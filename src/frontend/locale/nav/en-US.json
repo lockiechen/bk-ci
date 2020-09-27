@@ -42,7 +42,7 @@
     "recommendationLabel": "Google chrome is recommended for the best viewing experience",
     "dismiss": "Dismiss",
     "exception": {
-        "404": "No pages found！{action}",
+        "404": "No pages found!",
         "goBack": "Go back to Devops home page",
         "apiError": "Api error"
     },

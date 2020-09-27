@@ -4,6 +4,7 @@ import { updateRecentVisitServiceList, urlJoin, getServiceAliasByPath, importScr
 
 import compilePath from '../utils/pathExp'
 import * as cookie from 'js-cookie'
+import eventBus from '@/utils/eventBus'
 
 // 首页 - index
 const Index = () => import('../views/Index.vue')
@@ -15,6 +16,7 @@ const IFrame = () => import('../views/IFrame.vue')
 const ProjectManage = () => import('../views/ProjectManage.vue')
 
 const Maintaining = () => import('../views/503.vue')
+const NotFound = () => import('../views/404.vue')
 
 Vue.use(Router)
 
@@ -65,6 +67,11 @@ const routes = [
                 component: Maintaining
             }
         ]
+    },
+    {
+        path: '*',
+        name: '404',
+        component: NotFound
     }
 ]
 
@@ -87,12 +94,11 @@ const createRouter = (store: any, dynamicLoadModule: any, i18n: any) => {
         }
     }
     
-    router.beforeEach((to, from, next) => {
+    router.beforeEach(async (to, from, next) => {
         const serviceAlias = getServiceAliasByPath(to.path)
         const currentPage = window.serviceObject.serviceMap[serviceAlias]
-
-        window.currentPage = currentPage
-        store.dispatch('updateCurrentPage', currentPage) // update currentPage
+        const preCurrentPage = window.currentPage
+        updateCurrentPage(currentPage, store) // update currentPage
         if (!currentPage) { // console 首页
             next()
             return
@@ -100,13 +106,14 @@ const createRouter = (store: any, dynamicLoadModule: any, i18n: any) => {
         
         const { css_url, js_url } = currentPage
         if (isAmdModule(currentPage) && !loadedModule[serviceAlias]) {
-            loadedModule[serviceAlias] = true
-            store.dispatch('toggleModuleLoading', true)
-            Promise.all([
-                importStyle(css_url, document.head),
-                importScript(js_url, document.body),
-                dynamicLoadModule(serviceAlias, i18n.locale)
-            ]).then(() => {
+            try {
+                store.dispatch('toggleModuleLoading', true)
+                await Promise.all([
+                    importStyle(css_url, document.head),
+                    importScript(js_url, document.body),
+                    dynamicLoadModule(serviceAlias, i18n.locale)
+                ])
+                loadedModule[serviceAlias] = true
                 const module = window.Pages[serviceAlias]
                 store.registerModule(serviceAlias, module.store)
                 const dynamicRoutes = [{
@@ -116,16 +123,23 @@ const createRouter = (store: any, dynamicLoadModule: any, i18n: any) => {
                 }]
                 
                 router.addRoutes(dynamicRoutes)
+                const matchedRoute = router.match(to.path)
+                goNext(matchedRoute, next)
+            } catch (error) {
+                eventBus.$bkMessage({
+                    message: error.message,
+                    theme: 'error'
+                })
+                updateCurrentPage(preCurrentPage, store) // update currentPage
+                next(false)
+            } finally {
                 setTimeout(() => {
                     store.dispatch('toggleModuleLoading', false)
                 }, 100)
-                goNext(to, next)
-            })
-            goNext(to, next)
+            }
         } else if (isAmdModule(currentPage) && loadedModule[serviceAlias]) {
-            dynamicLoadModule(serviceAlias, i18n.locale).then(() => {
-                goNext(to, next)
-            })
+            await dynamicLoadModule(serviceAlias, i18n.locale)
+            goNext(to, next)
         } else {
             goNext(to, next)
         }
@@ -133,7 +147,6 @@ const createRouter = (store: any, dynamicLoadModule: any, i18n: any) => {
 
     router.afterEach(route => {
         updateRecentVisitServiceList(route.path)
-        
         store.dispatch('upadteHeaderConfig', updateHeaderConfig(route.meta))
     })
     return router
@@ -146,6 +159,11 @@ function updateHeaderConfig ({ showProjectList, showNav }) {
     }
 }
 
+function updateCurrentPage (currentPage, store) {
+    window.currentPage = currentPage
+    store.dispatch('updateCurrentPage', currentPage) // update currentPage
+}
+
 function getProjectId (params): string {
     try {
         const cookiePid = cookie.get(X_DEVOPS_PROJECT_ID)
@@ -156,28 +174,30 @@ function getProjectId (params): string {
     }
 }
 
-function initProjectId (to): string {
+function initProjectId (to): string[] {
     try {
         const { matched, params } = to
         const projectId: string = getProjectId(params)
         const lastMatched = matched[matched.length - 1]
-        
         const options = projectId ? {
             ...params,
             projectId
         } : params
-        return matched.length ? compilePath(lastMatched.path)(options) : to.path
+        const compiledPath = matched.length ? compilePath(lastMatched.path)(options) : to.path
+
+        return [compiledPath, projectId]
     } catch (e) {
         console.log(e)
-        return to.path
+        return [to.path, '']
     }
 }
 
 function goNext (to, next) {
-    const newPath = initProjectId(to)
+    const [newPath, projectId] = initProjectId(to)
 
-    // @ts-ignore
-    window.setProjectIdCookie(getProjectId(to.params))
+    if (projectId) {
+        window.setProjectIdCookie(projectId)
+    }
     if (to.path !== newPath) {
         next({
             path: newPath,

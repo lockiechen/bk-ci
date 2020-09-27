@@ -131,7 +131,7 @@
             return this.currentPage && this.currentPage.logoUrl ? this.currentPage.logoUrl : 'placeholder'
         }
         get selectProjectList (): Project[] {
-            return this.enableProjectList.map(project => ({
+            return this.enableProjectList.map((project: Project) => ({
                 ...project,
                 id: project.projectCode,
                 name: project.projectName
@@ -210,6 +210,12 @@
             const oldProject = this.selectProjectList.find(project => project.projectCode === projectId)
             const project = this.selectProjectList.find(project => project.projectCode === id)
             
+            if (!project) {
+              return
+            }
+
+            window.setProjectIdCookie(id)
+
             if (projectId && !oldProject) { // 当前无权限时返回首页
                 this.goHomeById(id)
             } else {
@@ -219,8 +225,7 @@
                     }
                 })
             }
-            window.setProjectIdCookie(id)
-
+            
             if ((!oldProject && project.gray) || (oldProject && oldProject.gray !== project.gray)) {
                 this.goHomeById(id, true)
             }

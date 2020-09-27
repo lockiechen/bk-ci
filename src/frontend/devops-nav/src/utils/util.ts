@@ -122,19 +122,22 @@ export function judgementLsVersion () {
 
 // 动态加载js
 export function importScript (src, oHead) {
-    return new Promise(resolve => {
+    return new Promise((resolve, reject) => {
         const oScript = document.createElement('script')
         oScript.type = 'text\/javascript'
         oScript.setAttribute('src', src)
         oHead.appendChild(oScript)
 
         oScript.onload = resolve
+        oScript.onerror = () => {
+            reject(Error('loadModError'))
+        }
     })
 }
 
 // 动态加载css
 export function importStyle (href, oHead) {
-    return new Promise(resolve => {
+    return new Promise((resolve, reject) => {
         const oStyle = document.createElement('link')
         oStyle.setAttribute('rel', 'stylesheet')
         oStyle.setAttribute('type', 'text/css')
@@ -142,6 +145,9 @@ export function importStyle (href, oHead) {
         oHead.appendChild(oStyle)
 
         oStyle.onload = resolve
+        oStyle.onerror = () => {
+            reject(Error('loadModError'))
+        }
     })
 }
 

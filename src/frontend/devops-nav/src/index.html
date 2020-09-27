@@ -43,6 +43,24 @@
 </head>
 <body>
     <script>
+      function handleAssetsNotFindError (e) {
+        var eleArray = ["SCRIPT", "LINK"];
+        var resourceMap = {
+            "SCRIPT": "JavaScript file",
+            "LINK": "CSS file"
+        };
+        var ele = e.target;
+        if(eleArray.indexOf(ele.tagName) != -1){
+            var url = ele.tagName == "LINK" ? ele.href: ele.src;
+            console.log("src：" + url + " File " + resourceMap[ele.tagName] + " failed loading. ");
+        }
+        if (ele.tagName === 'SCRIPT'){
+          location.reload()
+        }
+      }
+      window.addEventListener("error", handleAssetsNotFindError, true);
+    </script>
+    <script>
             var ajax = new XMLHttpRequest();
             ajax.open("GET", "<%=htmlWebpackPlugin.options.urlPrefix %>/svg-sprites/devops_sprite.svg?t=" + Math.random(), true)
             ajax.send();
@@ -69,6 +87,7 @@
     <script src="<%=htmlWebpackPlugin.options.urlPrefix %>/console/static/vue.min.js"></script>
     <script src="<%=htmlWebpackPlugin.options.urlPrefix %>/console/static/vuex.min.js"></script>
     <script src="<%=htmlWebpackPlugin.options.urlPrefix %>/console/static/vue-router.min.js"></script>
+    
     <!-- devops:assets -->
     <!-- end devops:assets -->
     
@@ -459,6 +478,7 @@
 
         window.onbeforeunload = function () {
             document.removeEventListener('visibilitychange', handleVisibilityChange, false);
+            window.removeEventListener('error', handleAssetsNotFindError)
         }
     </script>
 </body>

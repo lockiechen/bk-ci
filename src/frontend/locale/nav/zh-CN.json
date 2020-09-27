@@ -42,7 +42,7 @@
     "recommendationLabel": "推荐使用谷歌浏览器以获得更好的体验",
     "dismiss": "不再提示",
     "exception": {
-        "404": "没找到页面！{action}",
+        "404": "没找到页面!",
         "goBack": "返回蓝盾Devops首页",
         "apiError": "接口错误"
     },
