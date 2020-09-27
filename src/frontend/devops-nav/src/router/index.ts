@@ -123,6 +123,7 @@ const createRouter = (store: any, dynamicLoadModule: any, i18n: any) => {
                 }]
                 
                 router.addRoutes(dynamicRoutes)
+                // @ts-ignore
                 const matchedRoute = router.match(to.path)
                 goNext(matchedRoute, next)
             } catch (error) {
