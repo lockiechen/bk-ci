@@ -1,17 +1,6 @@
 <template>
     <div class="devops-app">
-        <div
-            v-show="moduleLoading"
-            class="bk-loading"
-            style="position: absolute;"
-        >
-            <div class="bk-loading-wrapper">
-                <div class="bk-loading1">
-                    <div class="point point1" /> <div class="point point2" /> <div class="point point3" /> <div class="point point4" />
-                </div> <div class="bk-loading-title" />
-            </div>
-        </div>
-        <router-view />
+        <router-view v-bkloading="{ isLoading: moduleLoading }" />
         <Announcement-dialog />
     </div>
 </template>

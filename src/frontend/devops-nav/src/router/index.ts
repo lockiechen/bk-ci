@@ -132,11 +132,7 @@ const createRouter = (store: any, dynamicLoadModule: any, i18n: any) => {
                     theme: 'error'
                 })
                 updateCurrentPage(preCurrentPage, store) // update currentPage
-                next(false)
-            } finally {
-                setTimeout(() => {
-                    store.dispatch('toggleModuleLoading', false)
-                }, 100)
+                store.dispatch('toggleModuleLoading', false)
             }
         } else if (isAmdModule(currentPage) && loadedModule[serviceAlias]) {
             await dynamicLoadModule(serviceAlias, i18n.locale)
@@ -149,6 +145,7 @@ const createRouter = (store: any, dynamicLoadModule: any, i18n: any) => {
     router.afterEach(route => {
         updateRecentVisitServiceList(route.path)
         store.dispatch('upadteHeaderConfig', updateHeaderConfig(route.meta))
+        store.dispatch('toggleModuleLoading', false)
     })
     return router
 }
@@ -195,7 +192,6 @@ function initProjectId (to): string[] {
 
 function goNext (to, next) {
     const [newPath, projectId] = initProjectId(to)
-
     if (projectId) {
         window.setProjectIdCookie(projectId)
     }
@@ -209,4 +205,5 @@ function goNext (to, next) {
         next()
     }
 }
+
 export default createRouter
