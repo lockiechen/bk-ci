@@ -128,10 +128,10 @@ const createRouter = (store: any, dynamicLoadModule: any, i18n: any) => {
                 goNext(matchedRoute, next)
             } catch (error) {
                 eventBus.$bkMessage({
-                    message: error.message,
+                    // @ts-ignore
+                    message: translateMsg(error.message),
                     theme: 'error'
                 })
-                console.log('catch')
                 updateCurrentPage(preCurrentPage, store) // update currentPage
                 store.dispatch('toggleModuleLoading', false)
             }
@@ -146,10 +146,18 @@ const createRouter = (store: any, dynamicLoadModule: any, i18n: any) => {
     router.afterEach(route => {
         updateRecentVisitServiceList(route.path)
         store.dispatch('upadteHeaderConfig', updateHeaderConfig(route.meta))
-        console.log('after')
         store.dispatch('toggleModuleLoading', false)
     })
     return router
+}
+
+function translateMsg (msg: string): string {
+    // @ts-ignore
+    if (window.devops && typeof window.devops.$t === 'function') {
+        // @ts-ignore
+        return window.devops.$t(msg)
+    }
+    return msg
 }
 
 function updateHeaderConfig ({ showProjectList, showNav }) {
