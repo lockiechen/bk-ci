@@ -131,6 +131,7 @@ const createRouter = (store: any, dynamicLoadModule: any, i18n: any) => {
                     message: error.message,
                     theme: 'error'
                 })
+                console.log('catch')
                 updateCurrentPage(preCurrentPage, store) // update currentPage
                 store.dispatch('toggleModuleLoading', false)
             }
@@ -145,6 +146,7 @@ const createRouter = (store: any, dynamicLoadModule: any, i18n: any) => {
     router.afterEach(route => {
         updateRecentVisitServiceList(route.path)
         store.dispatch('upadteHeaderConfig', updateHeaderConfig(route.meta))
+        console.log('after')
         store.dispatch('toggleModuleLoading', false)
     })
     return router

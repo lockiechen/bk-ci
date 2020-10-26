@@ -43,24 +43,6 @@
 </head>
 <body>
     <script>
-      function handleAssetsNotFindError (e) {
-        var eleArray = ["SCRIPT", "LINK"];
-        var resourceMap = {
-            "SCRIPT": "JavaScript file",
-            "LINK": "CSS file"
-        };
-        var ele = e.target;
-        if(eleArray.indexOf(ele.tagName) != -1){
-            var url = ele.tagName == "LINK" ? ele.href: ele.src;
-            console.log("src：" + url + " File " + resourceMap[ele.tagName] + " failed loading. ");
-        }
-        if (ele.tagName === 'SCRIPT'){
-          location.reload()
-        }
-      }
-      window.addEventListener("error", handleAssetsNotFindError, true);
-    </script>
-    <script>
             var ajax = new XMLHttpRequest();
             ajax.open("GET", "<%=htmlWebpackPlugin.options.urlPrefix %>/svg-sprites/devops_sprite.svg?t=" + Math.random(), true)
             ajax.send();
@@ -213,6 +195,25 @@
         window.setProjectIdCookie(pathPid)
         
     </script>
+
+    <script>
+      function handleAssetsNotFindError (e) {
+        var eleArray = ["SCRIPT", "LINK"];
+        var resourceMap = {
+            "SCRIPT": "JavaScript file",
+            "LINK": "CSS file"
+        };
+        var ele = e.target;
+        if(eleArray.indexOf(ele.tagName) !== -1){
+            var url = ele.tagName === "LINK" ? ele.href: ele.src;
+            console.log("src：" + url + " File " + resourceMap[ele.tagName] + " failed loading. ");
+            // 重新刷新页面
+            location.reload()
+        }
+      }
+      window.addEventListener("error", handleAssetsNotFindError, true);
+    </script>
+    
     <script>
         
         window.getLoginUrl = function () {

@@ -1,4 +1,5 @@
 {   
+    "loadModError": "Oops! Service Load Error",
     "okLabel": "Confirm",
     "cancelLabel": "Cancel",
     "logout": "Log out",
