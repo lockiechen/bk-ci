@@ -78,11 +78,11 @@
     "configPipeline": "Configure pipeline",
     "complete": "Complete",
     "noProjectFtind": "Lease select project accordingly",
-    "projectName": "Project name",
+    "projectName": "Project Name",
     "showDisableProject": "Show disabled project",
-    "projectDesc": "Project description",
+    "projectDesc": "Project Description",
     "projectCreator": "Creator",
-    "projectOperation": "Operation",
+    "projectOperation": "Actions",
     "disableLabel": "Disable",
     "enableLabel": "Enable",
     "waitforReview": "Pending review, no access to operate",
@@ -98,7 +98,7 @@
     "newProject": "New Project",
     "selectProjectPlaceholder": "Select project",
     "service": "Service",
-    "collection": "My collection",
+    "collection": "MY COLLECTION",
     "noCollection": "No collection",
     "outofCollectionTips": "Clear unused links to add new ones：）",
     "DevopsMobile": "Mobile",
@@ -231,6 +231,7 @@
         "list": "List",
         "execute": "Execute",
         "enable/disable": "Enable/Disable",
-        "manage": "Manage"
+        "manage": "Manage",
+        "documentation": "Documentation"
     }
 }
