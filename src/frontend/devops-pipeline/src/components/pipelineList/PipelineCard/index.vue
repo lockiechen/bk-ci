@@ -129,7 +129,6 @@
         RESOURCE_ACTION
     } from '@/utils/permission'
     import { RECENT_USED_VIEW_ID } from '@/store/constants'
-    import { statusColorMap } from '@/utils/pipelineStatus'
 
     export default {
         components: {
