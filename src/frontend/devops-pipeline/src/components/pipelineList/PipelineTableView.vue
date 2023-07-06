@@ -221,12 +221,12 @@
         RECENT_USED_VIEW_ID
     } from '@/store/constants'
     import { ORDER_ENUM, PIPELINE_SORT_FILED } from '@/utils/pipelineConst'
-    import { convertTime, isShallowEqual } from '@/utils/util'
-    import { mapGetters, mapState } from 'vuex'
     import {
         handlePipelineNoPermission,
         RESOURCE_ACTION
     } from '@/utils/permission'
+    import { convertTime, isShallowEqual } from '@/utils/util'
+    import { mapGetters, mapState } from 'vuex'
 
     export default {
         components: {

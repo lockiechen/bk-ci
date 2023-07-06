@@ -121,9 +121,9 @@
 
 <script>
     import Logo from '@/components/Logo'
+    import { statusColorMap } from '@/utils/pipelineStatus'
     import PipelineStatusIcon from '@/components/PipelineStatusIcon'
     import ExtMenu from '@/components/pipelineList/extMenu'
-    import { statusColorMap } from '@/utils/pipelineStatus'
     import {
         handlePipelineNoPermission,
         RESOURCE_ACTION
