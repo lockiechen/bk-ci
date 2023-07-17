@@ -103,7 +103,7 @@
                 ref="popoverRef"
             >
                 <div class="flag-box">
-                    <Icon :name="curLang.icon" />
+                    <Icon :name="curLang.icon" size="20" />
                 </div>
                 <template slot="content">
                     <li
@@ -111,7 +111,7 @@
                         :key="index"
                         :class="['bkci-dropdown-item', { active: curLang.id === item.id }]"
                         @click="handleChangeLang(item)">
-                        <Icon class="mr5" :name="item.icon" />
+                        <Icon class="mr5" :name="item.icon" size="20" />
                         {{item.name}}
                     </li>
                 </template>
@@ -123,7 +123,7 @@
                 trigger="click"
                 ref="popoverRef">
                 <div class="flag-box">
-                    <Icon name="help-fill" />
+                    <Icon name="help-fill" size="20" />
                 </div>
                 <template slot="content">
                     <li class="bkci-dropdown-item" @click.stop="goToDocs">{{ $t('documentation') }}</li>
@@ -315,7 +315,6 @@
             const { projectId } = this.$route.params
             const oldProject = this.selectProjectList.find(project => project.projectCode === projectId)
             const project = this.selectProjectList.find(project => project.projectCode === id)
-            sessionStorage.removeItem('group-apply-query')
             
             if (projectId && !oldProject) { // 当前无权限时返回首页
                 this.goHomeById(id)
@@ -373,7 +372,7 @@
     }
 </script>
 
-<style lang="scss" scoped>
+<style lang="scss">
     @import '../../assets/scss/conf';
 
     $headerBgColor: #191929;
@@ -563,32 +562,31 @@
     
     .navigation-message-theme {
         position: relative;
-        top: -5px;
+        top: 5px;
         padding: 0 !important;
     }
     .bkci-dropdown-item {
-      display: flex;
-      align-items: center;
-      height: 32px;
-      line-height: 33px;
-      padding: 0 16px;
-      color: #63656e;
-      font-size: 12px;
-      text-decoration: none;
-      white-space: nowrap;
-      cursor: pointer;
-      &:hover {
-          background-color: #eaf3ff;
-          color: #3a84ff;
-      }
-      &.disabled {
-          color: #dcdee5;
-          cursor: not-allowed;
-      }
-      &.active {
-        background-color: #eaf3ff;
-        color: #3a84ff;
-      }
+        display: flex;
+        align-items: center;
+        height: 32px;
+        line-height: 33px;
+        padding: 0 16px;
+        color: #63656e;
+        font-size: 12px;
+        text-decoration: none;
+        white-space: nowrap;
+        background-color: #fff;
+        cursor: pointer;
+        &:hover {
+            background-color: #f5f7fb;
+        }
+        &.disabled {
+            color: #dcdee5;
+            cursor: not-allowed;
+        }
+        &.active {
+            background-color: #f5f7fb;
+        }
     }
     .flag-box {
         align-items: center;

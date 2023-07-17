@@ -370,7 +370,7 @@
 
                     if (resData && resData.data) {
                         this.$showTips({
-                            message: `${pipelineSetting.pipelineName}${this.$t('updateSuc')}`,
+                            message: `${pipelineSetting.pipelineName}${' '}${this.$t('updateSuc')}`,
                             theme: 'success'
                         })
                         this.isEditing = false
@@ -435,7 +435,6 @@
             }
             .bk-form-item label{
                 display: inline-block;
-                width: 145px;
                 white-space: nowrap;
                 text-overflow: ellipsis;
                 overflow: hidden;
