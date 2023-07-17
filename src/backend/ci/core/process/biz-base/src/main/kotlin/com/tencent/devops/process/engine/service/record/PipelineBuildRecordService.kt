@@ -241,7 +241,6 @@ class PipelineBuildRecordService @Autowired constructor(
             stage.containers.forEach { container ->
                 container.containerHashId = container.containerHashId ?: container.containerId
                 container.containerId = container.id
-                container.name = container.getI18nName(I18nUtil.getRequestUserLanguage())
                 var elementElapsed = 0L
                 container.elements.forEach { element ->
                     element.timeCost?.executeCost?.let {
@@ -369,7 +368,7 @@ class PipelineBuildRecordService @Autowired constructor(
             executeCount = fixedExecuteCount,
             startUserList = startUserList,
             buildMsg = BuildMsgUtils.getBuildMsg(
-                buildMsg = null,
+                buildMsg = buildInfo.buildMsg,
                 startType = StartType.toStartType(buildInfo.trigger),
                 channelCode = buildInfo.channelCode
             ),
