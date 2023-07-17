@@ -43,13 +43,17 @@ data class PipelineOutput(
     val createTime: Long
 ) {
     companion object {
-        fun convertFromFileInfo(fileInfo: FileInfo): PipelineOutput {
+        fun convertFromFileInfo(
+            fileInfo: FileInfo,
+            pathWithProjectRepo: Boolean = false,
+            projectId: String? = null
+        ): PipelineOutput {
             with(fileInfo) {
                 return PipelineOutput(
                     artifactoryType = artifactoryType,
                     name = name,
                     fullName = fullName,
-                    path = path,
+                    path = if (pathWithProjectRepo) "$projectId/${artifactoryType.toBkrepoName()}$path" else path,
                     fullPath = fullPath,
                     size = size,
                     folder = folder,
