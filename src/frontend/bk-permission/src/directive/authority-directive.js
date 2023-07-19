@@ -1,6 +1,6 @@
-import './authority-directive.scss';
 import ajax from '../ajax/index';
 import { version } from '../utils/vue';
+import './authority-directive.scss';
 
 // vue2 和 vue3 使用的弹框不一样，使用变量接收传入的值
 let handleShowDialog;
@@ -181,6 +181,7 @@ export function AuthorityDirectiveV2(handleNoPermission, ajaxPrefix = '') {
         },
         inserted(el, binding, vNode) {
           const { disablePermissionApi } = binding.value;
+          console.log('insert perm', binding);
           if (!disablePermissionApi) {
             updatePerms(el, binding.value, vNode, ajaxPrefix);
           } else {
@@ -189,6 +190,7 @@ export function AuthorityDirectiveV2(handleNoPermission, ajaxPrefix = '') {
         },
         update(el, binding, vNode) {
           const { value, oldValue } = binding;
+          console.log('update perm', binding);
           if (value.hasPermission !== oldValue.hasPermission) {
             init(el, binding.value, vNode);
           }
