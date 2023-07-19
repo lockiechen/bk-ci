@@ -96,8 +96,8 @@
                 const { projectId, pipelineId } = this.$route.params
                 const pipeline = {
                     pipelineId,
-                    projectId
-                    ...this.curPipeline,
+                    projectId,
+                    ...this.curPipeline
                 }
                 return [
                     [
