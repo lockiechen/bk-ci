@@ -224,7 +224,7 @@ export function AuthorityDirectiveV3(handleNoPermission, ajaxPrefix = '') {
         },
         updated(el, binding, vNode) {
           const { value, oldValue } = binding;
-          if (value.hasPermission !== oldValue.hasPermission) {
+          if (value.hasPermission !== oldValue.hasPermission || value.permissionData !== oldValue.permissionData) {
             init(el, binding.value, vNode);
           }
         },
