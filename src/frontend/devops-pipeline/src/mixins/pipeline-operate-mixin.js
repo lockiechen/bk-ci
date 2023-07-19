@@ -67,49 +67,7 @@ export default {
             'setPipeline',
             'updateContainer'
         ]),
-        async fetchPipelineList (searchName) {
-            try {
-                const { projectId, pipelineId } = this.$route.params
-                const [list, curPipeline] = await Promise.all([
-                    this.searchPipelineList({
-                        projectId,
-                        searchName
-                    }),
-                    this.updateCurPipeline({
-                        projectId,
-                        pipelineId
-                    })
-                ])
-
-                this.setBreadCrumbPipelineList(list, curPipeline)
-            } catch (err) {
-                console.log(err)
-                this.$showTips({
-                    message: err.message || err,
-                    theme: 'error'
-                })
-            }
-        },
-        async setBreadCrumbPipelineList (list, pipeline) {
-            if (pipeline && list.every(ele => ele.pipelineId !== pipeline.pipelineId)) {
-                list = [
-                    {
-                        pipelineId: pipeline.pipelineId,
-                        pipelineName: pipeline.pipelineName
-                    },
-                    ...list
-                ]
-            }
-            this.$store.commit('pipelines/updatePipelineList', list)
-        },
-        async updateCurPipeline ({ projectId, pipelineId }) {
-            const curPipeline = await this.requestPipelineDetail({
-                projectId,
-                pipelineId
-            })
-            this.$store.commit('pipelines/updateCurPipeline', curPipeline)
-            return curPipeline
-        },
+        
         /**
              *  终止任务
              */
