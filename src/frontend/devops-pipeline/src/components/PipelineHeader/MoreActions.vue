@@ -8,7 +8,7 @@
                 <ul v-for="(parent, index) in actionConfMenus" :key="index">
                     <template v-for="action in parent">
                         <li
-                            v-if="!action.hidden"
+                            v-show="!action.hidden"
                             :key="action.id"
                             v-perm="{
                                 permissionData: action.permissionData
