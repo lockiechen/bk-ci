@@ -8,7 +8,7 @@
                 <ul v-for="(parent, index) in actionConfMenus" :key="index">
                     <template v-for="action in parent">
                         <li
-                            v-show="!action.hidden"
+                            v-if="!action.hidden"
                             :key="action.id"
                             v-perm="{
                                 permissionData: action.permissionData
@@ -155,7 +155,7 @@
                             }
                         },
                         {
-                            id: pipeline.pipelineId + 'newlist.saveAsTemp',
+                            id: 'newlist.saveAsTemp',
                             label: 'newlist.saveAsTemp',
                             handler: () => this.saveAsTempHandler(pipeline),
                             permissionData: {

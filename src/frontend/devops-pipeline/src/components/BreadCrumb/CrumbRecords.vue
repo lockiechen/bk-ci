@@ -8,7 +8,13 @@
             <i class="devops-icon icon-circle-2-1 spin-icon" />
         </div>
         <ul v-else>
-            <li v-for="item in records" :title="item[paramName]" :key="item[paramId]" :class="{ 'active': selectedValue === item[paramName] }" @click.stop="handleRecordClick(item)">
+            <li
+                v-for="item in records"
+                :title="item[paramName]"
+                :key="item[paramId]"
+                :class="{ 'active': selectedValue === item[paramName] }"
+                @click.stop="handleRecordClick(item)"
+            >
                 {{ item[paramName] }}
             </li>
         </ul>
