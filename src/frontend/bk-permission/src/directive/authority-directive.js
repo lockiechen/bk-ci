@@ -27,6 +27,7 @@ function init(el, data, vNode) {
   }
   const parent = el.parentNode;
   const options = Object.assign({}, DEFAULT_OPTIONS, data);
+  console.log('init', options, parent);
   if (options.hasPermission || !parent) return;
 
   if (!el.cloneEl) {
@@ -181,7 +182,7 @@ export function AuthorityDirectiveV2(handleNoPermission, ajaxPrefix = '') {
         },
         inserted(el, binding, vNode) {
           const { disablePermissionApi } = binding.value;
-          console.log('insert perm', binding);
+          console.log('insert perm', binding, vNode.key);
           if (!disablePermissionApi) {
             updatePerms(el, binding.value, vNode, ajaxPrefix);
           } else {
@@ -190,7 +191,7 @@ export function AuthorityDirectiveV2(handleNoPermission, ajaxPrefix = '') {
         },
         update(el, binding, vNode) {
           const { value, oldValue } = binding;
-          console.log('update perm', binding);
+          console.log('update perm', binding, vNode.key);
           if (value.hasPermission !== oldValue.hasPermission) {
             init(el, binding.value, vNode);
           } else if (value.permissionData !== oldValue.permissionData) {
