@@ -184,6 +184,7 @@ export function AuthorityDirectiveV2(handleNoPermission, ajaxPrefix = '') {
           const { disablePermissionApi } = binding.value;
           console.log('insert perm', binding, vNode.key);
           if (!disablePermissionApi) {
+            console.log('insert api perm');
             updatePerms(el, binding.value, vNode, ajaxPrefix);
           } else {
             init(el, binding.value, vNode);
@@ -193,8 +194,10 @@ export function AuthorityDirectiveV2(handleNoPermission, ajaxPrefix = '') {
           const { value, oldValue } = binding;
           console.log('update perm', binding, vNode.key);
           if (value.hasPermission !== oldValue.hasPermission) {
+            console.log('update init perm');
             init(el, binding.value, vNode);
           } else if (value.permissionData !== oldValue.permissionData) {
+            console.log('update update perm');
             updatePerms(el, binding.value, vNode, ajaxPrefix);
           }
         },
