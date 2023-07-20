@@ -21,13 +21,14 @@ const DEFAULT_OPTIONS = {
  * @returns
  */
 function init(el, data, vNode) {
+  console.log('init', data, el.parentNode, el, el.originEl, el.originEl?.parentNode);
   // 节点被替换过时需要还原回来
   if (el.originEl) {
     el = destroy(el, vNode);
   }
   const parent = el.parentNode;
   const options = Object.assign({}, DEFAULT_OPTIONS, data);
-  console.log('init', options, parent, el, el.originEl, el.originEl?.parentNode);
+
   if (options.hasPermission || !parent) return;
 
   if (!el.cloneEl) {
