@@ -11,6 +11,7 @@
                             v-if="!action.hidden"
                             :key="action.label"
                             v-perm="{
+                                disablePermissionApi: !action.permissionData,
                                 permissionData: action.permissionData
                             }"
                             @click="action.handler"
