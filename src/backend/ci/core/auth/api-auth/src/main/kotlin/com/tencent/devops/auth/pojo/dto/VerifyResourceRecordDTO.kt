@@ -23,18 +23,22 @@
  * NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
  * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+ *
  */
 
-package com.tencent.devops.websocket.utils
+package com.tencent.devops.auth.pojo.dto
 
-object PageUtils {
+import io.swagger.annotations.ApiModel
+import io.swagger.annotations.ApiModelProperty
 
-    @Suppress("ALL")
-    fun buildNormalPage(page: String): String {
-        if (page.contains("/list/") && !page.endsWith("/list")) {
-            val index = page.indexOf("/list")
-            return page.substring(0, index + 5)
-        }
-        return page
-    }
-}
+@ApiModel("鉴权记录实体")
+data class VerifyResourceRecordDTO(
+    @ApiModelProperty("项目ID")
+    val projectId: String,
+    @ApiModelProperty("资源类型")
+    val resourceType: String,
+    @ApiModelProperty("资源Code")
+    val resourceCode: String,
+    @ApiModelProperty("用户ID")
+    val userId: String
+)
