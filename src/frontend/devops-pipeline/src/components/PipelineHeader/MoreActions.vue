@@ -8,12 +8,20 @@
                 <ul v-for="(parent, index) in actionConfMenus" :key="index">
                     <template v-for="action in parent">
                         <li
-                            v-if="!action.hidden"
+                            v-if="action.permissionData"
+                            v-show="!action.hidden"
                             :key="action.label"
                             v-perm="{
-                                disablePermissionApi: !action.permissionData,
                                 permissionData: action.permissionData
                             }"
+                            @click="action.handler"
+                        >
+                            {{ $t(action.label) }}
+                        </li>
+                        <li
+                            v-else
+                            v-show="!action.hidden"
+                            :key="action.label"
                             @click="action.handler"
                         >
                             {{ $t(action.label) }}
