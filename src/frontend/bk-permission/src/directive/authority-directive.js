@@ -27,7 +27,7 @@ function init(el, data, vNode) {
   }
   const parent = el.parentNode;
   const options = Object.assign({}, DEFAULT_OPTIONS, data);
-  console.log('init', options, parent);
+  console.log('init', options, parent, el, el.originEl, el.originEl?.parentNode);
   if (options.hasPermission || !parent) return;
 
   if (!el.cloneEl) {
