@@ -165,6 +165,7 @@ function validatePermission(data, ajaxPrefix) {
 // 通过接口判断有无权限
 async function updatePerms(el, data, vNode, ajaxPrefix) {
   const hasPermission = await validatePermission(data.permissionData, ajaxPrefix);
+  console.log('hasPermission valid perms', hasPermission, vNode.key, el);
   const cloneData = JSON.parse(JSON.stringify(data));
   cloneData.hasPermission = hasPermission;
   init(el, cloneData, vNode);
