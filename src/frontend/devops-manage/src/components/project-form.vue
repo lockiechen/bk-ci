@@ -1,19 +1,19 @@
 <script setup lang="ts">
-import {
-  ref,
-  watch,
-  onBeforeUnmount,
-  computed,
-  onMounted,
-  getCurrentInstance,
-} from 'vue';
+import http from '@/http/api';
+import { Message, Popover } from 'bkui-vue';
 import {
   EditLine,
 } from 'bkui-vue/lib/icon';
-import IAMIframe from './IAM-Iframe';
+import {
+  computed,
+  getCurrentInstance,
+  onBeforeUnmount,
+  onMounted,
+  ref,
+  watch,
+} from 'vue';
 import { useI18n } from 'vue-i18n';
-import { Message, Popover } from 'bkui-vue';
-import http from '@/http/api';
+import IAMIframe from './IAM-Iframe';
 const {
   t,
 } = useI18n();
@@ -41,7 +41,7 @@ const vm = getCurrentInstance();
 const rules = {
   englishName: [
     {
-      validator: value => /^[a-z][a-z0-9\-]{1,32}$/.test(value),
+      validator: value => props.type !== 'apply' || /^[a-z][a-z0-9\-]{1,32}$/.test(value),
       message: t('项目ID必须由小写字母+数字+中划线组成，以小写字母开头，长度限制32字符！'),
       trigger: 'blur',
     },
