@@ -19,7 +19,7 @@
                         <i v-bk-tooltips="$t('stageFastKillDesc')" class="bk-icon icon-info-circle" />
                     </form-field>
                     <bk-form-item :label="$t('stageOptionLabel')">
-                        <bk-select :disabled="disabled" v-model="stageCondition" searchable>
+                        <bk-select :clearable="false" :disabled="disabled" v-model="stageCondition" searchable>
                             <bk-option v-for="option in conditionConf"
                                 :key="option.id"
                                 :id="option.id"
@@ -46,11 +46,11 @@
 </template>
 
 <script>
-    import { mapActions } from 'vuex'
-    import Accordion from '@/components/atomFormField/Accordion'
-    import VuexInput from '@/components/atomFormField/VuexInput'
-    import KeyValueNormal from '@/components/atomFormField/KeyValueNormal'
     import FormField from '@/components/AtomPropertyPanel/FormField'
+    import Accordion from '@/components/atomFormField/Accordion'
+    import KeyValueNormal from '@/components/atomFormField/KeyValueNormal'
+    import VuexInput from '@/components/atomFormField/VuexInput'
+    import { mapActions } from 'vuex'
 
     export default {
         name: 'stage-control',
