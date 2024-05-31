@@ -54,14 +54,22 @@
         },
         methods: {
             bkVarWrapper,
-            handleCopy (con) {
+            async handleCopy (con) {
                 if (this.disabledCopy) return
-                window.navigator.clipboard.writeText(con)
-                this.$bkMessage({
-                    theme: 'success',
-                    message: this.$t('copySuc'),
-                    limit: 1
-                })
+                try {
+                    await window.navigator.clipboard.writeText(con)
+                    this.$bkMessage({
+                        theme: 'success',
+                        message: this.$t('copySuc'),
+                        limit: 1
+                    })
+                } catch (e) {
+                    this.$bkMessage({
+                        theme: 'error',
+                        message: e.message,
+                        limit: 1
+                    })
+                }
             }
         }
     }
