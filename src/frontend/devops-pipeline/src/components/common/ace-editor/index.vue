@@ -43,6 +43,10 @@
                 type: String,
                 default: 'text'
             },
+            aceLangMap: {
+                type: Object,
+                default: () => ({})
+            },
             readOnly: {
                 type: Boolean,
                 default: false
@@ -67,6 +71,18 @@
                 monaco: null
             }
         },
+        computed: {
+            langMap () {
+                return {
+                    sh: 'shell',
+                    bash: 'shell',
+                    batchfile: 'bat',
+                    cmd: 'bat',
+                    pwsh: 'powershell',
+                    ...(this.aceLangMap ?? {})
+                }
+            }
+        },
         watch: {
             value (newValue) {
                 if (this.editor) {
@@ -78,7 +94,7 @@
 
             lang (newVal) {
                 if (this.editor) {
-                    this.monaco.editor.setModelLanguage(this.editor.getModel(), newVal)
+                    this.monaco.editor.setModelLanguage(this.editor.getModel(), this.getLang(newVal))
                 }
             },
 
@@ -125,12 +141,7 @@
         },
         methods: {
             getLang (lang) {
-                const langMap = {
-                    sh: 'shell',
-                    batchfile: 'bat'
-                }
-
-                return langMap[lang] || lang
+                return this.langMap[lang] || lang
             },
             calcSize (size) {
                 const _size = size.toString()

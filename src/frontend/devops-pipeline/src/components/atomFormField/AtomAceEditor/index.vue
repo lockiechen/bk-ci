@@ -18,7 +18,8 @@
             class="ace-wrapper"
             :read-only="disabled"
             :value="value"
-            :lang="lang"
+            :lang="dynamicLang"
+            :ace-lang-map="aceLangMap"
             :name="name"
             :full-screen="isFullScreen"
             @input="handleScriptInput"
@@ -43,8 +44,9 @@
         props: {
             lang: {
                 type: String,
-                default: 'sh'
+                default: 'shell'
             },
+            aceLangMap: Object,
             default: String,
             bashConf: {
                 type: Object,
@@ -60,6 +62,14 @@
                 height: 360,
                 isLoading: false,
                 isFullScreen: false
+            }
+        },
+        computed: {
+            dynamicLang () {
+                if (this.lang === 'auto') {
+                    return this.container?.baseOS === 'WINDOWS' ? 'cmd' : 'shell'
+                }
+                return this.lang
             }
         },
         watch: {
