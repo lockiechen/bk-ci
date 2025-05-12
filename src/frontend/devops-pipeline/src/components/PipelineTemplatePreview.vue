@@ -131,8 +131,7 @@
                         component: 'NotifyTab',
                         props: {
                             editable: false,
-                            failSubscriptionList: this.pipelineSetting?.failSubscriptionList ?? [],
-                            successSubscriptionList: this.pipelineSetting?.successSubscriptionList ?? []
+                            ...this.pipelineSetting
                         }
                     },
                     {

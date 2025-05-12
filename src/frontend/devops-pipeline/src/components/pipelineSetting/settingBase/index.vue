@@ -94,8 +94,7 @@
             >
                 <notify-tab
                     :editable="!isDisabled && hasPermission"
-                    :success-subscription-list="templateSetting?.successSubscriptionList ?? []"
-                    :fail-subscription-list="templateSetting?.failSubscriptionList ?? []"
+                    :notices="templateSetting?.notices"
                     :update-subscription="handleUpdateNotify"
                 />
             </form-field>
@@ -135,14 +134,14 @@
 </template>
 
 <script>
-    import { NotifyTab } from '@/components/PipelineEditTabs/'
     import FormField from '@/components/AtomPropertyPanel/FormField.vue'
+    import { NotifyTab } from '@/components/PipelineEditTabs/'
     import RunningLock from '@/components/pipelineSetting/RunningLock'
-    import { mapActions, mapGetters, mapState } from 'vuex'
     import SyntaxStyleConfiguration from '@/components/syntaxStyleConfiguration'
     import {
         TEMPLATE_RESOURCE_ACTION
     } from '@/utils/permission'
+    import { mapActions, mapGetters, mapState } from 'vuex'
     export default {
         components: {
             NotifyTab,
@@ -350,7 +349,7 @@
                 this.setIsEditing()
             },
             handleUpdateNotify (name, value) {
-                Object.assign(this.templateSetting, { [name]: value })
+                Object.assign(this.templateSetting.notices, { [name]: value })
                 this.setIsEditing()
             },
             inheritedChange (value) {

@@ -132,30 +132,29 @@
 </template>
 
 <script>
-    import { mapActions } from 'vuex'
-    import { deepCopy } from '@/utils/util'
     import NotifySetting from '@/components/pipelineSetting/NotifySetting'
+    import { deepCopy } from '@/utils/util'
+    import { mapActions } from 'vuex'
+    const defalueValMap = {
+        successSubscriptionList: {
+            content: window.pipelineVue?.$i18n?.t('settings.defaultSuc')
+        },
 
-    const defaultSuc = {
-        types: [],
-        groups: [],
-        users: '${{ci.actor}}',
-        wechatGroupFlag: false,
-        wechatGroup: '',
-        wechatGroupMarkdownFlag: false,
-        detailFlag: false,
-        content: window.pipelineVue?.$i18n?.t('settings.defaultSuc')
-    }
+        failSubscriptionList: {
+            content: window.pipelineVue?.$i18n?.t('settings.defaultFail')
+        },
 
-    const defaultFail = {
-        types: [],
-        groups: [],
-        users: '${{ci.actor}}',
-        wechatGroupFlag: false,
-        wechatGroup: '',
-        wechatGroupMarkdownFlag: false,
-        detailFlag: false,
-        content: window.pipelineVue?.$i18n?.t('settings.defaultFail')
+        canceledSubscriptionList: {
+            content: window.pipelineVue?.$i18n?.t('settings.defaultCanceled')
+        },
+
+        releasedSubscriptionList: {
+            users: '${{ci.pipeline_owner}}',
+            content: window.pipelineVue?.$i18n?.t('settings.defaultReleased')
+        },
+        stageSuccessSubscriptionList: {
+            content: window.pipelineVue?.$i18n?.t('settings.defaultStageSuccess')
+        }
     }
 
     export default {
@@ -168,8 +167,10 @@
                 type: Boolean,
                 default: true
             },
-            successSubscriptionList: Array,
-            failSubscriptionList: Array,
+            notices: {
+                type: Object,
+                default: () => ({})
+            },
             updateSubscription: Function
         },
         data () {
@@ -186,8 +187,20 @@
                         name: this.$t('settings.whenSuc')
                     },
                     {
+                        type: 'stageSuccessSubscriptionList',
+                        name: this.$t('settings.whenStageSuccess')
+                    },
+                    {
                         type: 'failSubscriptionList',
                         name: this.$t('settings.whenFail')
+                    },
+                    {
+                        type: 'canceledSubscriptionList',
+                        name: this.$t('settings.whenCanceled')
+                    },
+                    {
+                        type: 'releasedSubscriptionList',
+                        name: this.$t('settings.whenVersionReleased')
                     }
                 ],
                 renderFields: [
@@ -222,7 +235,7 @@
         computed: {
             slideTitle () {
                 const actionType = this.editIndex > -1 ? this.$t('newui.editNotice') : this.$t('newui.addNotice')
-                const targetType = this.editType === 'failSubscriptionList' ? this.$t('settings.whenFail') : this.$t('settings.whenSuc')
+                const targetType = this.notifyList.find(item => item.type === this.editType)?.name ?? '--'
                 return actionType + ' - ' + targetType
             }
         },
@@ -234,7 +247,7 @@
                 'requestProjectGroupAndUsers'
             ]),
             getRenderInfo (type) {
-                return this[type]
+                return this.notices[type]
             },
             getShowContent (col, val) {
                 let res = ''
@@ -250,33 +263,47 @@
                 return res
             },
             handleDelete (type, index) {
-                this[type].splice(index, 1)
-                this.updateSubscription(type, this[type])
+                this.notices[type].splice(index, 1)
+                this.updateSubscription(type, this.notices[type])
             },
             handleEdit (type, index) {
                 this.showSlider = true
                 this.editType = type
                 this.editIndex = index
-                if (index > -1 && this[type][index]) {
-                    this.sliderEditItem = deepCopy(this[type][index])
+                if (index > -1 && this.notices[type][index]) {
+                    this.sliderEditItem = deepCopy(this.notices[type][index])
                 } else {
-                    this.sliderEditItem = deepCopy(type === 'failSubscriptionList' ? defaultFail : defaultSuc)
+                    this.sliderEditItem = deepCopy({
+                        types: [],
+                        groups: [],
+                        users: '${{ci.actor}}',
+                        wechatGroupFlag: false,
+                        wechatGroup: '',
+                        wechatGroupMarkdownFlag: false,
+                        detailFlag: false,
+                        ...defalueValMap[type]
+                    })
                 }
             },
             handleSaveNotify () {
                 this.$refs?.notifySettingTab?.$refs?.notifyForm?.validate().then(() => {
-                    if (this.editIndex > -1) {
-                        this[this.editType][this.editIndex] = this.sliderEditItem
-                    } else {
-                        this[this.editType].push(this.sliderEditItem)
+                    let noticeList = this.notices[this.editType]
+                    if (!Array.isArray(noticeList)) {
+                        noticeList = []
                     }
-                    this.updateSubscription(this.editType, this[this.editType])
+                    if (this.editIndex > -1) {
+                        noticeList[this.editIndex] = this.sliderEditItem
+                    } else {
+                        noticeList.push(this.sliderEditItem)
+                    }
+                    this.updateSubscription(this.editType, noticeList)
                     this.hideSlider()
+                }).catch(err => {
+                    console.log(err)
                 })
             },
             updateEditItem (name, value) {
                 Object.assign(this.sliderEditItem, { [name]: value })
-                console.log(this.sliderEditItem, 'editing')
             },
             hideSlider () {
                 this.showSlider = false

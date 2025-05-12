@@ -123,7 +123,6 @@
             ...mapGetters({
                 isCodeMode: 'isCodeMode',
                 isActiveDraftVersion: 'atom/isActiveDraftVersion',
-                getPipelineSubscriptions: 'atom/getPipelineSubscriptions',
                 isBranchVersion: 'atom/isBranchVersion'
             }),
             projectId () {
@@ -185,8 +184,7 @@
                             is: NotifyTab,
                             props: {
                                 editable: false,
-                                failSubscriptionList: this.getPipelineSubscriptions('fail'),
-                                successSubscriptionList: this.getPipelineSubscriptions('success')
+                                notices: this.pipelineSetting.notices
                             }
                         }
                     case pipelineTabIdMap.setting:

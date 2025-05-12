@@ -69,9 +69,6 @@ export default {
     yamlInfo: state => {
         return state.pipelineInfo?.yamlInfo
     },
-    getPipelineSubscriptions: state => type => {
-        return state.pipelineSetting?.[`${type}SubscriptionList`] ?? []
-    },
     curPipelineParams: state => {
         const firstJob = state.pipeline?.stages?.[0]?.containers?.[0]
         return firstJob?.params?.filter(param => !semverVersionKeySet.has(param.id)) ?? []

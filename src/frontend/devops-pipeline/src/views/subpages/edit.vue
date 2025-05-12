@@ -129,8 +129,7 @@
                 'showVariable'
             ]),
             ...mapGetters({
-                isCodeMode: 'isCodeMode',
-                getPipelineSubscriptions: 'atom/getPipelineSubscriptions'
+                isCodeMode: 'isCodeMode'
             }),
             pipelineVersion () {
                 return this.pipelineInfo?.version
@@ -175,12 +174,11 @@
                         label: this.$t('settings.notify'),
                         component: 'NotifyTab',
                         bindData: {
-                            failSubscriptionList: this.getPipelineSubscriptions('fail'),
-                            successSubscriptionList: this.getPipelineSubscriptions('success'),
+                            notices: this.pipelineSetting?.notices,
                             updateSubscription: (name, value) => {
                                 this.setPipelineEditing(true)
                                 this.updatePipelineSetting({
-                                    setting: this.pipelineSetting,
+                                    setting: this.pipelineSetting.notices,
                                     param: {
                                         [name]: value
                                     }
