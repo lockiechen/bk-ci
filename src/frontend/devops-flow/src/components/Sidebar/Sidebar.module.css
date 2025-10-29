@@ -1,0 +1,169 @@
+.sidebar {
+  padding: var(--spacing-lg) 0;
+  height: 100%;
+  overflow-y: auto;
+  overflow-x: hidden;
+  background: var(--bg-tertiary);
+}
+
+/* 菜单项通用样式 */
+.menuItem {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-md);
+  padding: var(--spacing-md) var(--spacing-lg);
+  cursor: pointer;
+  border-radius: var(--border-radius-large);
+  transition: all var(--transition-normal);
+  position: relative;
+  color: var(--color-text-primary);
+  font-size: var(--font-size-sm);
+}
+
+.menuItem:hover {
+  background: var(--bg-hover);
+}
+
+.menuItem.active {
+  background: var(--bg-hover-active);
+  color: var(--color-primary);
+}
+
+.menuItem.active::before {
+  content: '';
+  position: absolute;
+  left: -16px;
+  top: 0;
+  bottom: 0;
+  width: 3px;
+  background: var(--color-primary);
+  border-radius: 0 2px 2px 0;
+}
+
+.toggleIcon {
+  transition: transform var(--transition-normal);
+  &.expanded {
+    transform: rotate(90deg);
+  }
+}
+
+/* 子菜单项 - 增加左侧缩进 */
+.subMenuItem {
+  padding-left: 48px;
+}
+
+/* 分组样式 */
+.groupSection {
+  margin-top: var(--spacing-md);
+  position: relative;
+}
+
+.groupHeader {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-md);
+  padding: var(--spacing-md) var(--spacing-lg);
+  cursor: pointer;
+  border-radius: var(--border-radius-large);
+  transition: all var(--transition-normal);
+  position: relative;
+  color: var(--color-text-tertiary);
+}
+
+.groupHeader:hover {
+  background: var(--bg-hover);
+}
+
+/* 吸顶效果 */
+.groupHeader.sticky {
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  background: var(--bg-tertiary);
+  border-bottom: 1px solid var(--border-color);
+}
+
+.expandIcon {
+  font-size: 12px;
+  color: var(--color-text-medium-black);
+  width: 16px;
+  text-align: center;
+}
+
+.groupTitle {
+  flex: 1;
+  font-weight: 500;
+  color: var(--color-text-tertiary);
+  font-size: var(--font-size-sm);
+}
+
+.groupAction {
+  padding: 2px 6px;
+  border: 1px solid var(--color-primary);
+  border-radius: 2px;
+  color: var(--color-primary);
+  font-size: 14px;
+  line-height: 1;
+  opacity: 0;
+  transition: opacity var(--transition-normal);
+}
+
+.groupHeader:hover .groupAction {
+  opacity: 1;
+}
+
+/* 分组内容容器 */
+.groupContent {
+  padding-top: var(--spacing-xs);
+}
+
+/* 图标样式 */
+.icon {
+  width: 16px;
+  height: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  color: var(--color-text-secondary);
+}
+
+.text {
+  flex: 1;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  color: var(--color-text-secondary);
+}
+
+.count {
+  color: var(--color-text-tertiary);
+  font-size: var(--font-size-xs);
+  font-weight: normal;
+  white-space: nowrap;
+}
+
+.itemAction {
+  padding: 2px 4px;
+  color: var(--color-text-tertiary);
+  font-size: 18px;
+  line-height: 1;
+  opacity: 0;
+  transition: opacity var(--transition-normal);
+  cursor: pointer;
+}
+
+.menuItem:hover .itemAction {
+  opacity: 1;
+}
+
+.itemAction:hover {
+  color: var(--color-text-primary);
+}
+
+/* 分割线 */
+.divider {
+  height: 1px;
+  background: var(--border-color);
+  margin: var(--spacing-lg) var(--spacing-md);
+}

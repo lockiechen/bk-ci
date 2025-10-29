@@ -1,0 +1,30 @@
+{
+  "flow": {
+    "title": "创作流",
+    "welcome": "欢迎使用流水线流程",
+    "description": "用于配置和管理CI/CD流水线流程",
+    "tabs": {
+      "flow": "创作流",
+      "template": "模板"
+    },
+    "sidebar": {
+      "allFlows": "全部创作流",
+      "myFlows": "我的创作流",
+      "myFavorites": "我收藏的创作流",
+      "myCreated": "我创建的创作流",
+      "personalGroup": "个人可见的创作流组 1",
+      "projectGroups": "项目创作流组",
+      "ungrouped": "未分组",
+      "group": "创作流组",
+      "recycleBin": "回收站"
+    },
+    "content": {
+      "allFlows": "全部创作流",
+      "newFlow": "新建创作流",
+      "batchManage": "批量管理",
+      "searchPlaceholder": "创作流名称/创建人/创作流组/创作环境",
+      "emptyState": "暂无数据"
+    }
+  }
+}
+

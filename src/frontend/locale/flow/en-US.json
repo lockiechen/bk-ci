@@ -1,0 +1,30 @@
+{
+  "flow": {
+    "title": "Pipeline Flow",
+    "welcome": "Welcome to Pipeline Flow",
+    "description": "Configure and manage CI/CD pipeline workflows",
+    "tabs": {
+      "flow": "Flow",
+      "template": "Template"
+    },
+    "sidebar": {
+      "allFlows": "All Flows",
+      "myFlows": "My Flows",
+      "myFavorites": "My Favorite Flows",
+      "myCreated": "My Created Flows",
+      "personalGroup": "Personal Flow Group",
+      "projectGroups": "Project Flow Groups",
+      "ungrouped": "Ungrouped",
+      "group": "Flow Group",
+      "recycleBin": "Recycle Bin"
+    },
+    "content": {
+      "allFlows": "All Flows",
+      "newFlow": "New Flow",
+      "batchManage": "Batch Manage",
+      "searchPlaceholder": "Flow Name/Creator/Flow Group/Environment",
+      "emptyState": "No Data"
+    }
+  }
+}
+

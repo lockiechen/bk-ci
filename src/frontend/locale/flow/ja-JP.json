@@ -1,0 +1,30 @@
+{
+  "flow": {
+    "title": "パイプラインフロー",
+    "welcome": "パイプラインフローへようこそ",
+    "description": "CI/CDパイプラインワークフローの設定と管理",
+    "tabs": {
+      "flow": "フロー",
+      "template": "テンプレート"
+    },
+    "sidebar": {
+      "allFlows": "すべてのフロー",
+      "myFlows": "マイフロー",
+      "myFavorites": "お気に入りのフロー",
+      "myCreated": "作成したフロー",
+      "personalGroup": "個人フローグループ",
+      "projectGroups": "プロジェクトフローグループ",
+      "ungrouped": "グループ未分類",
+      "group": "フローグループ",
+      "recycleBin": "ゴミ箱"
+    },
+    "content": {
+      "allFlows": "すべてのフロー",
+      "newFlow": "新しいフロー",
+      "batchManage": "一括管理",
+      "searchPlaceholder": "フロー名/作成者/フローグループ/環境",
+      "emptyState": "データなし"
+    }
+  }
+}
+
