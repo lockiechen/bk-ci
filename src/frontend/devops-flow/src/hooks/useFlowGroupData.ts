@@ -1,161 +1,95 @@
-import { onMounted } from 'vue';
+import { computed, onMounted } from 'vue';
+import { storeToRefs } from 'pinia';
 import { useFlowGroupStore } from '../stores/flowGroup';
-import {
-  getFlowGroupCounts,
-  getPersonalFlowGroups,
-  getProjectFlowGroups,
-  getProjectFlowGroupsCount,
-  type FlowGroupItem,
-  type ProjectFlowGroup,
-} from '../api/flowGroup';
+import { FLOW_GROUP_TYPES } from '../constants/flowGroup';
+import { useI18n } from 'vue-i18n';
 
+/**
+ * 组件数据 Hook
+ * 从 store 获取数据，进行二次加工，提供给组件使用
+ */
 export function useFlowGroupData() {
   const store = useFlowGroupStore();
+  const { t } = useI18n();
+  
+  // 使用 storeToRefs 确保响应式
+  const { counts, flowGroups, loading, personalFlowGroups, projectFlowGroups } = storeToRefs(store);
+  
+  // 从 store 获取原始数据
   
   /**
-   * 加载所有数据
+   * 全部创作流的数量（所有组的数量）
    */
-  async function loadAllData() {
-    store.setLoading(true);
-    try {
-      // 并发加载所有数据
-      const [counts, personalFlowGroups, projectFlowGroups, projectFlowGroupsTotal] = await Promise.all([
-        getFlowGroupCounts(),
-        getPersonalFlowGroups(),
-        getProjectFlowGroups(),
-        getProjectFlowGroupsCount(),
-      ]);
-      
-      store.setCounts(counts);
-      store.setPersonalFlowGroups(personalFlowGroups);
-      store.setProjectFlowGroups(projectFlowGroups);
-      store.setProjectFlowGroupsTotal(projectFlowGroupsTotal);
-    } catch (error) {
-      console.error('Failed to load flow group data:', error);
-      // 可以在这里添加错误提示
-    } finally {
-      store.setLoading(false);
-    }
-  }
-  
-  /**
-   * 刷新数量统计
-   */
-  async function refreshCounts() {
-    try {
-      const counts = await getFlowGroupCounts();
-      store.setCounts(counts);
-    } catch (error) {
-      console.error('Failed to refresh counts:', error);
-    }
-  }
-  
-  /**
-   * 刷新个人创作流组
-   */
-  async function refreshPersonalFlowGroups() {
-    try {
-      const groups = await getPersonalFlowGroups();
-      store.setPersonalFlowGroups(groups);
-    } catch (error) {
-      console.error('Failed to refresh personal flow groups:', error);
-    }
-  }
-  
-  /**
-   * 刷新项目创作流组
-   */
-  async function refreshProjectFlowGroups() {
-    try {
-      const [groups, total] = await Promise.all([
-        getProjectFlowGroups(),
-        getProjectFlowGroupsCount(),
-      ]);
-      store.setProjectFlowGroups(groups);
-      store.setProjectFlowGroupsTotal(total);
-    } catch (error) {
-      console.error('Failed to refresh project flow groups:', error);
-    }
-  }
-  
-  /**
-   * 添加个人创作流组
-   */
-  async function addPersonalFlowGroup(name: string) {
-    try {
-      // TODO: await createPersonalFlowGroup(name);
-      // 临时添加到列表
-      const newGroup: FlowGroupItem = {
-        id: `personal-${Date.now()}`,
-        name,
-        count: 0,
-      };
-      store.addPersonalFlowGroup(newGroup);
-    } catch (error) {
-      console.error('Failed to add personal flow group:', error);
-      throw error;
-    }
-  }
-  
-  /**
-   * 删除个人创作流组
-   */
-  async function removePersonalFlowGroup(id: string) {
-    try {
-      // TODO: await deletePersonalFlowGroup(id);
-      store.removePersonalFlowGroup(id);
-    } catch (error) {
-      console.error('Failed to remove personal flow group:', error);
-      throw error;
-    }
-  }
-  
-  /**
-   * 添加项目创作流组
-   */
-  async function addProjectFlowGroup(name: string) {
-    try {
-      // TODO: await createProjectFlowGroup(name);
-      // 临时添加到列表
-      const newGroup: ProjectFlowGroup = {
-        id: `project-${Date.now()}`,
-        name,
-        count: 0,
-      };
-      store.addProjectFlowGroup(newGroup);
-    } catch (error) {
-      console.error('Failed to add project flow group:', error);
-      throw error;
-    }
-  }
-  
-  /**
-   * 删除项目创作流组
-   */
-  async function removeProjectFlowGroup(id: string) {
-    try {
-      // TODO: await deleteProjectFlowGroup(id);
-      store.removeProjectFlowGroup(id);
-    } catch (error) {
-      console.error('Failed to remove project flow group:', error);
-      throw error;
-    }
-  }
-  
-  // 组件挂载时加载数据
-  onMounted(() => {
-    loadAllData();
+  const allFlowsCount = computed(() => {
+    return flowGroups.value.length;
   });
   
-  return {
-    loadAllData,
-    refreshCounts,
-    refreshPersonalFlowGroups,
-    refreshProjectFlowGroups,
-    addPersonalFlowGroup,
-    removePersonalFlowGroup,
-    addProjectFlowGroup,
-    removeProjectFlowGroup,
-  };
-}
-
+  /**
+   * 我的创作流组总数（组的数量）
+   * 收藏(1) + 我创建的(1) + 个人组的数量
+   */
+  const myFlowGroupsTotal = computed(() => {
+    return 2 + personalFlowGroups.value.length;
+  });
+  
+  /**
+   * 项目创作流组总数（组的数量）
+   */
+  const projectFlowGroupsTotal = computed(() => {
+    return projectFlowGroups.value.length;
+  });
+  
+  /**
+   * 我的创作流菜单项列表
+   * 包含：收藏、我创建的、所有个人组
+   */
+  const myFlowGroupMenuItems = computed(() => {
+    return [
+      {
+        id: FLOW_GROUP_TYPES.MY_FAVORITES,
+        icon: 'star',
+        name: t('flow.sidebar.myFavorites'),
+        count: counts.value.myFavoriteCount,
+        showAction: false,
+      },
+      {
+        id: FLOW_GROUP_TYPES.MY_CREATED,
+        icon: 'user',
+        name: t('flow.sidebar.myCreated'),
+        count: counts.value.myFlowCount,
+        showAction: false,
+      },
+      ...personalFlowGroups.value,
+    ];
+  });
+  
+  /**
+   * 组件挂载时加载数据
+   */
+  onMounted(() => {
+    if (flowGroups.value.length === 0 && !loading.value) {
+      store.loadAllData();
+    }
+  });
+  
+    return {
+      // 原始数据（使用 storeToRefs 确保响应式）
+      counts,
+      flowGroups,
+      personalFlowGroups,
+      projectFlowGroups,
+      loading,
+      
+      // 二次加工的数据
+      allFlowsCount,
+      myFlowGroupsTotal,
+      projectFlowGroupsTotal,
+      myFlowGroupMenuItems,
+      
+      // 操作方法（直接暴露 store 的方法）
+      createFlowGroup: store.createFlowGroup,
+      removeFlowGroup: store.removeFlowGroup,
+      renameFlowGroup: store.renameFlowGroup,
+      pinFlowGroup: store.pinFlowGroup,
+    };
+  }

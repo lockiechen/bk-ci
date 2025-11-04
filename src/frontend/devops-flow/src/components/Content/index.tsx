@@ -5,13 +5,19 @@ import styles from "./Content.module.css";
 
 export const Content = defineComponent({
   name: "Content",
-  setup() {
+  props: {
+    groupId: {
+      type: String,
+      default: '',
+    },
+  },
+  setup(props) {
     const { t } = useI18n();
 
     return () => (
       <div class={styles.content}>
         <div class={styles.toolbar}>
-          <h2 class={styles.title}>{t('flow.content.allFlows')}</h2>
+          <h2 class={styles.title}>{t('flow.common.allFlows')}</h2>
           <Button theme="primary">{t('flow.content.newFlow')}</Button>
           <Button>{t('flow.content.batchManage')}</Button>
           <div class={styles.searchBox}>
@@ -23,7 +29,7 @@ export const Content = defineComponent({
         </div>
         <div class={styles.tableContainer}>
           <div class={styles.emptyState}>
-            {t('flow.content.emptyState')}
+            {t('flow.common.noData')}
           </div>
         </div>
       </div>

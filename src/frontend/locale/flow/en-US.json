@@ -1,30 +1,60 @@
 {
   "flow": {
     "title": "Pipeline Flow",
-    "welcome": "Welcome to Pipeline Flow",
-    "description": "Configure and manage CI/CD pipeline workflows",
     "tabs": {
       "flow": "Flow",
       "template": "Template"
     },
-    "sidebar": {
+    "common": {
+      "confirm": "Confirm",
+      "cancel": "Cancel",
+      "close": "Close",
       "allFlows": "All Flows",
+      "noData": "No Data",
+      "success": "Success",
+      "failed": "Failed"
+    },
+    "sidebar": {
       "myFlows": "My Flows",
       "myFavorites": "My Favorite Flows",
       "myCreated": "My Created Flows",
-      "personalGroup": "Personal Flow Group",
       "projectGroups": "Project Flow Groups",
       "ungrouped": "Ungrouped",
       "group": "Flow Group",
       "recycleBin": "Recycle Bin"
     },
     "content": {
-      "allFlows": "All Flows",
       "newFlow": "New Flow",
       "batchManage": "Batch Manage",
-      "searchPlaceholder": "Flow Name/Creator/Flow Group/Environment",
-      "emptyState": "No Data"
+      "searchPlaceholder": "Flow Name/Creator/Flow Group/Environment"
+    },
+    "dialog": {
+      "createGroup": {
+        "title": "Create Flow Group",
+        "groupName": "Flow Group Name",
+        "groupNamePlaceholder": "Please enter flow group name",
+        "groupNameRequired": "Flow group name is required",
+        "visibilityScope": "Visibility Scope",
+        "personalVisible": "Personal Visible",
+        "projectVisible": "Project Visible"
+      },
+      "renameGroup": {
+        "title": "Rename Flow Group",
+        "groupName": "Flow Group Name",
+        "groupNamePlaceholder": "Please enter flow group name",
+        "groupNameRequired": "Flow group name is required"
+      },
+      "deleteConfirm": {
+        "title": "Confirm Delete"
+      }
+    },
+    "actions": {
+      "rename": "Rename",
+      "pinToTop": "Pin to Top",
+      "unpin": "Unpin",
+      "delete": "Delete",
+      "permissionManage": "Flow Group Permission Management",
+      "confirmDelete": "Are you sure you want to delete \"{name}\"?"
     }
   }
 }
-

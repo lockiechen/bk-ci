@@ -17,6 +17,9 @@ import './styles/variables.css'
 import './styles/global.css'
 import './styles/utils.css'
 
+// 导入指令
+import { clickoutside } from 'bkui-vue/lib/directives'
+
 // 语言映射配置
 const localeAliasMap: Record<string, string> = {
   'zh-CN': 'zh-CN',
@@ -71,5 +74,9 @@ app.use(bkui, {
   locale: bkUiLocaleAliasMap[cookiesObj.blueking_language ?? 'zh-CN'] || bkuiZhCn
 })
 app.use(i18n)
+
+// 注册指令
+app.directive('clickoutside', clickoutside)
+app.directive('bk-clickoutside', clickoutside)
 
 app.mount('#app')

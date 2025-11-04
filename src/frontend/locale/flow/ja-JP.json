@@ -1,30 +1,60 @@
 {
   "flow": {
     "title": "パイプラインフロー",
-    "welcome": "パイプラインフローへようこそ",
-    "description": "CI/CDパイプラインワークフローの設定と管理",
     "tabs": {
       "flow": "フロー",
       "template": "テンプレート"
     },
-    "sidebar": {
+    "common": {
+      "confirm": "確定",
+      "cancel": "キャンセル",
+      "close": "閉じる",
       "allFlows": "すべてのフロー",
+      "noData": "データなし",
+      "success": "成功",
+      "failed": "失敗"
+    },
+    "sidebar": {
       "myFlows": "マイフロー",
       "myFavorites": "お気に入りのフロー",
       "myCreated": "作成したフロー",
-      "personalGroup": "個人フローグループ",
       "projectGroups": "プロジェクトフローグループ",
       "ungrouped": "グループ未分類",
       "group": "フローグループ",
       "recycleBin": "ゴミ箱"
     },
     "content": {
-      "allFlows": "すべてのフロー",
       "newFlow": "新しいフロー",
       "batchManage": "一括管理",
-      "searchPlaceholder": "フロー名/作成者/フローグループ/環境",
-      "emptyState": "データなし"
+      "searchPlaceholder": "フロー名/作成者/フローグループ/環境"
+    },
+    "dialog": {
+      "createGroup": {
+        "title": "フローグループを作成",
+        "groupName": "フローグループ名",
+        "groupNamePlaceholder": "フローグループ名を入力してください",
+        "groupNameRequired": "フローグループ名は必須です",
+        "visibilityScope": "表示範囲",
+        "personalVisible": "個人表示",
+        "projectVisible": "プロジェクト表示"
+      },
+      "renameGroup": {
+        "title": "創作流グループの名前を変更",
+        "groupName": "創作流グループ名",
+        "groupNamePlaceholder": "創作流グループ名を入力してください",
+        "groupNameRequired": "創作流グループ名は空にできません"
+      },
+      "deleteConfirm": {
+        "title": "削除確認"
+      }
+    },
+    "actions": {
+      "rename": "名前を変更",
+      "pinToTop": "トップに固定",
+      "unpin": "固定解除",
+      "delete": "削除",
+      "permissionManage": "創作流グループ権限管理",
+      "confirmDelete": "\"{name}\"を削除してもよろしいですか？"
     }
   }
 }
-
