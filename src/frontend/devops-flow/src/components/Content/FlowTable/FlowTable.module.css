@@ -1,0 +1,8 @@
+.flowTable {
+  height: calc(100% - 56px);
+}
+
+.actions {
+  display: flex;
+  gap: var(--spacing-sm);
+}

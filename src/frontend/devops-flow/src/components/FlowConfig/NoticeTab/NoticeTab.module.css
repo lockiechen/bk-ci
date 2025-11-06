@@ -1,0 +1,30 @@
+.noticeTab {
+  padding: var(--spacing-lg);
+  padding-right: var(--spacing-xl);
+}
+
+.content {
+  margin-top: var(--spacing-lg);
+}
+
+.collapse {
+  :global(.bk-collapse-icon svg) {
+    font-size: 10px;
+    color: var(--color-text-tertiary);
+  }
+  :global(.bk-collapse-item) {
+    box-shadow: none;
+  }
+  :global(.bk-collapse-icon) {
+    top: 17px;
+  }
+  :global(.bk-collapse-header) {
+    height: 40px;
+    background-color: var(--bg-secondary);
+  }
+  :global(.bk-collapse-title) {
+    font-size: var(--font-size-sm);
+    margin-left: 18px;
+    color: #3F3E3E;
+  }
+}

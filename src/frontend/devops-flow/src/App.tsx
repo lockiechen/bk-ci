@@ -32,6 +32,7 @@ export default defineComponent({
           <Tab 
             active={activeTab.value}
             type="unborder-card"
+            label-height={47}
             class={styles.navTabs}
             onChange={handleTabChange}
           >
