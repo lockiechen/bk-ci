@@ -1,16 +1,16 @@
-import { computed, defineComponent, ref } from "vue";
-import { useI18n } from "vue-i18n";
-import { useRouter } from "vue-router";
-import { Loading, Tag, Message } from "bkui-vue";
-import styles from "./FlowGroupAside.module.css";
-import { SvgIcon } from "../SvgIcon";
-import { CreateGroupDialog } from "./CreateGroupDialog";
-import { RenameGroupDialog } from "./RenameGroupDialog";
-import { GroupActionMenu } from "./GroupActionMenu";
-import { useFlowGroupData } from "../../hooks/useFlowGroupData";
-import { useDeleteConfirm } from "../../hooks/useDeleteConfirm";
-import { FLOW_GROUP_TYPES } from "../../constants/flowGroup";
-import type { FlowGroupItem } from "../../api/flowGroup";
+import { computed, defineComponent, ref } from 'vue'
+import { useI18n } from 'vue-i18n'
+import { useRouter, useRoute } from 'vue-router'
+import { Loading, Tag, Message } from 'bkui-vue'
+import styles from './FlowGroupAside.module.css'
+import { SvgIcon } from '../SvgIcon'
+import { CreateGroupDialog } from './CreateGroupDialog'
+import { RenameGroupDialog } from './RenameGroupDialog'
+import { GroupActionMenu } from './GroupActionMenu'
+import { useFlowGroupData } from '../../hooks/useFlowGroupData'
+import { useDeleteConfirm } from '../../hooks/useDeleteConfirm'
+import { FLOW_GROUP_TYPES } from '../../constants/flowGroup'
+import type { FlowGroupItem } from '../../api/flowGroup'
 
 export enum GroupSectionType {
   MY_FLOWS = 'myFlowGroups',
@@ -18,133 +18,143 @@ export enum GroupSectionType {
 }
 
 export const FlowGroupAside = defineComponent({
-  name: "FlowGroupAside",
-        components: {
-          SvgIcon,
-          Tag,
-          CreateGroupDialog,
-          RenameGroupDialog,
-          GroupActionMenu,
-        },
+  name: 'FlowGroupAside',
+  components: {
+    SvgIcon,
+    Tag,
+    CreateGroupDialog,
+    RenameGroupDialog,
+    GroupActionMenu,
+  },
   setup() {
-    const { t } = useI18n();
-    const router = useRouter();
-    const flowGroupData = useFlowGroupData(); // 获取处理后的数据
+    const { t } = useI18n()
+    const router = useRouter()
+    const route = useRoute()
+    const flowGroupData = useFlowGroupData() // 获取处理后的数据
     // 组件本地状态
     const selectedItem = computed(() => {
-      return router.currentRoute.value.params.groupId as string;
-    });
+      return router.currentRoute.value.params.groupId as string
+    })
     const collapsed = ref({
       myFlowGroups: false,
       projectFlowGroups: true,
-    });
-    
-    const showDialog = ref(false);
-    const currentGroupType = ref<GroupSectionType>(GroupSectionType.MY_FLOWS);
-    
+    })
+
+    const showDialog = ref(false)
+    const currentGroupType = ref<GroupSectionType>(GroupSectionType.MY_FLOWS)
+
     // 重命名弹窗状态
-    const showRenameDialog = ref(false);
-    const renameGroupId = ref('');
-    const renameGroupName = ref('');
-    
+    const showRenameDialog = ref(false)
+    const renameGroupId = ref('')
+    const renameGroupName = ref('')
+
     // 当前操作的分组项
-    const currentGroupItem = ref<FlowGroupItem | null>(null);
-    
+    const currentGroupItem = ref<FlowGroupItem | null>(null)
+
     // 删除确认 hook
-    const { showDeleteConfirm } = useDeleteConfirm();
+    const { showDeleteConfirm } = useDeleteConfirm()
 
     const handleItemClick = (key: string) => {
-      router.push({ name: 'flowList', params: { groupId: key } });
-    };
+      router.push({
+        name: 'flowList',
+        params: { groupId: key },
+        query: route.query,
+      })
+    }
 
     const handleGroupToggle = (key: GroupSectionType) => {
-      collapsed.value[key] = !collapsed.value[key];
-    };
+      collapsed.value[key] = !collapsed.value[key]
+    }
 
     const handleGroupAction = (e: MouseEvent, key: GroupSectionType) => {
-      e.stopPropagation();
-      currentGroupType.value = key;
-      showDialog.value = true;
-    };
-    
+      e.stopPropagation()
+      currentGroupType.value = key
+      showDialog.value = true
+    }
+
     const handleDialogConfirm = async (data: { name: string; projected: boolean }) => {
       try {
-        await flowGroupData.createFlowGroup(data.name, data.projected);
+        await flowGroupData.createFlowGroup(data.name, data.projected)
       } catch (error) {
-        console.error('Failed to create flow group:', error);
+        console.error('Failed to create flow group:', error)
       }
-    };
-    
+    }
+
     // 处理操作菜单点击
     const handleOperationClick = (item: FlowGroupItem, operationId: string) => {
-      currentGroupItem.value = item;
-      
+      currentGroupItem.value = item
+
       if (operationId === 'rename') {
-        renameGroupId.value = item.id;
-        renameGroupName.value = item.name;
-        showRenameDialog.value = true;
+        renameGroupId.value = item.id
+        renameGroupName.value = item.name
+        showRenameDialog.value = true
       } else if (operationId === 'pinToTop') {
-        handlePinToTop(item);
+        handlePinToTop(item)
       } else if (operationId === 'delete') {
-        handleDelete(item);
+        handleDelete(item)
       } else if (operationId === 'permissionManage') {
-        handlePermissionManage(item);
+        handlePermissionManage(item)
       }
-    };
-    
+    }
+
     // 处理重命名确认
     const handleRenameConfirm = async (data: { groupId: string; name: string }) => {
       try {
-        await flowGroupData.renameFlowGroup(data.groupId, data.name);
-        Message({ theme: 'success', message: t('flow.actions.rename') + t('flow.common.success') });
+        await flowGroupData.renameFlowGroup(data.groupId, data.name)
+        Message({ theme: 'success', message: t('flow.actions.rename') + t('flow.common.success') })
       } catch (error) {
-        console.error('Failed to rename flow group:', error);
-        Message({ theme: 'error', message: t('flow.actions.rename') + t('flow.common.failed') });
+        console.error('Failed to rename flow group:', error)
+        Message({ theme: 'error', message: t('flow.actions.rename') + t('flow.common.failed') })
       }
-    };
-    
+    }
+
     // 处理置顶
     const handlePinToTop = async (item: FlowGroupItem) => {
       try {
-        const newTopState = !item.pin;
-        await flowGroupData.pinFlowGroup(item.id, newTopState);
-        Message({ 
-          theme: 'success', 
-          message: newTopState ? t('flow.actions.pinToTop') + t('flow.common.success') : t('flow.actions.unpin') + t('flow.common.success')
-        });
+        const newTopState = !item.pin
+        await flowGroupData.pinFlowGroup(item.id, newTopState)
+        Message({
+          theme: 'success',
+          message: newTopState
+            ? t('flow.actions.pinToTop') + t('flow.common.success')
+            : t('flow.actions.unpin') + t('flow.common.success'),
+        })
       } catch (error) {
-        console.error('Failed to pin flow group:', error);
-        Message({ theme: 'error', message: t('flow.actions.pinToTop') + t('flow.common.failed') });
+        console.error('Failed to pin flow group:', error)
+        Message({ theme: 'error', message: t('flow.actions.pinToTop') + t('flow.common.failed') })
       }
-    };
-    
+    }
+
     // 处理删除
     const handleDelete = (item: FlowGroupItem) => {
       showDeleteConfirm({
         message: t('flow.actions.confirmDelete', { name: item.name }),
         onConfirm: async () => {
           try {
-            await flowGroupData.removeFlowGroup(item.id);
-            Message({ theme: 'success', message: t('flow.actions.delete') + t('flow.common.success') });
+            await flowGroupData.removeFlowGroup(item.id)
+            Message({
+              theme: 'success',
+              message: t('flow.actions.delete') + t('flow.common.success'),
+            })
           } catch (error) {
-            console.error('Failed to delete flow group:', error);
-            Message({ theme: 'error', message: t('flow.actions.delete') + t('flow.common.failed') });
-            throw error; // 重新抛出错误，让 InfoBox 不关闭
+            console.error('Failed to delete flow group:', error)
+            Message({ theme: 'error', message: t('flow.actions.delete') + t('flow.common.failed') })
+            throw error // 重新抛出错误，让 InfoBox 不关闭
           }
         },
-      });
-    };
-    
+      })
+    }
+
     // 处理权限管理
     const handlePermissionManage = (item: FlowGroupItem) => {
       // TODO: 跳转到权限管理页面
       // 这里需要根据实际的路由配置来实现
       // 暂时使用 window.open 或路由跳转
-      const projectCode = router.currentRoute.value.params.projectCode as string || '';
-      const permissionUrl = `/manage/${projectCode}/permission?groupId=${item.id}`;
-      window.open(permissionUrl, '_blank');
-    };
-    
+      const projectCode = (router.currentRoute.value.params.projectCode as string) || ''
+      const permissionUrl = `/manage/${projectCode}/permission?groupId=${item.id}`
+      window.open(permissionUrl, '_blank')
+    }
+
     // 获取操作菜单列表
     const getOperations = (item: FlowGroupItem) => {
       const operations = [
@@ -160,34 +170,34 @@ export const FlowGroupAside = defineComponent({
           id: 'delete',
           label: t('flow.actions.delete'),
         },
-      ];
-      
+      ]
+
       // 项目组添加权限管理入口
       if (item.projected === true) {
         operations.splice(3, 0, {
           id: 'permissionManage',
           label: t('flow.actions.permissionManage'),
-        });
+        })
       }
-      
-      return operations;
-    };
+
+      return operations
+    }
 
     const renderMenuItem = (item: FlowGroupItem) => {
       // 判断是否为配置对象还是分组项
-      const { id, name, icon, count, showAction = false } = item;
-      const sticky = id === FLOW_GROUP_TYPES.ALL_FLOWS;
-      const isTrash = id === FLOW_GROUP_TYPES.RECYCLE_BIN;
-      const operations = showAction ? getOperations(item) : [];
-      
+      const { id, name, icon, count, showAction = false } = item
+      const sticky = id === FLOW_GROUP_TYPES.ALL_FLOWS
+      const isTrash = id === FLOW_GROUP_TYPES.RECYCLE_BIN
+      const operations = showAction ? getOperations(item) : []
+
       return (
-        <div 
+        <div
           key={id}
           class={[
-            styles.menuItem, 
+            styles.menuItem,
             selectedItem.value === id && styles.active,
             sticky && styles.stickyMenuItem,
-            isTrash && styles.trashItem
+            isTrash && styles.trashItem,
           ]}
           onClick={() => handleItemClick(id)}
         >
@@ -203,7 +213,9 @@ export const FlowGroupAside = defineComponent({
               <div class={styles.itemAction}>
                 <GroupActionMenu
                   operations={operations}
-                  onOperationClick={(operationId: string) => handleOperationClick(item, operationId)}
+                  onOperationClick={(operationId: string) =>
+                    handleOperationClick(item, operationId)
+                  }
                 />
               </div>
             ) : (
@@ -211,110 +223,112 @@ export const FlowGroupAside = defineComponent({
             )}
           </div>
         </div>
-      );
-    };
+      )
+    }
 
     const renderSectionHeader = (key: GroupSectionType, title: string, total: number) => {
-      const isCollapsed = collapsed.value[key];
+      const isCollapsed = collapsed.value[key]
       // "项目创作流组"需要不同的 sticky top 值，避免与"我的创作流"重叠
-      const stickyClass = key === 'projectFlowGroups' 
-        ? styles.stickyProjectHeader 
-        : styles.sticky;
+      const stickyClass = key === 'projectFlowGroups' ? styles.stickyProjectHeader : styles.sticky
       return (
-        <div 
-            class={[styles.groupHeader, stickyClass]} 
-            onClick={() => handleGroupToggle(key)}
-          >
-            <SvgIcon 
-              name="right-shape" 
-              size={14} 
-              class={[styles.icon, styles.toggleIcon, !isCollapsed && styles.expanded]} 
-            />
-            <span class={styles.groupTitle}>
-              {title} ({total})
-            </span>
-            <div onClick={(e) => handleGroupAction(e, key)}>
-              <SvgIcon 
-                name="increase" 
-                class={[styles.icon, styles.increaseIcon]} 
-              />
-            </div>
+        <div class={[styles.groupHeader, stickyClass]} onClick={() => handleGroupToggle(key)}>
+          <SvgIcon
+            name="right-shape"
+            size={14}
+            class={[styles.icon, styles.toggleIcon, !isCollapsed && styles.expanded]}
+          />
+          <span class={styles.groupTitle}>
+            {title} ({total})
+          </span>
+          <div onClick={(e) => handleGroupAction(e, key)}>
+            <SvgIcon name="increase" class={[styles.icon, styles.increaseIcon]} />
           </div>
+        </div>
       )
-    };
+    }
 
     // 渲染分组部分 - 已移除，因为需要将 header 和 content 分开以保持 sticky 在同一层级
 
-    return () => flowGroupData.loading.value ? (
-      <div class={styles.sidebar}>
-        <div class={styles.sidebarContent}>
-          <div class={styles.stickyPlaceholder}></div>
-          <div class={styles.loadingWrapper}>
-            <Loading loading size='small' mode='spin' theme="primary" />
+    return () =>
+      flowGroupData.loading.value ? (
+        <div class={styles.sidebar}>
+          <div class={styles.sidebarContent}>
+            <div class={styles.stickyPlaceholder}></div>
+            <div class={styles.loadingWrapper}>
+              <Loading loading size="small" mode="spin" theme="primary" />
+            </div>
           </div>
         </div>
-      </div>
-    ) : (
-      <div class={styles.sidebar}>
-        <div class={styles.sidebarContent}>
-          {/* sticky 占位块 - 覆盖 sidebarContent 的 padding-top */}
-          <div class={styles.stickyPlaceholder}></div>
-          {/* 全部创作流 - sticky，直接子元素 */}
-          {
-            renderMenuItem({
+      ) : (
+        <div class={styles.sidebar}>
+          <div class={styles.sidebarContent}>
+            {/* sticky 占位块 - 覆盖 sidebarContent 的 padding-top */}
+            <div class={styles.stickyPlaceholder}></div>
+            {/* 全部创作流 - sticky，直接子元素 */}
+            {renderMenuItem({
               id: FLOW_GROUP_TYPES.ALL_FLOWS,
               icon: 'all',
               name: t('flow.common.allFlows'),
               count: flowGroupData.allFlowsCount.value,
-            })
-          }
-          <div class={[styles.divider, styles.sticky]}></div>
-          {/* 我的创作流 header - sticky，直接子元素 */}
-          {renderSectionHeader(GroupSectionType.MY_FLOWS, t('flow.sidebar.myFlows'), flowGroupData.myFlowGroupsTotal.value)}
-          {/* 我的创作流内容 - 在 groupContent 内 */}
-          {!collapsed.value.myFlowGroups && (
-            <div class={styles.groupContent}>
-              {flowGroupData.myFlowGroupMenuItems.value.map(renderMenuItem)}
-            </div>
-          )}
-          <div class={styles.divider}></div>
-          {/* 项目创作流组 header - sticky，直接子元素 */}
-          {renderSectionHeader(GroupSectionType.PROJECT_FLOWS, t('flow.sidebar.projectGroups'), flowGroupData.projectFlowGroupsTotal.value)}
-          {!collapsed.value.projectFlowGroups && (
-            <div class={styles.groupContent}>
-              {flowGroupData.projectFlowGroups.value.map(renderMenuItem)}
-            </div>
-          )}
-        </div>
-        {/* 回收站 - 固定在底部 */}
-        <div class={styles.sidebarFooter}>
-          {renderMenuItem({
-            id: FLOW_GROUP_TYPES.RECYCLE_BIN,
-            icon: 'trash-bin',
-            name: t('flow.sidebar.recycleBin'),
-            count: flowGroupData.counts.value.recycleCount,
-            showAction: false, // 回收站不需要操作按钮，但需要保留空间以对齐
-          })}
-        </div>
-        
-        {/* 创建分组弹窗 */}
-        <CreateGroupDialog
-          isShow={showDialog.value}
-          projected={currentGroupType.value === GroupSectionType.PROJECT_FLOWS}
-          onUpdate:isShow={(val: boolean) => { showDialog.value = val; }}
-          onConfirm={handleDialogConfirm}
-        />
-        
-        {/* 重命名弹窗 */}
-              <RenameGroupDialog
-                isShow={showRenameDialog.value}
-                groupId={renameGroupId.value}
-                currentName={renameGroupName.value}
-                onUpdate:isShow={(val: boolean) => { showRenameDialog.value = val; }}
-                onConfirm={handleRenameConfirm}
-              />
-            </div>
-          );
-        },
-      });
+            })}
+            <div class={[styles.divider, styles.sticky]}></div>
+            {/* 我的创作流 header - sticky，直接子元素 */}
+            {renderSectionHeader(
+              GroupSectionType.MY_FLOWS,
+              t('flow.sidebar.myFlows'),
+              flowGroupData.myFlowGroupsTotal.value,
+            )}
+            {/* 我的创作流内容 - 在 groupContent 内 */}
+            {!collapsed.value.myFlowGroups && (
+              <div class={styles.groupContent}>
+                {flowGroupData.myFlowGroupMenuItems.value.map(renderMenuItem)}
+              </div>
+            )}
+            <div class={styles.divider}></div>
+            {/* 项目创作流组 header - sticky，直接子元素 */}
+            {renderSectionHeader(
+              GroupSectionType.PROJECT_FLOWS,
+              t('flow.sidebar.projectGroups'),
+              flowGroupData.projectFlowGroupsTotal.value,
+            )}
+            {!collapsed.value.projectFlowGroups && (
+              <div class={styles.groupContent}>
+                {flowGroupData.projectFlowGroups.value.map(renderMenuItem)}
+              </div>
+            )}
+          </div>
+          {/* 回收站 - 固定在底部 */}
+          <div class={styles.sidebarFooter}>
+            {renderMenuItem({
+              id: FLOW_GROUP_TYPES.RECYCLE_BIN,
+              icon: 'trash-bin',
+              name: t('flow.sidebar.recycleBin'),
+              count: flowGroupData.counts.value.recycleCount,
+              showAction: false, // 回收站不需要操作按钮，但需要保留空间以对齐
+            })}
+          </div>
 
+          {/* 创建分组弹窗 */}
+          <CreateGroupDialog
+            isShow={showDialog.value}
+            projected={currentGroupType.value === GroupSectionType.PROJECT_FLOWS}
+            onUpdate:isShow={(val: boolean) => {
+              showDialog.value = val
+            }}
+            onConfirm={handleDialogConfirm}
+          />
+
+          {/* 重命名弹窗 */}
+          <RenameGroupDialog
+            isShow={showRenameDialog.value}
+            groupId={renameGroupId.value}
+            currentName={renameGroupName.value}
+            onUpdate:isShow={(val: boolean) => {
+              showRenameDialog.value = val
+            }}
+            onConfirm={handleRenameConfirm}
+          />
+        </div>
+      )
+  },
+})

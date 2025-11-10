@@ -10,6 +10,7 @@ import { getCookies } from './utils/cookie'
 import ZhCN from '../../locale/flow/zh-CN.json'
 import EnUS from '../../locale/flow/en-US.json'
 import JaJP from '../../locale/flow/ja-JP.json'
+import { bkTooltips } from 'bkui-vue/lib/directives';
 
 // 导入全局样式
 import './styles/variables.css'
@@ -78,6 +79,7 @@ const app = createApp({
   ),
 })
 
+app.directive('bk-tooltips', bkTooltips);
 app.use(createPinia())
 app.use(router)
 app.use(bkui, {

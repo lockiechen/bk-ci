@@ -1,24 +1,30 @@
-import { defineComponent } from "vue";
-import { useRoute } from "vue-router";
-import { Button } from "bkui-vue";
-import styles from "./index.module.css";
+import { defineComponent } from 'vue'
+import { useI18n } from 'vue-i18n'
+import { useRoute } from 'vue-router'
+import { Button } from 'bkui-vue'
+import styles from './index.module.css'
 
 export default defineComponent({
-  name: "FlowEdit",
+  name: 'FlowEdit',
   setup() {
-    const route = useRoute();
-    const flowId = route.params.flowId as string;
+    const { t } = useI18n()
+    const route = useRoute()
+    const flowId = route.params.flowId as string
 
     return () => (
       <div class={styles.pageContent}>
         <div class={styles.pagePlaceholder}>
-          <h2>编辑创作流</h2>
-          <p>编辑页面内容待实现</p>
+          <h2>
+            {t('flow.content.edit')} {t('flow.title')}
+          </h2>
+          <p>
+            {t('flow.content.edit')} {t('flow.content.workflowConfig')}{' '}
+            {t('flow.content.toBeImplemented')}
+          </p>
           <p>Flow ID: {flowId}</p>
-          <Button theme="primary">保存</Button>
+          <Button theme="primary">{t('flow.common.confirm')}</Button>
         </div>
       </div>
-    );
+    )
   },
-});
-
+})

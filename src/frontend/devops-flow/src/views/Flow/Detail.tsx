@@ -1,4 +1,5 @@
 import { defineComponent, ref, computed, watch, shallowRef } from 'vue'
+import { useI18n } from 'vue-i18n'
 import { Table, DatePicker, Checkbox } from 'bkui-vue'
 import SearchSelect from '@blueking/search-select-v3'
 import { useRoute, useRouter } from 'vue-router'
@@ -16,6 +17,7 @@ interface MenuItem {
 export default defineComponent({
   name: 'FlowDetail',
   setup() {
+    const { t } = useI18n()
     const route = useRoute()
     const router = useRouter()
     const flowId = route.params.flowId as string
@@ -35,34 +37,34 @@ export default defineComponent({
     } = useExecutionRecordData(flowId)
 
     // 菜单数据
-    const menuItems = ref<MenuItem[]>([
+    const menuItems = computed(() => [
       {
         key: 'execution-info',
-        label: '执行信息',
+        label: t('flow.content.executionInfo'),
         children: [
-          { key: 'execution-record', label: '执行记录' },
-          { key: 'trigger-record', label: '触发记录' },
+          { key: 'execution-record', label: t('flow.content.executionRecord') },
+          { key: 'trigger-record', label: t('flow.content.triggerRecord') },
         ],
       },
       {
         key: 'workflow-config',
-        label: '创作流配置',
+        label: t('flow.content.workflowConfig'),
         children: [
-          { key: 'workflow-orchestration', label: '创作流编排' },
-          { key: 'workflow-environment', label: '创作环境' },
-          { key: 'trigger-events', label: '触发事件' },
-          { key: 'notification-config', label: '通知配置' },
-          { key: 'basic-settings', label: '基础设置' },
+          { key: 'workflow-orchestration', label: t('flow.content.workflowOrchestration') },
+          { key: 'workflow-environment', label: t('flow.content.workflowEnvironment') },
+          { key: 'trigger-events', label: t('flow.content.triggerEvents') },
+          { key: 'notification-config', label: t('flow.content.notificationConfig') },
+          { key: 'basic-settings', label: t('flow.content.basicSettings') },
         ],
       },
 
       {
         key: 'more',
-        label: '更多',
+        label: t('flow.content.more'),
         children: [
-          { key: 'permission-settings', label: '权限设置' },
-          { key: 'permission-delegation', label: '权限代持' },
-          { key: 'operation-log', label: '操作日志' },
+          { key: 'permission-settings', label: t('flow.content.permissionSettings') },
+          { key: 'permission-delegation', label: t('flow.content.permissionDelegation') },
+          { key: 'operation-log', label: t('flow.content.operationLog') },
         ],
       },
     ])
@@ -85,20 +87,20 @@ export default defineComponent({
     >([])
 
     // 搜索选择器的数据配置
-    const searchData = shallowRef([
+    const searchData = computed(() => [
       {
         id: 'status',
-        name: '状态',
+        name: t('flow.content.status'),
         children: [
-          { id: 'success', name: '成功' },
-          { id: 'failed', name: '失败' },
-          { id: 'running', name: '运行中' },
-          { id: 'pending', name: '待执行' },
+          { id: 'success', name: t('flow.common.success') },
+          { id: 'failed', name: t('flow.common.failed') },
+          { id: 'running', name: t('flow.content.executionStatusRunning') },
+          { id: 'pending', name: t('flow.content.executionStatusPending') },
         ],
       },
       {
         id: 'repository',
-        name: '代码库',
+        name: t('flow.content.repository'),
       },
       {
         id: 'commitId',
@@ -110,29 +112,33 @@ export default defineComponent({
       },
       {
         id: 'triggerMethod',
-        name: '触发方式',
+        name: t('flow.content.triggerMethod'),
         children: [
-          { id: 'manual', name: '手动触发' },
-          { id: 'timer', name: '定时触发' },
-          { id: 'remote', name: '远程触发' },
+          { id: 'manual', name: t('flow.content.manualTrigger') },
+          { id: 'timer', name: t('flow.content.timerTrigger') },
+          { id: 'remote', name: t('flow.content.remoteTrigger') },
           { id: 'git-push', name: 'Git Push' },
           { id: 'git-tag', name: 'Git Tag' },
-          { id: 'merge', name: '代码合并' },
+          { id: 'merge', name: t('flow.content.codeMerge') },
         ],
       },
       {
         id: 'triggerBranch',
-        name: '触发分支',
+        name: t('flow.content.triggerBranch'),
       },
       {
         id: 'remark',
-        name: '备注',
+        name: t('flow.content.remark'),
       },
       {
         id: 'artifactQuality',
-        name: '制品质量',
+        name: t('flow.content.artifactQuality'),
       },
     ])
+
+    const searchPlaceHolder = computed(() => {
+      return searchData.value.map((item) => item.name).join('/')
+    })
 
     // 监听日期范围变化
     watch(dateRange, (newRange) => {
@@ -225,7 +231,7 @@ export default defineComponent({
                 remarkExpandedMap.value[rowId] = !expanded
               }}
             >
-              {expanded ? '收起' : '展开'}
+              {expanded ? t('flow.content.collapse') : t('flow.content.expand')}
             </span>
           )}
         </div>
@@ -252,51 +258,51 @@ export default defineComponent({
         ),
       },
       {
-        label: '构建号',
+        label: t('flow.content.buildNumber'),
         field: 'buildNumber',
         render: ({ row }: any) => `#${(row as ExecutionRecord).buildNumber}`,
       },
       {
-        label: 'Stage 状态',
+        label: t('flow.content.stageStatus'),
         field: 'stageStatus',
         render: ({ row }: any) => renderStageStatus((row as ExecutionRecord).stageStatus),
       },
       {
-        label: '创作节点',
+        label: t('flow.content.workflowNode'),
         field: 'workflowNode',
       },
       {
-        label: '触发方式/触发人',
+        label: t('flow.content.triggerMethodAndUser'),
         field: 'triggerMethod',
       },
       {
-        label: '触发时间',
+        label: t('flow.content.triggerTime'),
         field: 'triggerTime',
       },
       {
-        label: '执行开始时间',
+        label: t('flow.content.executionStartTime'),
         field: 'startTime',
       },
       {
-        label: '执行完成时间',
+        label: t('flow.content.executionEndTime'),
         field: 'endTime',
       },
       {
-        label: '总耗时',
+        label: t('flow.content.totalDuration'),
         field: 'totalDuration',
       },
       {
-        label: '执行耗时',
+        label: t('flow.content.executionDuration'),
         field: 'executionDuration',
       },
       {
-        label: '备注',
+        label: t('flow.content.remark'),
         field: 'remark',
         render: ({ row }: any) =>
           renderRemark((row as ExecutionRecord).remark, (row as ExecutionRecord).id),
       },
       {
-        label: '错误码',
+        label: t('flow.content.errorCode'),
         field: 'errorCode',
         render: ({ row }: any) => (row as ExecutionRecord).errorCode || '--',
       },
@@ -347,7 +353,7 @@ export default defineComponent({
             <div class={styles.filterLeft}>
               <DatePicker
                 type="daterange"
-                placeholder="选择开始时间范围"
+                placeholder={t('flow.content.selectStartTimeRange')}
                 v-model={dateRange.value}
                 class={styles.datePicker}
               />
@@ -357,7 +363,7 @@ export default defineComponent({
                 modelValue={searchValue.value}
                 data={searchData.value}
                 unique-select
-                placeholder="状态/代码库/commitId/CommitMessage/触发方式/触发分支/备注/制品质量"
+                placeholder={searchPlaceHolder.value}
                 class={styles.searchInput}
                 onUpdate:modelValue={handleSearchChange}
                 onSearch={handleSearch}

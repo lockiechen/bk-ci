@@ -1,13 +1,13 @@
-import { defineComponent } from "vue";
-import { useI18n } from "vue-i18n";
-import { FlowGroupAside } from "../components/FlowGroupAside";
-import styles from "./Flow.module.css";
+import { defineComponent } from 'vue'
+import { useI18n } from 'vue-i18n'
+import { FlowGroupAside } from '../components/FlowGroupAside'
+import styles from '@/styles/layout.module.css'
 
 export default defineComponent({
-  name: "Template",
+  name: 'Template',
   setup() {
-    const { t } = useI18n();
-    
+    const { t } = useI18n()
+
     return () => (
       <div class={styles.page}>
         <div class={styles.sidebar}>
@@ -19,6 +19,6 @@ export default defineComponent({
           </div>
         </div>
       </div>
-    );
+    )
   },
-});
+})

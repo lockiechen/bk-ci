@@ -27,19 +27,19 @@ export const CreateGroupDialog = defineComponent({
       name: '',
       projected: props.projected,
     });
-    
+
     // 重置表单
     const resetForm = () => {
       group.name = '';
       group.projected = false;
     };
-    
+
     // 关闭弹窗
     const handleClose = () => {
       emit('update:isShow', false);
       resetForm();
     };
-    
+
     // 确认创建
     const handleConfirm = () => {
       if (!group.name.trim()) {
@@ -49,7 +49,7 @@ export const CreateGroupDialog = defineComponent({
       emit('confirm', group);
       handleClose();
     };
-    
+
     return () => (
       <Dialog
         isShow={props.isShow}
@@ -72,13 +72,13 @@ export const CreateGroupDialog = defineComponent({
                   maxlength={50}
                 />
               </div>
-              
+
               <div class={styles.formItem}>
                 <label class={styles.label}>
                   {t('flow.dialog.createGroup.visibilityScope')}
                   <span class={styles.required}>*</span>
                 </label>
-                <Radio.Group 
+                <Radio.Group
                   v-model={group.projected}
                 >
                   <Radio label={false} class={styles.radio}>

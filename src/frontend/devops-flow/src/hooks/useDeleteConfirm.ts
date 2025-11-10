@@ -1,21 +1,22 @@
-import { InfoBox } from 'bkui-vue';
-import { h } from 'vue';
-import { useI18n } from 'vue-i18n';
-import { SvgIcon } from '../components/SvgIcon';
-import styles from '../styles/useDeleteConfirm.module.css';
+import { InfoBox } from 'bkui-vue'
+import { h } from 'vue'
+import { useI18n } from 'vue-i18n'
+import { SvgIcon } from '../components/SvgIcon'
+import styles from '../styles/useDeleteConfirm.module.css'
 
 interface DeleteConfirmOptions {
-  title?: string;
-  message: string;
-  description?: string;
-  confirmText?: string;
-  cancelText?: string;
-  onConfirm: () => void | Promise<void>;
-  onCancel?: () => void;
+  title?: string
+  message: string | (() => any)
+  description?: string
+  confirmText?: string
+  cancelText?: string
+  theme?: 'primary' | 'danger' | 'warning' | 'success'
+  onConfirm: () => void | Promise<void>
+  onCancel?: () => void
 }
 
 export function useDeleteConfirm() {
-  const { t } = useI18n();
+  const { t } = useI18n()
 
   const showDeleteConfirm = (options: DeleteConfirmOptions) => {
     const {
@@ -24,45 +25,51 @@ export function useDeleteConfirm() {
       description,
       confirmText,
       cancelText,
+      theme = 'danger',
       onConfirm,
       onCancel,
-    } = options;
+    } = options
+
+    const messageContent = typeof message === 'function' ? message() : message
 
     const infoBoxInstance = InfoBox({
       title: title || '',
-      content: h('div', {
-        class: styles.deleteConfirmContent
-      }, [
-        h(SvgIcon, {
-          name: 'exclamation-circle-shape',
-          class: styles.deleteConfirmIcon,
-          size: 48,
-        }),
-        h('span', { class: 'text-[#313238]' }, message),
-      ]),
+      content: h(
+        'div',
+        {
+          class: styles.deleteConfirmContent,
+        },
+        [
+          h(SvgIcon, {
+            name: 'exclamation-circle-shape',
+            class: [styles.deleteConfirmIcon, theme === 'danger' && styles.dangerIcon],
+            size: 48,
+          }),
+          h('div', { class: styles.deleteConfirmMessage }, messageContent),
+        ],
+      ),
       confirmText: confirmText || t('flow.actions.delete'),
       cancelText: cancelText || t('flow.common.close'),
-      theme: 'danger',
+      theme,
       onConfirm: async () => {
         try {
-          await onConfirm();
-          infoBoxInstance.hide();
+          await onConfirm()
+          infoBoxInstance.hide()
         } catch (error) {
-          console.error('Delete confirm action failed:', error);
+          console.error('Delete confirm action failed:', error)
           // 不关闭弹窗，让用户重试
         }
       },
       onClose: () => {
-        onCancel?.();
-        return true;
+        onCancel?.()
+        return true
       },
-    });
+    })
 
-    return infoBoxInstance;
-  };
+    return infoBoxInstance
+  }
 
   return {
     showDeleteConfirm,
-  };
+  }
 }
-
