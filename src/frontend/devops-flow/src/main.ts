@@ -1,11 +1,10 @@
-import { createApp } from 'vue'
+import { createApp, h } from 'vue'
 import { createPinia } from 'pinia'
 import { createI18n } from 'vue-i18n'
 import bkui from 'bkui-vue'
 import bkuiZhCn from 'bkui-vue/dist/locale/zh-cn.esm'
 import bkuiEn from 'bkui-vue/dist/locale/en.esm'
 
-import App from './App.tsx'
 import router from './router'
 import { getCookies } from './utils/cookie'
 import ZhCN from '../../locale/flow/zh-CN.json'
@@ -19,6 +18,7 @@ import './styles/utils.css'
 
 // 导入指令
 import { clickoutside } from 'bkui-vue/lib/directives'
+import { RouterView } from 'vue-router'
 
 // 语言映射配置
 const localeAliasMap: Record<string, string> = {
@@ -66,7 +66,17 @@ const i18n = createI18n({
   },
 })
 
-const app = createApp(App)
+const app = createApp({
+  render: () => h(
+    'div',
+    {
+      class: 'devops-flow-app',
+    },
+    [     
+      h(RouterView),
+    ]
+  ),
+})
 
 app.use(createPinia())
 app.use(router)

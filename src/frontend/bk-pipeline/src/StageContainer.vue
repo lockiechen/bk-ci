@@ -50,114 +50,144 @@
         <Component
             :is="jobComponentName"
             v-bind="jobComponentProps"
-            v-on="$listeners"
+            v-on="$listeners || listeners"
             ref="jobBox"
         />
     </div>
 </template>
 
-<script>
+<script setup>
+    import { ref, computed, onMounted, onBeforeUnmount, nextTick, inject, getCurrentInstance } from 'vue'
     import CruveLine from './CruveLine'
     import Job from './Job'
     import Logo from './Logo'
     import MatrixGroup from './MatrixGroup'
-    import {
-        getOuterHeight
-    } from './util'
+    import { getOuterHeight } from './util'
 
-    export default {
-        components: {
-            CruveLine,
-            MatrixGroup,
-            Logo,
-            Job
+    const props = defineProps({
+        stage: {
+            type: Object,
+            required: true
         },
-        props: {
-            stage: {
-                type: Object,
-                required: true
-            },
-            container: {
-                type: Object,
-                required: true
-            },
-            stageIndex: Number,
-            containerIndex: Number,
-            stageLength: Number,
-            containerLength: Number,
-            stageDisabled: Boolean,
-            isTriggerStage: {
-                type: Boolean,
-                default: false
-            },
-            isFinallyStage: {
-                type: Boolean,
-                default: false
-            },
-            handleChange: {
-                type: Function,
-                required: true
-            }
+        container: {
+            type: Object,
+            required: true
         },
-        inject: [
-            'reactiveData'
-        ],
-        data () {
-            return {
-                cruveHeight: 0
-            }
+        stageIndex: Number,
+        containerIndex: Number,
+        stageLength: Number,
+        containerLength: Number,
+        stageDisabled: Boolean,
+        isTriggerStage: {
+            type: Boolean,
+            default: false
         },
-        computed: {
-            containerDisabled () {
-                return !!(this.container.jobControlOption && this.container.jobControlOption.enable === false) || this.stageDisabled
-            },
-            isMatrix () {
-                return this.reactiveData.isExecDetail && this.container.matrixGroupFlag && this.container.groupContainers
-            },
-            showLastCruveLine () {
-                return (this.stageIndex !== this.stageLength - 1 || this.reactiveData.editable) && !this.isFinallyStage
-            },
-            showLeftCruveLine () {
-                return (this.reactiveData.editable && !this.isTriggerStage) || this.stageIndex > 0
-            },
-            jobComponentName () {
-                return this.isMatrix ? MatrixGroup : Job
-            },
-            jobComponentProps () {
-                return {
-                    ...(this.isMatrix
-                        ? {
-                            matrix: this.container
-                        }
-                        : {
-                            container: this.container
-                        }),
-                    updateCruveConnectHeight: this.updateCruveConnectHeight,
-                    disabled: this.containerDisabled,
-                    ...this.$props
-                }
-            }
+        isFinallyStage: {
+            type: Boolean,
+            default: false
         },
-        mounted () {
-            this.resizeObserver = new ResizeObserver((entries) => {
-                this.updateCruveConnectHeight()
-            })
-            this.resizeObserver.observe(this.$el)
-        },
-
-        beforeDestroy () {
-            this.resizeObserver?.unobserve?.(this.$el)
-        },
-        methods: {
-            updateCruveConnectHeight () {
-                this.$nextTick(() => {
-                    if (this.$refs.stageContainer) {
-                        this.cruveHeight = getOuterHeight(this.$refs.stageContainer)
-                    }
-                })
-            }
+        handleChange: {
+            type: Function,
+            required: true
         }
+    })
+
+    const reactiveData = inject('reactiveData')
+    const stageContainer = ref(null)
+    const jobBox = ref(null)
+    const cruveHeight = ref(0)
+    let resizeObserver = null
+
+    // Vue 2.7 和 Vue 3 兼容：处理 $listeners
+    // Vue 2.7: $listeners 在模板中直接可用
+    // Vue 3: 所有监听器都在 $attrs 中
+    const instance = getCurrentInstance()
+    const listeners = computed(() => {
+        // Vue 2.7: 使用 $listeners
+        if (instance?.proxy?.$listeners) {
+            return instance.proxy.$listeners
+        }
+        // Vue 3: 从 $attrs 中提取事件监听器
+        const attrs = instance?.attrs || {}
+        const eventListeners = {}
+        Object.keys(attrs).forEach(key => {
+            if (key.startsWith('on') && typeof attrs[key] === 'function') {
+                const eventName = key.slice(2).toLowerCase()
+                eventListeners[eventName] = attrs[key]
+            }
+        })
+        return eventListeners
+    })
+
+    const containerDisabled = computed(() => {
+        return !!(props.container.jobControlOption && props.container.jobControlOption.enable === false) || props.stageDisabled
+    })
+
+    const isMatrix = computed(() => {
+        return reactiveData.isExecDetail && props.container.matrixGroupFlag && props.container.groupContainers
+    })
+
+    const showLastCruveLine = computed(() => {
+        return (props.stageIndex !== props.stageLength - 1 || reactiveData.editable) && !props.isFinallyStage
+    })
+
+    const showLeftCruveLine = computed(() => {
+        return (reactiveData.editable && !props.isTriggerStage) || props.stageIndex > 0
+    })
+
+    const jobComponentName = computed(() => {
+        return isMatrix.value ? MatrixGroup : Job
+    })
+
+    const jobComponentProps = computed(() => {
+        return {
+            ...(isMatrix.value
+                ? {
+                    matrix: props.container
+                }
+                : {
+                    container: props.container
+                }),
+            updateCruveConnectHeight: updateCruveConnectHeight,
+            disabled: containerDisabled.value,
+            stage: props.stage,
+            stageIndex: props.stageIndex,
+            containerIndex: props.containerIndex,
+            stageLength: props.stageLength,
+            containerLength: props.containerLength,
+            stageDisabled: props.stageDisabled,
+            isTriggerStage: props.isTriggerStage,
+            isFinallyStage: props.isFinallyStage,
+            handleChange: props.handleChange
+        }
+    })
+
+    const updateCruveConnectHeight = () => {
+        nextTick(() => {
+            if (stageContainer.value) {
+                cruveHeight.value = getOuterHeight(stageContainer.value)
+            }
+        })
     }
+
+    onMounted(() => {
+        resizeObserver = new ResizeObserver(() => {
+            updateCruveConnectHeight()
+        })
+        if (stageContainer.value) {
+            resizeObserver.observe(stageContainer.value)
+        }
+    })
+
+    onBeforeUnmount(() => {
+        if (resizeObserver && stageContainer.value) {
+            resizeObserver.unobserve(stageContainer.value)
+        }
+    })
+
+    defineExpose({
+        jobBox
+    })
 </script>
 
 <style lang="scss">

@@ -54,7 +54,7 @@ export const FlowGroupAside = defineComponent({
     const { showDeleteConfirm } = useDeleteConfirm();
 
     const handleItemClick = (key: string) => {
-      router.push({ name: 'flowGroup', params: { groupId: key } });
+      router.push({ name: 'flowList', params: { groupId: key } });
     };
 
     const handleGroupToggle = (key: GroupSectionType) => {

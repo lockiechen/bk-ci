@@ -7,7 +7,51 @@ import {
     VM_CONTAINER_TYPE
 } from './constants'
 
-export const eventBus = new Vue()
+// Vue 2.7 和 Vue 3 兼容的事件总线
+// Vue 2.7: 使用 new Vue() 作为事件总线
+// Vue 3: 检测 Vue 版本，如果不可用则使用简单的事件发射器
+let eventBus
+try {
+    // Vue 2.7 支持 new Vue()
+    if (Vue && typeof Vue === 'function' && Vue.prototype) {
+        eventBus = new Vue()
+    } else {
+        // Vue 3 或无法创建 Vue 实例时，使用简单的事件发射器
+        eventBus = createEventEmitter()
+    }
+} catch (e) {
+    // 如果 new Vue() 失败，使用简单的事件发射器
+    eventBus = createEventEmitter()
+}
+
+// 简单的事件发射器实现（Vue 3 兼容）
+function createEventEmitter () {
+    const events = {}
+    return {
+        $on (event, callback) {
+            if (!events[event]) {
+                events[event] = []
+            }
+            events[event].push(callback)
+        },
+        $off (event, callback) {
+            if (!events[event]) return
+            if (callback) {
+                events[event] = events[event].filter(cb => cb !== callback)
+            } else {
+                delete events[event]
+            }
+        },
+        $emit (event, ...args) {
+            if (events[event]) {
+                events[event].forEach(callback => callback(...args))
+            }
+        }
+    }
+}
+
+// 导出事件总线（Vue 2.7 和 Vue 3 兼容）
+export { eventBus }
 
 /**
  *

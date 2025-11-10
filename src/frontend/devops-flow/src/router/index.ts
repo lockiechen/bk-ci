@@ -5,20 +5,38 @@ const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
   routes: [
     {
-      path: '/flow/:groupId',
-      component: () => import('../views/Flow'),
-      name: 'flowGroup',
+      path: '/',
+      redirect: { name: 'flowList', params: { groupId: FLOW_GROUP_TYPES.ALL_FLOWS } },
+    },
+    {
+      path: '/list/:groupId',
+      component: () => import('../views/FlowList'),
+      name: 'flowList',
       props: true,
     },
     {
-      path: '/',
-      redirect: { name: 'flowGroup', params: { groupId: FLOW_GROUP_TYPES.ALL_FLOWS } },
+      path: '/flow/:flowId',
+      component: () => import('../views/Flow/index'),
+      children: [
+        {
+          path: '',
+          component: () => import('../views/Flow/Detail'),
+          name: 'flowDetail',
+          props: true,
+        },
+        {
+          path: 'edit',
+          component: () => import('../views/Flow/Edit'),
+          name: 'flowDetailEdit',
+          props: true,
+        }
+      ],
     },
     {
       path: '/template',
       component: () => import('../views/Template'),
       name: 'template',
-    }
+    },
   ],
 })
 

@@ -8,7 +8,7 @@
         <Stage
             class="list-item"
             v-for="(stage, index) in computedStages"
-            :ref="stage.id"
+            :ref="(el) => setStageRef(el, stage.id)"
             :key="stage.id"
             :editable="editable"
             :stage="stage"
@@ -22,18 +22,18 @@
             :stage-length="computedStages.length"
             :containers="stage.containers"
             :match-rules="matchRules"
-            @[COPY_EVENT_NAME]="handleCopyStage"
-            @[DELETE_EVENT_NAME]="handleDeleteStage"
+            @[COPY_EVENT_NAME_VALUE]="handleCopyStage"
+            @[DELETE_EVENT_NAME_VALUE]="handleDeleteStage"
         >
         </Stage>
     </draggable>
 </template>
 
-<script>
+<script setup>
+    import { ref, computed, provide, onMounted, onBeforeUnmount, nextTick } from 'vue'
     import draggable from 'vuedraggable'
     import Stage from './Stage'
     import { eventBus, hashID, isTriggerContainer } from './util'
-
     import {
         ADD_STAGE,
         ATOM_ADD_EVENT_NAME,
@@ -49,6 +49,23 @@
         STAGE_RETRY
     } from './constants'
 
+    // 定义 emits - 必须在 defineProps 之前，且不能引用局部变量
+    const emit = defineEmits([
+        'input',
+        'change',
+        CLICK_EVENT_NAME,
+        DELETE_EVENT_NAME,
+        ATOM_REVIEW_EVENT_NAME,
+        ATOM_CONTINUE_EVENT_NAME,
+        ATOM_EXEC_EVENT_NAME,
+        ATOM_QUALITY_CHECK_EVENT_NAME,
+        ATOM_ADD_EVENT_NAME,
+        ADD_STAGE,
+        STAGE_CHECK,
+        STAGE_RETRY,
+        DEBUG_CONTAINER
+    ])
+
     const customEvents = [
         CLICK_EVENT_NAME,
         DELETE_EVENT_NAME,
@@ -63,242 +80,268 @@
         DEBUG_CONTAINER
     ]
 
-    export default {
-        components: {
-            Stage,
-            draggable
+    const props = defineProps({
+        editable: {
+            type: Boolean,
+            default: true
         },
-        emits: customEvents,
-        props: {
-            editable: {
-                type: Boolean,
-                default: true
-            },
-            isPreview: {
-                type: Boolean,
-                default: false
-            },
-            currentExecCount: {
-                type: Number,
-                default: 1
-            },
-            isExecDetail: {
-                type: Boolean,
-                default: false
-            },
-            isLatestBuild: {
-                type: Boolean,
-                default: false
-            },
-            canSkipElement: {
-                type: Boolean,
-                default: false
-            },
-            pipeline: {
-                type: Object,
-                required: true
-            },
-            cancelUserId: {
-                type: String,
-                default: 'unknow'
-            },
-            userName: {
-                type: String,
-                default: 'unknow'
-            },
-            matchRules: {
-                type: Array,
-                default: () => []
-            },
-            isExpandAllMatrix: {
-                type: Boolean,
-                default: true
-            }
+        isPreview: {
+            type: Boolean,
+            default: false
         },
-        provide () {
-            const reactiveData = {};
-            [
-                'currentExecCount',
-                'isPreview',
-                'userName',
-                'matchRules',
-                'editable',
-                'isExecDetail',
-                'isLatestBuild',
-                'canSkipElement',
-                'cancelUserId',
-                'isExpandAllMatrix'
-            ].forEach((key) => {
-                Object.defineProperty(reactiveData, key, {
-                    enumerable: true,
-                    get: () => this[key]
-                })
+        currentExecCount: {
+            type: Number,
+            default: 1
+        },
+        isExecDetail: {
+            type: Boolean,
+            default: false
+        },
+        isLatestBuild: {
+            type: Boolean,
+            default: false
+        },
+        canSkipElement: {
+            type: Boolean,
+            default: false
+        },
+        pipeline: {
+            type: Object,
+            required: true
+        },
+        cancelUserId: {
+            type: String,
+            default: 'unknow'
+        },
+        userName: {
+            type: String,
+            default: 'unknow'
+        },
+        matchRules: {
+            type: Array,
+            default: () => []
+        },
+        isExpandAllMatrix: {
+            type: Boolean,
+            default: true
+        }
+    })
+
+
+    // 使用 ref 存储 stage refs
+    const stageRefs = ref({})
+
+    // provide 响应式数据 - Vue 2.7 和 Vue 3 兼容
+    // 使用 Object.defineProperty 创建响应式代理，在 Vue 2.7 和 Vue 3 中都能正常工作
+    // Vue 2.7: Object.defineProperty 配合 Vue 的响应式系统
+    // Vue 3: 虽然推荐使用 reactive，但 Object.defineProperty 仍然可以工作
+    const reactiveData = {}
+    const keys = [
+        'currentExecCount',
+        'isPreview',
+        'userName',
+        'matchRules',
+        'editable',
+        'isExecDetail',
+        'isLatestBuild',
+        'canSkipElement',
+        'cancelUserId',
+        'isExpandAllMatrix'
+    ]
+
+    keys.forEach((key) => {
+        Object.defineProperty(reactiveData, key, {
+            enumerable: true,
+            get: () => props[key],
+            configurable: true
+        })
+    })
+
+    provide('reactiveData', reactiveData)
+    provide('emitPipelineChange', () => {
+        emitPipelineChange(props.pipeline)
+    })
+
+    const DELETE_EVENT_NAME_VALUE = DELETE_EVENT_NAME
+    const COPY_EVENT_NAME_VALUE = COPY_EVENT_NAME
+
+    const computedStages = computed({
+        get () {
+            return props.pipeline?.stages ?? []
+        },
+        set (stages) {
+            const data = stages.map((stage, index) => {
+                const name = `stage-${index + 1}`
+                const id = `s-${hashID()}`
+                if (!stage.containers) {
+                    return {
+                        id,
+                        name,
+                        containers: [stage]
+                    }
+                }
+                return stage
             })
+            updatePipeline(props.pipeline, {
+                stages: data.filter(stage => stage.containers.length)
+            })
+        }
+    })
 
-            return {
-                reactiveData,
-                emitPipelineChange: () => {
-                    this.emitPipelineChange(this.pipeline)
-                }
-            }
-        },
-        data () {
-            return {
-                DELETE_EVENT_NAME,
-                COPY_EVENT_NAME
-            }
-        },
-        computed: {
-            computedStages: {
-                get () {
-                    return this.pipeline?.stages ?? []
-                },
-                set (stages) {
-                    const data = stages.map((stage, index) => {
-                        const name = `stage-${index + 1}`
-                        const id = `s-${hashID()}`
-                        if (!stage.containers) {
-                            return {
-                                id,
-                                name,
-                                containers: [stage]
-                            }
-                        }
-                        return stage
-                    })
-                    this.updatePipeline(this.pipeline, {
-                        stages: data.filter(stage => stage.containers.length)
-                    })
-                }
-            },
-            dragOptions () {
-                return {
-                    group: 'pipeline-job',
-                    ghostClass: 'sortable-ghost-atom',
-                    chosenClass: 'sortable-chosen-atom',
-                    animation: 130,
-                    disabled: !this.editable
-                }
-            },
-            hasFinallyStage () {
-                try {
-                    const stageLength = this.computedStages.length
-                    const last = this.computedStages[stageLength - 1]
-                    return last.finally
-                } catch (error) {
-                    return false
-                }
-            }
-        },
-        mounted () {
-            this.registeCustomEvent()
-        },
-        beforeDestroy () {
-            window.showLinuxTipYet = false
-            this.registeCustomEvent(true)
-        },
-        methods: {
-            emitPipelineChange (newVal) {
-                this.$emit('input', newVal)
-                this.$emit('change', newVal)
-            },
-            registeCustomEvent (destory = false) {
-                customEvents.forEach((eventName) => {
-                    const fn = (destory ? eventBus.$off : eventBus.$on).bind(eventBus)
-                    fn(eventName, (...args) => {
-                        this.$emit(eventName, ...args)
-                    })
-                })
-            },
-            checkIsTriggerStage (stage) {
-                try {
-                    return isTriggerContainer(stage.containers[0])
-                } catch (e) {
-                    return false
-                }
-            },
-            updatePipeline (model, params) {
-                Object.assign(model, params)
-                this.emitPipelineChange(model)
-            },
-            checkMove (event) {
-                const dragContext = event.draggedContext || {}
-                const element = dragContext.element || {}
-                const isTrigger = element.containers[0]['@type'] === 'trigger'
-                const isFinally = element.finally === true
+    const dragOptions = computed(() => {
+        return {
+            group: 'pipeline-job',
+            ghostClass: 'sortable-ghost-atom',
+            chosenClass: 'sortable-chosen-atom',
+            animation: 130,
+            disabled: !props.editable
+        }
+    })
 
-                const relatedContext = event.relatedContext || {}
-                const relatedelement = relatedContext.element || {}
-                const isRelatedTrigger = relatedelement['@type'] === 'trigger'
+    const hasFinallyStage = computed(() => {
+        try {
+            const stageLength = computedStages.value.length
+            const last = computedStages.value[stageLength - 1]
+            return last.finally
+        } catch (error) {
+            return false
+        }
+    })
 
-                const isTriggerStage = this.checkIsTriggerStage(relatedelement)
-                const isRelatedFinally = relatedelement.finally === true
+    const emitPipelineChange = (newVal) => {
+        emit('input', newVal)
+        emit('change', newVal)
+    }
 
-                return (
-                    !isTrigger
-                    && !isRelatedTrigger
-                    && !isTriggerStage
-                    && !isFinally
-                    && !isRelatedFinally
-                )
-            },
-            handleCopyStage ({ stageIndex, stage }) {
-                this.pipeline.stages.splice(stageIndex + 1, 0, stage)
-                this.emitPipelineChange()
-            },
-            handleDeleteStage (stageId) {
-                this.pipeline.stages = this.pipeline.stages.filter(stage => stage.id !== stageId)
-                this.emitPipelineChange()
-            },
-            expandPostAction (stageId, matrixId, containerId) {
-                return new Promise((resolve, reject) => {
-                    try {
-                        let jobInstance = this.$refs?.[stageId]?.[0]?.$refs?.[containerId]?.[0]?.$refs?.jobBox
-                        if (matrixId) {
-                            jobInstance = this.$refs?.[stageId]?.[0]?.$refs?.[matrixId]?.[0]?.$refs?.jobBox?.$refs[containerId]?.[0]
-                        }
-                        console.log(jobInstance, 'jobInstance')
-                        jobInstance?.$refs?.atomList?.expandPostAction?.()
-                        this.$nextTick(() => {
-                            resolve(true)
-                        })
-                    } catch (error) {
-                        console.error(error)
-                        resolve(false)
-                    }
-                })
-            },
-            expandMatrix (stageId, matrixId, containerId, expand = true) {
-                console.log('expandMatrix', stageId, matrixId, containerId)
-                return new Promise((resolve) => {
-                    try {
-                        const jobInstance = this.$refs?.[stageId]?.[0]?.$refs?.[matrixId]?.[0]?.$refs?.jobBox
-                        jobInstance?.toggleMatrixOpen?.(expand)
-                        this.$nextTick(() => {
-                            jobInstance?.$refs[containerId]?.[0]?.toggleShowAtom(expand)
-                            resolve(true)
-                        })
-                    } catch (error) {
-                        console.error(error)
-                        resolve(false)
-                    }
-                })
-            },
-            expandJob (stageId, containerId, expand = true) {
-                console.log('expandJob', stageId, containerId)
-                return new Promise((resolve) => {
-                    try {
-                        const jobInstance = this.$refs?.[stageId]?.[0]?.$refs?.[containerId]?.[0]?.$refs?.jobBox
-                        jobInstance?.toggleShowAtom(expand)
-                        resolve(true)
-                    } catch (error) {
-                        console.error(error)
-                        resolve(false)
-                    }
-                })
-            }
+    const registeCustomEvent = (destory = false) => {
+        customEvents.forEach((eventName) => {
+            const fn = (destory ? eventBus.$off : eventBus.$on).bind(eventBus)
+            fn(eventName, (...args) => {
+                emit(eventName, ...args)
+            })
+        })
+    }
+
+    const checkIsTriggerStage = (stage) => {
+        try {
+            return isTriggerContainer(stage.containers[0])
+        } catch (e) {
+            return false
         }
     }
+
+    const updatePipeline = (model, params) => {
+        Object.assign(model, params)
+        emitPipelineChange(model)
+    }
+
+    const checkMove = (event) => {
+        const dragContext = event.draggedContext || {}
+        const element = dragContext.element || {}
+        const isTrigger = element.containers[0]?.['@type'] === 'trigger'
+        const isFinally = element.finally === true
+
+        const relatedContext = event.relatedContext || {}
+        const relatedelement = relatedContext.element || {}
+        const isRelatedTrigger = relatedelement['@type'] === 'trigger'
+
+        const isTriggerStage = checkIsTriggerStage(relatedelement)
+        const isRelatedFinally = relatedelement.finally === true
+
+        return (
+            !isTrigger
+            && !isRelatedTrigger
+            && !isTriggerStage
+            && !isFinally
+            && !isRelatedFinally
+        )
+    }
+
+    const handleCopyStage = ({ stageIndex, stage }) => {
+        props.pipeline.stages.splice(stageIndex + 1, 0, stage)
+        emitPipelineChange()
+    }
+
+    const handleDeleteStage = (stageId) => {
+        props.pipeline.stages = props.pipeline.stages.filter(stage => stage.id !== stageId)
+        emitPipelineChange()
+    }
+
+    const expandPostAction = (stageId, matrixId, containerId) => {
+        return new Promise((resolve) => {
+            try {
+                let jobInstance = stageRefs.value[stageId]?.[0]?.$refs?.[containerId]?.[0]?.$refs?.jobBox
+                if (matrixId) {
+                    jobInstance = stageRefs.value[stageId]?.[0]?.$refs?.[matrixId]?.[0]?.$refs?.jobBox?.$refs[containerId]?.[0]
+                }
+                console.log(jobInstance, 'jobInstance')
+            jobInstance?.$refs?.atomList?.expandPostAction?.()
+                nextTick(() => {
+                    resolve(true)
+                })
+            } catch (error) {
+                console.error(error)
+                resolve(false)
+            }
+        })
+    }
+
+    const expandMatrix = (stageId, matrixId, containerId, expand = true) => {
+        console.log('expandMatrix', stageId, matrixId, containerId)
+        return new Promise((resolve) => {
+            try {
+                const jobInstance = stageRefs.value[stageId]?.[0]?.$refs?.[matrixId]?.[0]?.$refs?.jobBox
+            jobInstance?.toggleMatrixOpen?.(expand)
+                nextTick(() => {
+                jobInstance?.$refs[containerId]?.[0]?.toggleShowAtom(expand)
+                resolve(true)
+                })
+            } catch (error) {
+                console.error(error)
+                resolve(false)
+            }
+        })
+    }
+
+    const expandJob = (stageId, containerId, expand = true) => {
+        console.log('expandJob', stageId, containerId)
+        return new Promise((resolve) => {
+            try {
+                const jobInstance = stageRefs.value[stageId]?.[0]?.$refs?.[containerId]?.[0]?.$refs?.jobBox
+            jobInstance?.toggleShowAtom(expand)
+                resolve(true)
+            } catch (error) {
+                console.error(error)
+                resolve(false)
+            }
+        })
+    }
+
+    // 设置 ref 的回调函数
+    const setStageRef = (el, stageId) => {
+        if (el) {
+            if (!stageRefs.value[stageId]) {
+                stageRefs.value[stageId] = []
+            }
+            stageRefs.value[stageId].push(el)
+        }
+    }
+
+    onMounted(() => {
+        registeCustomEvent()
+    })
+
+    onBeforeUnmount(() => {
+        window.showLinuxTipYet = false
+        registeCustomEvent(true)
+    })
+
+    // 暴露方法供外部调用
+    defineExpose({
+        expandPostAction,
+        expandMatrix,
+        expandJob
+    })
 </script>
 
 <style lang="scss">

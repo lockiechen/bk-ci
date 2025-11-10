@@ -5,10 +5,10 @@
   --bg-primary: #ffffff;
   --bg-secondary: #f5f7fa;
   --bg-tertiary: #fafbfd;
-  --bg-active: #F0F5FF;
+  --bg-active: #f0f5ff;
   --bg-hover: #f0f1f5;
-  --bg-hover-active: #E1ECFF;
-  
+  --bg-hover-active: #e1ecff;
+
   --color-primary: #3a84ff;
   --color-primary-hover: #699df4;
   --color-success: #30d878;
@@ -18,35 +18,42 @@
   --color-text-secondary: #63656e;
   --color-text-tertiary: #979ba5;
   --color-text-disabled: #c4c6cc;
-  --color-text-medium-black: #4D4F56;
-  
+  --color-text-medium-black: #4d4f56;
+
   --border-color: #dcdee5;
   --border-radius: 2px;
   --border-radius-large: 4px;
-  
+
   /* 间距变量 */
   --spacing-xs: 4px;
   --spacing-sm: 8px;
   --spacing-md: 12px;
   --spacing-lg: 16px;
   --spacing-xl: 24px;
-  
+
+  --line-height-xs: 16px;
+  --line-height-sm: 20px;
+  --line-height-md: 24px;
+  --line-height-lg: 28px;
+  --line-height-xl: 32px;
+
   /* 字体大小变量 */
   --font-size-xs: 12px;
   --font-size-sm: 14px;
   --font-size-md: 16px;
   --font-size-lg: 18px;
   --font-size-xl: 20px;
-  
+
   /* 阴影变量 */
-  --shadow-sm: 0 2px 4px rgba(0, 0, 0, 0.08);
+  --shadow-sm: 0 2px 5px 0 rgba(51, 60, 72, 0.03);
   --shadow-md: 0 4px 8px rgba(0, 0, 0, 0.12);
   --shadow-lg: 0 8px 16px rgba(0, 0, 0, 0.16);
-  
+  --shadow-focus: 0 0 0 2px rgba(58, 132, 255, 0.2);
+
   /* 布局变量 */
   --header-height: 48px;
   --sidebar-width: 240px;
-  
+
   /* 过渡时间 */
   --transition-fast: 0.15s;
   --transition-normal: 0.2s;
