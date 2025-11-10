@@ -19,13 +19,13 @@ export enum GroupSectionType {
 
 export const FlowGroupAside = defineComponent({
   name: "FlowGroupAside",
-        components: {
-          SvgIcon,
-          Tag,
-          CreateGroupDialog,
-          RenameGroupDialog,
-          GroupActionMenu,
-        },
+  components: {
+    SvgIcon,
+    Tag,
+    CreateGroupDialog,
+    RenameGroupDialog,
+    GroupActionMenu,
+  },
   setup() {
     const { t } = useI18n();
     const router = useRouter();
@@ -38,23 +38,27 @@ export const FlowGroupAside = defineComponent({
       myFlowGroups: false,
       projectFlowGroups: true,
     });
-    
+
     const showDialog = ref(false);
     const currentGroupType = ref<GroupSectionType>(GroupSectionType.MY_FLOWS);
-    
+
     // 重命名弹窗状态
     const showRenameDialog = ref(false);
     const renameGroupId = ref('');
     const renameGroupName = ref('');
-    
+
     // 当前操作的分组项
     const currentGroupItem = ref<FlowGroupItem | null>(null);
-    
+
     // 删除确认 hook
     const { showDeleteConfirm } = useDeleteConfirm();
 
     const handleItemClick = (key: string) => {
-      router.push({ name: 'flowGroup', params: { groupId: key } });
+      router.push({
+        name: 'flowGroup',
+        params: { groupId: key },
+        query: router.currentRoute.value.query
+      });
     };
 
     const handleGroupToggle = (key: GroupSectionType) => {
@@ -66,7 +70,7 @@ export const FlowGroupAside = defineComponent({
       currentGroupType.value = key;
       showDialog.value = true;
     };
-    
+
     const handleDialogConfirm = async (data: { name: string; projected: boolean }) => {
       try {
         await flowGroupData.createFlowGroup(data.name, data.projected);
@@ -74,11 +78,11 @@ export const FlowGroupAside = defineComponent({
         console.error('Failed to create flow group:', error);
       }
     };
-    
+
     // 处理操作菜单点击
     const handleOperationClick = (item: FlowGroupItem, operationId: string) => {
       currentGroupItem.value = item;
-      
+
       if (operationId === 'rename') {
         renameGroupId.value = item.id;
         renameGroupName.value = item.name;
@@ -91,7 +95,7 @@ export const FlowGroupAside = defineComponent({
         handlePermissionManage(item);
       }
     };
-    
+
     // 处理重命名确认
     const handleRenameConfirm = async (data: { groupId: string; name: string }) => {
       try {
@@ -102,14 +106,14 @@ export const FlowGroupAside = defineComponent({
         Message({ theme: 'error', message: t('flow.actions.rename') + t('flow.common.failed') });
       }
     };
-    
+
     // 处理置顶
     const handlePinToTop = async (item: FlowGroupItem) => {
       try {
         const newTopState = !item.pin;
         await flowGroupData.pinFlowGroup(item.id, newTopState);
-        Message({ 
-          theme: 'success', 
+        Message({
+          theme: 'success',
           message: newTopState ? t('flow.actions.pinToTop') + t('flow.common.success') : t('flow.actions.unpin') + t('flow.common.success')
         });
       } catch (error) {
@@ -117,7 +121,7 @@ export const FlowGroupAside = defineComponent({
         Message({ theme: 'error', message: t('flow.actions.pinToTop') + t('flow.common.failed') });
       }
     };
-    
+
     // 处理删除
     const handleDelete = (item: FlowGroupItem) => {
       showDeleteConfirm({
@@ -134,7 +138,7 @@ export const FlowGroupAside = defineComponent({
         },
       });
     };
-    
+
     // 处理权限管理
     const handlePermissionManage = (item: FlowGroupItem) => {
       // TODO: 跳转到权限管理页面
@@ -144,7 +148,7 @@ export const FlowGroupAside = defineComponent({
       const permissionUrl = `/manage/${projectCode}/permission?groupId=${item.id}`;
       window.open(permissionUrl, '_blank');
     };
-    
+
     // 获取操作菜单列表
     const getOperations = (item: FlowGroupItem) => {
       const operations = [
@@ -161,7 +165,7 @@ export const FlowGroupAside = defineComponent({
           label: t('flow.actions.delete'),
         },
       ];
-      
+
       // 项目组添加权限管理入口
       if (item.projected === true) {
         operations.splice(3, 0, {
@@ -169,7 +173,7 @@ export const FlowGroupAside = defineComponent({
           label: t('flow.actions.permissionManage'),
         });
       }
-      
+
       return operations;
     };
 
@@ -179,12 +183,12 @@ export const FlowGroupAside = defineComponent({
       const sticky = id === FLOW_GROUP_TYPES.ALL_FLOWS;
       const isTrash = id === FLOW_GROUP_TYPES.RECYCLE_BIN;
       const operations = showAction ? getOperations(item) : [];
-      
+
       return (
-        <div 
+        <div
           key={id}
           class={[
-            styles.menuItem, 
+            styles.menuItem,
             selectedItem.value === id && styles.active,
             sticky && styles.stickyMenuItem,
             isTrash && styles.trashItem
@@ -217,29 +221,29 @@ export const FlowGroupAside = defineComponent({
     const renderSectionHeader = (key: GroupSectionType, title: string, total: number) => {
       const isCollapsed = collapsed.value[key];
       // "项目创作流组"需要不同的 sticky top 值，避免与"我的创作流"重叠
-      const stickyClass = key === 'projectFlowGroups' 
-        ? styles.stickyProjectHeader 
+      const stickyClass = key === 'projectFlowGroups'
+        ? styles.stickyProjectHeader
         : styles.sticky;
       return (
-        <div 
-            class={[styles.groupHeader, stickyClass]} 
-            onClick={() => handleGroupToggle(key)}
-          >
-            <SvgIcon 
-              name="right-shape" 
-              size={14} 
-              class={[styles.icon, styles.toggleIcon, !isCollapsed && styles.expanded]} 
+        <div
+          class={[styles.groupHeader, stickyClass]}
+          onClick={() => handleGroupToggle(key)}
+        >
+          <SvgIcon
+            name="right-shape"
+            size={14}
+            class={[styles.icon, styles.toggleIcon, !isCollapsed && styles.expanded]}
+          />
+          <span class={styles.groupTitle}>
+            {title} ({total})
+          </span>
+          <div onClick={(e) => handleGroupAction(e, key)}>
+            <SvgIcon
+              name="increase"
+              class={[styles.icon, styles.increaseIcon]}
             />
-            <span class={styles.groupTitle}>
-              {title} ({total})
-            </span>
-            <div onClick={(e) => handleGroupAction(e, key)}>
-              <SvgIcon 
-                name="increase" 
-                class={[styles.icon, styles.increaseIcon]} 
-              />
-            </div>
           </div>
+        </div>
       )
     };
 
@@ -296,7 +300,7 @@ export const FlowGroupAside = defineComponent({
             showAction: false, // 回收站不需要操作按钮，但需要保留空间以对齐
           })}
         </div>
-        
+
         {/* 创建分组弹窗 */}
         <CreateGroupDialog
           isShow={showDialog.value}
@@ -304,17 +308,17 @@ export const FlowGroupAside = defineComponent({
           onUpdate:isShow={(val: boolean) => { showDialog.value = val; }}
           onConfirm={handleDialogConfirm}
         />
-        
+
         {/* 重命名弹窗 */}
-              <RenameGroupDialog
-                isShow={showRenameDialog.value}
-                groupId={renameGroupId.value}
-                currentName={renameGroupName.value}
-                onUpdate:isShow={(val: boolean) => { showRenameDialog.value = val; }}
-                onConfirm={handleRenameConfirm}
-              />
-            </div>
-          );
-        },
-      });
+        <RenameGroupDialog
+          isShow={showRenameDialog.value}
+          groupId={renameGroupId.value}
+          currentName={renameGroupName.value}
+          onUpdate:isShow={(val: boolean) => { showRenameDialog.value = val; }}
+          onConfirm={handleRenameConfirm}
+        />
+      </div>
+    );
+  },
+});
 

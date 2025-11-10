@@ -1,4 +1,4 @@
-import { defineComponent, ref, onMounted, onUnmounted } from 'vue';
+import { defineComponent, ref, onMounted, onUnmounted, watch } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { Select, Tag } from 'bkui-vue';
 import { SvgIcon } from "@/components/SvgIcon";
@@ -13,24 +13,29 @@ export default defineComponent({
     isEdit: {
       type: Boolean,
       default: false
+    },
+    modelValue: {
+      type: String,
+      default: ''
+    },
+    envList: {
+      type: Array,
+      default: () => []
     }
   },
+  emits: ['update:modelValue'],
   setup(props, { emit }) {
     const { t } = useI18n();
     const selectRef = ref();
     const isPopoverVisible = ref(false);
-    const authoringEnv = ref('bike');
-    const authoringEnvList = ref([
-      {
-        value: 'fitness',
-        label: '健身',
-      },
-      {
-        value: 'bike',
-        label: '骑车',
-      }
-    ])
+    const authoringEnv = ref(props.modelValue);
     const trigger = ref<'default' | 'manual'>('manual');
+
+    watch(() => props.modelValue, (newValue) => {
+      if (newValue !== authoringEnv.value) {
+        authoringEnv.value = newValue;
+      }
+    });
 
     onMounted(() => {
       document.addEventListener('click', handleClickOutside);
@@ -65,6 +70,10 @@ export default defineComponent({
       }
     }
 
+    function handleChange() {
+      emit('update:modelValue', authoringEnv.value);
+    }
+
     function handlePopoverHide(value: boolean) {
       isPopoverVisible.value = value;
     }
@@ -85,9 +94,10 @@ export default defineComponent({
               searchPlaceholder={t('flow.content.searchEnvironment')}
               popoverMinWidth={240}
               onToggle={handlePopoverHide}
+              onChange={handleChange}
             >
               {
-                authoringEnvList.value.map(i => (
+                props.envList.map((i: any) => (
                   <Select.Option
                     key={i.value}
                     id={i.value}

@@ -1,4 +1,4 @@
-import { defineComponent, ref, watch, nextTick } from 'vue';
+import { defineComponent, nextTick } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { Dialog, Upload, Message } from 'bkui-vue';
 import { useRouter } from 'vue-router';
@@ -8,8 +8,9 @@ import { CODE_MODE, UI_MODE } from '@/utils/flowConst'
 export default defineComponent({
   name: 'ImportFlowPopup',
   props: {
-    modelValue: {
-      type: Boolean
+    isShow: {
+      type: Boolean,
+      default: false,
     },
     title: {
       type: String
@@ -18,15 +19,10 @@ export default defineComponent({
       type: Function
     }
   },
-  emits: ['update:modelValue'],
+  emits: ['update:isShow', 'confirm'],
   setup(props, { emit }) {
     const { t } = useI18n();
     const router = useRouter();
-    const isShow = ref(false);
-
-    watch(() => props.modelValue, (show) => {
-      isShow.value = show
-    });
 
     function checkJsonValid(json: any) {
       try {
@@ -78,7 +74,6 @@ export default defineComponent({
             }
           }
         } catch (e) {
-          console.log(e)
           onSuccess({
             code: 1,
             message: t('invalidFlowJson'),
@@ -91,26 +86,32 @@ export default defineComponent({
       reader.addEventListener('progress', onProgress)
     }
 
-    function handleCancel() {
-      emit('update:modelValue', false)
+    function handleConfirm() {
+      emit('confirm');
+      handleClose();
+    }
+
+    function handleClose() {
+      emit('update:isShow', false)
     }
 
     return () => (
       <Dialog
-        is-show={isShow.value}
+        is-show={props.isShow}
         theme="primary"
         width={640}
         title={props.title || t('flow.content.importFlow')}
         confirm-text={t('flow.content.import')}
         quick-close={false}
-        onClosed={handleCancel}
+        onClosed={handleClose}
+        onConfirm={handleConfirm}
       >
         {{
           default: () => (
             <>
               <span class={`${styles.label} ${styles.desc}`}>{t('flow.content.importFlowLabel')}</span>
               <Upload
-                v-if={isShow.value}
+                v-if={props.isShow}
                 accept=".json, application/json"
                 with-credentials={true}
                 custom-request={handleSelect}

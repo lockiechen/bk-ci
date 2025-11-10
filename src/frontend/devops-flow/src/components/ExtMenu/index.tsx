@@ -2,16 +2,7 @@ import { defineComponent, ref, type PropType, computed } from 'vue';
 import { Popover } from 'bkui-vue';
 import { SvgIcon } from "@/components/SvgIcon";
 import styles from "./ExtMenu.module.css";
-
-interface MenuItem {
-  text: string;
-  disable?: boolean;
-  hasPermission?: boolean;
-  disablePermissionApi?: boolean;
-  permissionData?: any;
-  tooltips?: string;
-  handler: (data: any, item: MenuItem) => void;
-}
+import { type MenuItem } from '@/api/flowContentList';
 
 export default defineComponent({
   name: 'ExtMenu',
@@ -20,7 +11,7 @@ export default defineComponent({
   },
   props: {
     data: {
-      type: Object as PropType<Record<string, any>>,
+      type: Object,
       default: () => ({})
     },
     config: {

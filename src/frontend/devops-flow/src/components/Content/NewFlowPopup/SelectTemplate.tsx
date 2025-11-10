@@ -1,4 +1,4 @@
-import { computed, defineComponent, ref } from 'vue';
+import { computed, defineComponent, ref, watch } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { useRouter } from 'vue-router';
 import { Radio, Checkbox, Message } from 'bkui-vue';
@@ -24,23 +24,27 @@ export default defineComponent({
   },
   props: {
     modelValue: {
-      type: Boolean
+      type: Object,
+      default: () => ({
+        activeTemplate: { name: '空白模板', logoUrl: '', desc: '' },
+        currentModel: 'freedomMode',
+        cloneTemplateSet: [],
+        activeMenuItem: 'flowModel'
+      })
     }
   },
   emits: ['update:modelValue'],
   setup(props, { emit }) {
     const { t } = useI18n();
-    const router = useRouter();
-    const activeTemplate = ref({
-      "name": "空白模板",
-      "logoUrl": "",
-      "desc": ""
-    });
+  
+    const templateInfoData = ref(props.modelValue);
     const isTemplatPopup = ref(false);
     const templateList = ref([]);
-    const currentModel = ref('freedomMode');
-    const cloneTemplateSet = ref([]);
-    const activeMenuItem = ref('flowModel');
+
+    watch(() => props.modelValue, (newValue) => {
+      templateInfoData.value = { ...templateInfoData.value, ...newValue };
+    }, { deep: true });
+
     const configList = computed(() => [
       {
         title: t('flow.flowModel'),
@@ -67,7 +71,7 @@ export default defineComponent({
       disableTooltip: {
         disabled: true
       },
-      active: activeMenuItem.value === child.name
+      active: templateInfoData.value.activeMenuItem === child.name
     })));
 
     const configComponentMap: Record<string, any> = {
@@ -77,14 +81,18 @@ export default defineComponent({
       notice: NoticeTab,
       setting: SettingTab
     }
-    
+
+    function handleChange() {
+      emit('update:modelValue', templateInfoData.value);
+    }
+
     function renderDynamicComponent() {
-      const TargetComponent = configComponentMap[activeMenuItem.value]
+      const TargetComponent = configComponentMap[templateInfoData.value.activeMenuItem]
       return TargetComponent ? <TargetComponent /> : null
     }
 
     function changeConfig(name: string) {
-      activeMenuItem.value = name;
+      templateInfoData.value.activeMenuItem = name;
     }
 
     return () => (
@@ -95,9 +103,9 @@ export default defineComponent({
           >
             <span class={styles.activeImage}>
               {
-                activeTemplate.value.logoUrl ? (
+                templateInfoData.value.activeTemplate.logoUrl ? (
                   <img
-                    src={activeTemplate.value.logoUrl}
+                    src={templateInfoData.value.activeTemplate.logoUrl}
                     width={32}
                     height={32}
                   />
@@ -110,11 +118,11 @@ export default defineComponent({
               }
             </span>
             <div class={styles.activeLabel}>
-              <p>{activeTemplate.value.name}</p>
+              <p>{templateInfoData.value.activeTemplate.name}</p>
               {
-                activeTemplate.value.name === '空白模板' ? (
+                templateInfoData.value.activeTemplate.name === '空白模板' ? (
                   <p class={styles.activeDesc}>{t('flow.content.orchestrateFromScratch')}</p>
-                ) : <p class={styles.activeDesc}>{activeTemplate.value.desc || '--'}</p>
+                ) : <p class={styles.activeDesc}>{templateInfoData.value.activeTemplate.desc || '--'}</p>
               }
             </div>
             <span class={styles.selectIcon}>
@@ -128,8 +136,9 @@ export default defineComponent({
             <div class={styles.modelSelect}>
               <p class={styles.settingLabel}>{t('flow.content.mode')}</p>
               <Radio.Group
-                v-model={currentModel.value}
+                v-model={templateInfoData.value.currentModel}
                 size="small"
+                onChange={handleChange}
               >
                 <Radio label='freedomMode'>{t('flow.content.freeMode')}</Radio>
                 <Radio label='constraintMode' disabled={true}>{t('flow.content.constraintMode')}</Radio>
@@ -138,8 +147,9 @@ export default defineComponent({
             <div class={styles.cloneTemplateSet}>
               <p class={styles.settingLabel}>{t('flow.content.cloneTemplateSettings')}</p>
               <Checkbox.Group
-                v-model={cloneTemplateSet.value}
+                v-model={templateInfoData.value.cloneTemplateSet}
                 disabled={true}
+                onChange={handleChange}
               >
                 <Checkbox label='freedomMode' size="small">{t('flow.content.notificationSettings')}</Checkbox>
                 <Checkbox label='constraintMode' size="small">{t('flow.content.concurrencyPolicy')}</Checkbox>
@@ -154,7 +164,7 @@ export default defineComponent({
               configList.value.map(item => (
                 <li
                   onClick={() => changeConfig(item.name)}
-                  class={`${styles.configItem} ${activeMenuItem.value === item.name ? styles.configActive : ''}`}
+                  class={`${styles.configItem} ${templateInfoData.value.activeMenuItem === item.name ? styles.configActive : ''}`}
                 >
                   {item.title}
                 </li>

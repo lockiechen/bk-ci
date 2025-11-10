@@ -31,7 +31,7 @@ export const GroupActionMenu = defineComponent({
   },
   setup(props: Props) {
     const handleClick = (e: MouseEvent, operationId: string) => {
-      
+
       props.onOperationClick(operationId);
     };
 
@@ -46,7 +46,7 @@ export const GroupActionMenu = defineComponent({
     };
 
     return () => (
-      <Dropdown 
+      <Dropdown
         trigger="click"
         placement="bottom-end"
         popoverOptions={popoverOptions.value}

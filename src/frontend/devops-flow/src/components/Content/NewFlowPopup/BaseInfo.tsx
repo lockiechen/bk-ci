@@ -1,4 +1,4 @@
-import { defineComponent, ref } from 'vue';
+import { defineComponent, ref, watch } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { Form, Input} from 'bkui-vue';
 import { SvgIcon } from "@/components/SvgIcon";
@@ -13,23 +13,48 @@ export default defineComponent({
   },
   props: {
     modelValue: {
-      type: Boolean
+      type: Object,
+      default: () => ({
+        flowName: '',
+        desc: '',
+        authoringEnv: ''
+      })
     }
   },
   emits: ['update:modelValue'],
-  setup() {
+  setup(props, { emit, expose }) {
     const { t } = useI18n();
     const formRef = ref();
-    const FormData = ref({
-      flowName: '',
-      desc: ''
+    const baseInfoData = ref({...props.modelValue});
+    const authoringEnvList = ref([
+      {
+        value: 'a',
+        label: '我的创作环境',
+      }
+    ])
+
+    expose({
+      formRef
     });
+
+    watch(()=>props.modelValue,(newValue)=>{
+      baseInfoData.value = {...baseInfoData.value, ...newValue}
+    })
+
+    function handleChange() {
+      emit('update:modelValue', baseInfoData.value);
+    }
+
+    function updateAuthoringEnv(env: string) {
+      baseInfoData.value.authoringEnv = env;
+      handleChange()
+    }
 
     return () => (
       <Form
         class={styles.baseInfo}
-        ref={formRef.value}
-        model={FormData.value}
+        ref={formRef}
+        model={baseInfoData.value}
         form-type="vertical"
       >
         <div class={styles.baseItem}>
@@ -37,11 +62,13 @@ export default defineComponent({
           <Form.FormItem
             label={t('flow.content.flowName')}
             property="flowName"
-            placeholder={t('flow.content.inputFlowName')}
             required
+            maxlength={128}
           >
             <Input
-              v-model={FormData.value.flowName}
+              v-model={baseInfoData.value.flowName}
+              onChange={handleChange}
+              placeholder={t('flow.content.inputFlowName')}
             ></Input>
           </Form.FormItem>
           <Form.FormItem
@@ -49,7 +76,8 @@ export default defineComponent({
             property="desc"
           >
             <Input
-              v-model={FormData.value.desc}
+              v-model={baseInfoData.value.desc}
+              onChange={handleChange}
               type="textarea"
             ></Input>
           </Form.FormItem>
@@ -68,6 +96,9 @@ export default defineComponent({
           </p>
           <AuthoringContent
             isEdit={true}
+            modelValue={baseInfoData.value.authoringEnv}
+            onUpdate:modelValue={updateAuthoringEnv}
+            envList={authoringEnvList.value}
           />
         </div>
       </Form>

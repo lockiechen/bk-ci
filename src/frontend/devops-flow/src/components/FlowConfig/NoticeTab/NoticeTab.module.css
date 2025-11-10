@@ -14,6 +14,10 @@
   }
   :global(.bk-collapse-item) {
     box-shadow: none;
+    margin-bottom: 14px;
+  }
+  :global(.bk-collapse-content) {
+    padding: var(--spacing-md) var(--spacing-lg) 0;
   }
   :global(.bk-collapse-icon) {
     top: 17px;
@@ -25,6 +29,13 @@
   :global(.bk-collapse-title) {
     font-size: var(--font-size-sm);
     margin-left: 18px;
-    color: #3F3E3E;
+    color: var(--color-title-text);
   }
+}
+
+.collapseContent {
+  background: var(--bg-primary);
+  border: 1px solid var(--border-color);
+  border-radius: 2px;
+  padding: 22px 24px;
 }

@@ -10,7 +10,7 @@
 
 .moreFill:hover {
   color: var(--color-primary);
-  background: #e6e6e7;
+  background: var(--bg-hover);
   border-radius: 50%;
 }
 
@@ -31,7 +31,7 @@
   line-height: 32px;
   font-size: var(--spacing-md);
   padding: 0 20px;
-  color: #63656e;
+  color: var(--color-text-secondary);
   background-color: var(--bg-primary);
   text-align: center;
   cursor: pointer;

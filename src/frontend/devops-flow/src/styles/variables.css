@@ -8,6 +8,7 @@
   --bg-active: #F0F5FF;
   --bg-hover: #f0f1f5;
   --bg-hover-active: #E1ECFF;
+  --bg-unchecked: #EAEBF0;
   
   --color-primary: #3a84ff;
   --color-primary-hover: #699df4;
@@ -19,6 +20,7 @@
   --color-text-tertiary: #979ba5;
   --color-text-disabled: #c4c6cc;
   --color-text-medium-black: #4D4F56;
+  --color-title-text: #3F3E3E;
   
   --border-color: #dcdee5;
   --border-radius: 2px;

@@ -11,8 +11,8 @@
 .newFlowPopup {
   :global(.bk-step:not(.current):not(.done) .bk-step-indicator) {
     color: var(--color-text-medium-black);
-    background-color: #EAEBF0;
-    border-color: #EAEBF0;
+    background-color: var(--bg-unchecked);
+    border-color: var(--bg-unchecked);
   }
 
   :global(.bk-step.done .bk-step-indicator) {
@@ -38,7 +38,14 @@
   overflow-y: auto;
 }
 
-/* 基础设置 */
+.btn {
+  margin-left: var(--spacing-sm);
+}
+
+/* ==========================================
+ * 基础设置相关样式
+ * ========================================== */
+
 .baseInfo {
   width: 640px;
   margin: auto;
@@ -81,7 +88,10 @@
   margin-top: 2px;
 }
 
-/* 选择模板 */
+/* ==========================================
+ * 选择模板相关样式
+ * ========================================== */
+
 .selectTemplate {
   height: 100%;
 }
@@ -188,8 +198,4 @@
 .configContent {
   flex: 1;
   background-color: var(--bg-primary);
-}
-
-.btn {
-  margin-left: var(--spacing-sm);
 }

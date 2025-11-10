@@ -1,23 +1,21 @@
 import { useI18n } from "vue-i18n";
-import { defineComponent, ref, computed, onMounted, watch } from "vue";
-import { useRoute, useRouter } from 'vue-router';
-import { Button, Input, Dropdown } from "bkui-vue";
-import { type Flow } from '@/types/index'
+import { defineComponent } from "vue";
+import { Button, Input, Dropdown, Dialog } from "bkui-vue";
 import styles from "./Content.module.css";
 import { FlowTable } from "./FlowTable";
 import { SvgIcon } from "@/components/SvgIcon";
 import ImportFlowPopup from '@/components/ImportFlowPopup'
 import NewFlowPopup from './NewFlowPopup'
-
-import { ORDER_ENUM, FLOW_SORT_FILED } from '@/utils/flowConst.ts';
-// import { statusIconMap } from '@/utils/flowStatus'
+import { useContentData } from '@/hooks/useContentData'
 
 export const Content = defineComponent({
   name: "Content",
   components: {
     SvgIcon,
     ImportFlowPopup,
-  },  
+    NewFlowPopup,
+    FlowTable
+  },
   props: {
     groupId: {
       type: String,
@@ -26,226 +24,50 @@ export const Content = defineComponent({
   },
   setup(props) {
     const { t } = useI18n();
-    const route = useRoute();
-    const router = useRouter();
+    const {
+      pagination,
+      tableLoading,
+      flowTableList,
+      isShowEnableDialog,
+      isShowAddToDialog,
+      isShowCopyDialog,
+      isShowSaveAsTemplateDialog,
+      isShowDeleteDialog,
+      currentActionData,
+      
+      sortList,
+      newFlowList,
+      sortShow,
+      currentSortType,
+      currentCollation,
+      currentSortIconName,
+      newFromTemplatePopupShow,
+      importFlowPopupShow,
 
-    const sortShow = ref(false);
-    const currentSortType = ref((route.query.sortType as string) || localStorage.getItem('flowSortType') || FLOW_SORT_FILED.flowName);
-    const currentCollation = ref((route.query.collation as string) || localStorage.getItem('flowSortCollation') || ORDER_ENUM.ascending);
-    const currentSortIconName = computed(() => getSortIconName(currentSortType.value));
+      changeSortType,
+      closeAllDialogs,
+      handleTableSortChange,
+      handlePageChange,
+      handleLimitChange,
+      handleClearSearch,
+      removeContent,
+      confirmEnableAction,
+      copyContentItem,
+      saveContentAsTemplate,
+      addContentToFlowGroup,
+      importNewContent,
+    } = useContentData();
 
-    const tableLoading = ref(false);
-    const flowList = ref<Flow[]>([]);
-    const pagination = ref({
-      current: 1,
-      count: 0,
-      limit: 20
-    });
-
-    const sortList = computed(() => {
-      return [
-        {
-          id: FLOW_SORT_FILED.flowName,
-          name: t('flow.content.orderByAlpha')
-        }, {
-          id: FLOW_SORT_FILED.createTime,
-          name: t('flow.content.orderByCreateTime')
-        }, {
-          id: FLOW_SORT_FILED.updateTime,
-          name: t('flow.content.orderByUpdateTime')
-        }, {
-          id: FLOW_SORT_FILED.latestBuildStartDate,
-          name: t('flow.content.orderByExecuteTime')
-        }
-      ].map(sort => ({
-        ...sort,
-        active: isActiveSort(sort.id),
-        sortIcon: getSortIconName(sort.id)
-      }))
-    });
-
-    const newFlowList = computed(() => [
-      {
-        text: t('flow.content.newFromTemplate'),
-        handler: handleNewFromTemplate
-      },
-      {
-        text: t('flow.content.importFlow'),
-        handler: handleImportFlow
-      }
-    ]);
-
-    const newFromTemplatePopupShow = ref(false);
-    const importFlowPopupShow = ref(false);
-
-    watch([currentSortType, currentCollation], () => {
-      fetchFlowList();
-      updateQuery();
-    });
-
-    onMounted(() => {
-      fetchFlowList();
-      updateQuery();
-    });
-
-    async function fetchFlowList() {
-      tableLoading.value = true;
-      try {
-        const params = {
-          page: pagination.value.current,
-          pageSize: pagination.value.limit,
-          sortType: currentSortType.value,
-          collation: currentCollation.value
-        };
-        // 这里调用实际的接口
-        // const response = await flowApi.getFlowList({
-        //   sortType: currentSortType.value,
-        //   collation: currentCollation.value
-        // });
-        // flowList.value = response.data;
-        setTimeout(() => {
-          // 模拟数据 - 后续替换为实际接口调用
-          flowList.value = [
-            {
-              id: 1,
-              name: 'CI流水线',
-              groupName: '5',
-              lastExecution: '成功',
-              executionTime: '2024-01-13 10:30',
-              status: '运行中',
-              creator: '张三',
-              updateTime: '2024-01-13 10:30',
-            },
-            {
-              id: 2,
-              name: 'A部署流程',
-              groupName: '2',
-              lastExecution: '失败',
-              executionTime: '2024-01-14 16:45',
-              status: '已停止',
-              creator: '李四',
-              updateTime: '2024-01-14 16:45'
-            },
-            {
-              id: 3,
-              name: '部署流程',
-              groupName: '3',
-              lastExecution: '失败',
-              executionTime: '2024-01-16 16:45',
-              status: '已停止',
-              creator: '李屋',
-              updateTime: '2024-01-16 16:45'
-            },
-          ].map(item => ({
-            ...item,
-            flowAction: [{
-              text: t('flow.content.disable') || t('flow.content.enable'),
-              handler: handleFn
-            }, {
-              text: t('flow.content.addTo'),
-              tooltips: '66666666',
-              handler: handleFn
-            }, {
-              text: t('flow.content.copyCreationFlow'),
-              handler: handleFn
-            }, {
-              text: t('flow.content.saveAsTemplate'),
-              handler: handleFn
-            }, {
-              text: t('flow.content.delete'),
-              handler: handleFn
-            }
-            ]
-          }))
-          tableLoading.value = false;
-        }, 1000);
-      } catch (error) {
-        console.error('获取流程列表失败:', error);
-      }
+    function sortChange({ sortType, collation }: { sortType: string, collation: string }) {
+      handleTableSortChange({ sortType, collation });
     }
 
-    function handleFn(row: Flow) {
-      console.log(1111111, row);
+    function pageChange(current: number) {
+      handlePageChange(current);
     }
 
-    function handleClearSearch() {
-      console.log('清空搜索条件');
-    }
-
-    function handleNewFromTemplate() {
-      console.log('从模板新建创作流');
-      newFromTemplatePopupShow.value = !newFromTemplatePopupShow.value
-    }
-
-    function handleImportFlow() {
-      console.log('导入创作流');
-      importFlowPopupShow.value = !importFlowPopupShow.value
-    }
-
-    function updateQuery() {
-      const queryParams: any = {
-        ...route.query,
-        sortType: currentSortType.value,
-        ...(currentCollation.value ? { collation: currentCollation.value } : {})
-      };
-      router.push({
-        query: queryParams
-      });
-    }
-
-    function isActiveSort(sortType: string) {
-      return currentSortType.value === sortType;
-    }
-
-    function getSortIconName(sortType: string) {
-      if (isActiveSort(sortType) && currentCollation.value && currentCollation.value !== 'null') {
-        return `sort-${currentCollation.value.toLowerCase()}`;
-      }
-      return 'sort';
-    }
-
-    function changeSortType(sortType: string) {
-      if (sortType === currentSortType.value) {
-        currentCollation.value = currentCollation.value === ORDER_ENUM.descending ? ORDER_ENUM.ascending : ORDER_ENUM.descending;
-      } else {
-        switch (sortType) {
-          case FLOW_SORT_FILED.flowName:
-            currentCollation.value = ORDER_ENUM.ascending;
-            break;
-          case FLOW_SORT_FILED.createTime:
-          case FLOW_SORT_FILED.updateTime:
-          case FLOW_SORT_FILED.latestBuildStartDate:
-            currentCollation.value = ORDER_ENUM.descending;
-            break;
-        }
-        currentSortType.value = sortType;
-        sortShow.value = false;
-      }
-
-      localStorage.setItem('flowSortType', currentSortType.value);
-      localStorage.setItem('flowSortCollation', currentCollation.value);
-
-      updateQuery();
-    }
-
-    function handleTableSortChange({ sortType, collation }: { sortType: string, collation: string }) {
-      currentSortType.value = sortType;
-      currentCollation.value = collation;
-
-      localStorage.setItem('flowSortType', sortType);
-      localStorage.setItem('flowSortCollation', collation);
-      updateQuery();
-    }
-
-    function handlePageChange(current: number) {
-      pagination.value.current = current;
-      fetchFlowList();
-    }
-
-    function handleLimitChange(limit: number) {
-      pagination.value.limit = limit;
-      pagination.value.current = 1;
-      fetchFlowList();
+    function limitChange(limit: number) {
+      handleLimitChange(limit);
     }
 
     return () => (
@@ -336,25 +158,111 @@ export const Content = defineComponent({
             </div>
           </div>
           <FlowTable
-            data={flowList.value}
+            data={flowTableList.value}
             loading={tableLoading.value}
-            sortType={currentSortType.value}
-            collation={currentCollation.value}
+            currentSortType={currentSortType.value}
+            currentCollation={currentCollation.value}
             pagination={pagination.value}
-            onSortChange={handleTableSortChange}
-            onPageChange={handlePageChange}
-            onLimitChange={handleLimitChange}
+            onSortChange={sortChange}
+            onPageChange={pageChange}
+            onLimitChange={limitChange}
             onClearSearch={handleClearSearch}
           />
         </div>
 
         <NewFlowPopup
-          v-model={newFromTemplatePopupShow.value}
+          isShow={newFromTemplatePopupShow.value}
+          onUpdate:isShow={(val: boolean) => { newFromTemplatePopupShow.value = val; }}
         />
 
         <ImportFlowPopup
-          v-model={importFlowPopupShow.value}
+          isShow={importFlowPopupShow.value}
+          onUpdate:isShow={(val: boolean) => { importFlowPopupShow.value = val; }}
+          onConfirm={importNewContent}
         />
+
+        {/* 启用/禁用弹窗 */}
+        <Dialog
+          is-show={isShowEnableDialog.value}
+          title={'禁用或启用'}
+          onClosed={closeAllDialogs}
+        >
+          <div>
+            <p>确认{currentActionData.value?.status === 'enable' ? '禁用' : '启用'}创作流？</p>
+            <p>操作对象: {currentActionData.value?.name || currentActionData.value?.id}</p>
+          </div>
+          <template v-slot:footer>
+            <Button onClick={closeAllDialogs}>取消</Button>
+            <Button theme="primary" onClick={confirmEnableAction}>确认</Button>
+          </template>
+        </Dialog>
+
+        {/* 添加到组弹窗 */}
+        <Dialog
+          is-show={isShowAddToDialog.value}
+          title={t('flow.content.addTo')}
+          onClosed={closeAllDialogs}
+        >
+          <div>
+            <p>选择要添加到的组：</p>
+            <p>创作流: {currentActionData.value?.name || currentActionData.value?.id}</p>
+            {/* TODO: 添加组选择器 */}
+          </div>
+          <template v-slot:footer>
+            <Button onClick={closeAllDialogs}>取消</Button>
+            <Button theme="primary" onClick={addContentToFlowGroup}>确认</Button>
+          </template>
+        </Dialog>
+
+        {/* 复制弹窗 */}
+        <Dialog
+          is-show={isShowCopyDialog.value}
+          title={t('flow.content.copyCreationFlow')}
+          onClosed={closeAllDialogs}
+        >
+          <div>
+            <p>请输入新创作流的名称：</p>
+            <p>原创作流: {currentActionData.value?.name || currentActionData.value?.id}</p>
+            {/* TODO: 添加名称输入框 */}
+          </div>
+          <template v-slot:footer>
+            <Button onClick={closeAllDialogs}>取消</Button>
+            <Button theme="primary" onClick={copyContentItem}>确认</Button>
+          </template>
+        </Dialog>
+
+        {/* 另存为模板弹窗 */}
+        <Dialog
+          is-show={isShowSaveAsTemplateDialog.value}
+          title={t('flow.content.saveAsTemplate')}
+          onClosed={closeAllDialogs}
+        >
+          <div>
+            <p>请输入模板名称：</p>
+            <p>创作流: {currentActionData.value?.name || currentActionData.value?.id}</p>
+            {/* TODO: 添加模板名称输入框 */}
+          </div>
+          <template v-slot:footer>
+            <Button onClick={closeAllDialogs}>取消</Button>
+            <Button theme="primary" onClick={saveContentAsTemplate}>确认</Button>
+          </template>
+        </Dialog>
+
+        {/* 删除弹窗 */}
+        <Dialog
+          is-show={isShowDeleteDialog.value}
+          title={t('flow.content.delete')}
+          onClosed={closeAllDialogs}
+        >
+          <div>
+            <p>确认删除创作流？此操作不可撤销。</p>
+            <p>操作对象: {currentActionData.value?.name || currentActionData.value?.id}</p>
+          </div>
+          <template v-slot:footer>
+            <Button onClick={closeAllDialogs}>取消</Button>
+            <Button theme="primary" onClick={removeContent}>确认</Button>
+          </template>
+        </Dialog>
       </div>
     );
   },

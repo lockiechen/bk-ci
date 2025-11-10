@@ -31,26 +31,26 @@ export const RenameGroupDialog = defineComponent({
     const group = reactive({
       name: props.currentName,
     });
-    
+
     watch(() => props.currentName, (newVal) => {
       group.name = newVal;
     });
-    
+
     watch(() => props.isShow, (newVal) => {
       if (newVal) {
         group.name = props.currentName;
       }
     });
-    
+
     const resetForm = () => {
       group.name = props.currentName;
     };
-    
+
     const handleClose = () => {
       emit('update:isShow', false);
       resetForm();
     };
-    
+
     const handleConfirm = () => {
       if (!group.name.trim()) {
         Message({ theme: 'error', message: t('flow.dialog.renameGroup.groupNameRequired') });
@@ -59,7 +59,7 @@ export const RenameGroupDialog = defineComponent({
       emit('confirm', { groupId: props.groupId, name: group.name.trim() });
       handleClose();
     };
-    
+
     return () => (
       <Dialog
         isShow={props.isShow}
