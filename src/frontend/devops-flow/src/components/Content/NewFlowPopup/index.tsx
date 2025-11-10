@@ -1,57 +1,98 @@
-import { defineComponent, ref, watch } from 'vue';
+import { defineComponent} from 'vue';
 import { useI18n } from 'vue-i18n';
 import { Dialog, Button, Steps, Message } from 'bkui-vue';
 import styles from "./Index.module.css";
 import BaseInfo from './BaseInfo';
 import SelectTemplate from './SelectTemplate';
+import { useNewFlow } from '@/hooks/useNewFlow';
 
 export default defineComponent({
   name: 'NewFlowPopup',
   props: {
-    modelValue: {
-      type: Boolean
+    isShow: {
+      type: Boolean,
+      default: false,
     }
   },
-  emits: ['update:modelValue'],
+  emits: ['update:isShow', 'confirm'],
   setup(props, { emit }) {
     const { t } = useI18n();
-    const isShow = ref(false);
-    const isFormLoading = ref(false);
-    const curStep = ref(1);
-    const steps = ref([
+
+    const {
+      currentStep,
+      formData,
+      isLoading,
+      baseInfoRef,
+      handleStepChange,
+      handleNextStep,
+      handlePrevStep,
+      handleUpdateBaseInfo,
+      handleUpdateTemplateInfo,
+      handleConfirm,
+      handleClose
+    } = useNewFlow(props);
+
+    // 步骤配置
+    const steps = [
       { title: t('flow.content.basicSettings'), icon: 1, description: t('flow.content.chooseEnvironment') },
       { title: t('flow.content.selectTemplate'), icon: 2, description: t('flow.content.startFromBlankOrTemplate') }
-    ]);
+    ];
 
-    watch(() => props.modelValue, (show) => {
-      isShow.value = show
-    });
-
-    function handleBerforeChangeStep(index: number) {
-      return true
+    /**
+     * 步骤切换前验证
+     */
+    async function handleBerforeChangeStep(index: number) {
+      return true;
     }
 
-    function stepChanged(index: number) {
-      curStep.value = index;
+    /**
+     * 步骤点击切换
+     */
+    async function stepChanged(index: number) {
+      await handleStepChange(index);
     }
 
-    function handleChangeStep() {
-      curStep.value = curStep.value === 1 ? 2 : 1;
+    /**
+     * 切换步骤按钮
+     */
+    async function handleChangeStep() {
+      if (currentStep.value === 1) {
+        await handleNextStep();
+      } else {
+        handlePrevStep();
+      }
     }
 
-    function handleConfirm() { }
+    /**
+     * 确认创建
+     */
+    async function onConfirm() {
+      try {
+        await handleConfirm();
+        onClose();
+      } catch (error) {
+        Message({
+          message: t('flow.content.createFailed'),
+          theme: 'error'
+        });
+      }
+    }
 
-    function handleCancel() {
-      emit('update:modelValue', false)
+    /**
+     * 关闭弹窗
+     */
+    function onClose() {
+      handleClose();
+      emit('update:isShow', false);
     }
 
     return () => (
       <Dialog
-        is-show={isShow.value}
+        is-show={props.isShow}
         theme="primary"
         width={1200}
         quick-close={false}
-        onClosed={handleCancel}
+        onClosed={onClose}
         class={styles.newFlowPopup}
       >
         {{
@@ -62,8 +103,8 @@ export default defineComponent({
                 <Steps
                   theme="primary"
                   controllable={true}
-                  cur-step={curStep.value}
-                  steps={steps.value}
+                  cur-step={currentStep.value}
+                  steps={steps}
                   onClick={stepChanged}
                   before-change={handleBerforeChangeStep}
                 ></Steps>
@@ -73,10 +114,17 @@ export default defineComponent({
           default: () => (
             <div class={styles.content}>
               {
-                curStep.value === 1 ? (
-                  <BaseInfo></BaseInfo>
+                currentStep.value === 1 ? (
+                  <BaseInfo
+                    ref={baseInfoRef}
+                    modelValue={formData.value.baseInfo}
+                    onUpdate:modelValue={handleUpdateBaseInfo}
+                  />
                 ) : (
-                  <SelectTemplate></SelectTemplate>
+                  <SelectTemplate
+                    modelValue={formData.value.templateInfo}
+                    onUpdate:modelValue={handleUpdateTemplateInfo}
+                  />
                 )
               }
             </div>
@@ -85,19 +133,19 @@ export default defineComponent({
             <>
               <Button
                 class={styles.btn}
-                loading={isFormLoading.value}
+                loading={isLoading.value}
                 theme="primary"
                 onClick={handleChangeStep}
               >
-                {curStep.value === 1 ? t('flow.content.nextStep') : t('flow.content.previousStep')}
+                {currentStep.value === 1 ? t('flow.content.nextStep') : t('flow.content.previousStep')}
               </Button>
               {
-                curStep.value === 2 ? (
+                currentStep.value === 2 ? (
                   <Button
                     class={styles.btn}
-                    loading={isFormLoading.value}
+                    loading={isLoading.value}
                     theme="primary"
-                    onClick={handleConfirm}
+                    onClick={onConfirm}
                   >
                     {t('flow.content.createAndStartOrchestrating')}
                   </Button>
@@ -105,8 +153,8 @@ export default defineComponent({
               }
               <Button
                 class={styles.btn}
-                loading={isFormLoading.value}
-                onClick={handleCancel}
+                loading={isLoading.value}
+                onClick={onClose}
               >
                 {t('flow.common.cancel')}
               </Button>

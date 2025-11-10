@@ -1,6 +1,6 @@
 import { defineComponent } from 'vue';
 import { useI18n } from 'vue-i18n';
-import { useModeStore } from "@/stores/mode";
+import { useModeStore } from "@/stores/flowMode";
 import ModeSwitch from '@/components/ModeSwitch';
 import EmptyPage from '@/components/EmptyPage/index';
 import styles from './FlowModel.module.css';

@@ -44,7 +44,7 @@ export default defineComponent({
         >
           {{
             content: () => (
-              <div>content</div>
+              <div class={styles.collapseContent}>content</div>
             )
           }}
         </Collapse>

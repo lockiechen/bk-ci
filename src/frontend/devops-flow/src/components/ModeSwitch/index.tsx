@@ -1,7 +1,7 @@
 import { computed, defineComponent } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { Button } from 'bkui-vue';
-import { useModeStore } from "@/stores/mode";
+import { useModeStore } from "@/stores/flowMode";
 import styles from './ModeSwitch.module.css';
 import { modeList } from "@/utils/flowConst";
 
