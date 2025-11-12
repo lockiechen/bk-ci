@@ -34,6 +34,7 @@ export interface ContentTableItem {
   webhookAliasName?: string;
   webhookMessage?: string;
   trigger?: string;
+  enable?: boolean
 }
 
 export interface ContentTableResponse {
@@ -83,6 +84,24 @@ export interface MenuItem<T = any> {
   tooltips?: string;
   handler: (data: T, item: MenuItem) => void;
 }
+export interface SaveAsTemplateParams {
+  templateName: string;
+  isCopySetting: boolean;
+}
+
+export interface CopyFlowParams {
+  name: string;
+  desc?: string;
+  labels?: string[];
+  staticView?: string[];
+  dynamicGroup?: string[];
+}
+
+export interface MatchDynamicViewParams {
+  labelIds: any[];
+  flowName: string;
+}
+
 
 /**
  * 获取创作流内容表格数据
@@ -120,6 +139,7 @@ export async function getContentTableData(params: ContentTableParams): Promise<C
           lastRunTime: '2024-11-06 14:15:00',
           tags: ['前端', '部署', '自动化'],
           favorite: true,
+          enable: true,
           latestBuildStageStatus: [
             {
               stageId: 'stage-1',
@@ -150,6 +170,7 @@ export async function getContentTableData(params: ContentTableParams): Promise<C
           description: '监控后端服务状态并发送告警',
           status: 'running',
           creator: '李四',
+          enable: true,
           createTime: '2024-02-20 09:15:00',
           updateTime: '2024-11-06 13:45:00',
           flowCount: 12,
@@ -189,6 +210,7 @@ export async function getContentTableData(params: ContentTableParams): Promise<C
           createTime: '2024-03-10 16:20:00',
           updateTime: '2024-11-05 18:30:00',
           flowCount: 6,
+          enable: false,
           successRate: 99.1,
           lastRunTime: '2024-11-05 18:25:00',
           tags: ['数据库', '备份', '恢复'],
@@ -216,6 +238,7 @@ export async function getContentTableData(params: ContentTableParams): Promise<C
           createTime: '2024-04-05 11:45:00',
           updateTime: '2024-11-06 10:10:00',
           flowCount: 5,
+          enable: false,
           successRate: 87.3,
           lastRunTime: '2024-11-06 10:05:00',
           tags: ['代码', '质量', '检查'],
@@ -259,9 +282,9 @@ export async function getContentTableData(params: ContentTableParams): Promise<C
 /**
  * 单条删除
  */
-export async function deleteContent(id: string): Promise<void> {
+export async function deleteContent(flowId: string): Promise<void> {
   // TODO: 调用实际接口
-  // await http.delete(`/api/flow/content/${id}`);
+  // await http.delete(`/api/flow/content/${flowId}`);
   
   // 模拟数据
   return new Promise((resolve) => {
@@ -274,9 +297,9 @@ export async function deleteContent(id: string): Promise<void> {
 /**
  * 禁用创作流
  */
-export async function disableContent(id: string): Promise<void> {
+export async function disableContent(flowId: string, enable: boolean): Promise<void> {
   // TODO: 调用实际接口
-  // await http.put(`/api/flow/content/${id}/disable`);
+  // await http.put(`/api/flow/content/${flowId}/disable`);
   
   // 模拟数据
   return new Promise((resolve) => {
@@ -289,9 +312,9 @@ export async function disableContent(id: string): Promise<void> {
 /**
  * 复制创作流
  */
-export async function copyContent(id: string, newName?: string): Promise<ContentTableItem> {
+export async function copyContent(flowId: string, params: CopyFlowParams): Promise<ContentTableItem> {
   // TODO: 调用实际接口
-  // const response = await http.post(`/api/flow/content/${id}/copy`, { newName });
+  // const response = await http.post(`/api/flow/content/${flowId}/copy`, { params });
   // return response.data;
   
   // 模拟数据
@@ -299,19 +322,32 @@ export async function copyContent(id: string, newName?: string): Promise<Content
     setTimeout(() => {
       const mockData: ContentTableItem = {
         id: `content-${Date.now()}`,
-        name: newName || `复制-${id}`,
-        description: '复制的创作流',
+        name: params.name || `复制-${flowId}`,
+        description: '定时备份数据库并支持快速恢复',
         status: 'stopped',
-        creator: '当前用户',
-        createTime: new Date().toISOString(),
-        updateTime: new Date().toISOString(),
-        flowCount: 0,
-        successRate: 0,
-        tags: [],
-        latestBuildStatus: 'SUCCEED',
-        latestVersionStatus: 'DRAFT',
-        trigger: '手动'
-      };
+        creator: '王五',
+        createTime: '2024-03-10 16:20:00',
+        updateTime: '2024-11-05 18:30:00',
+        flowCount: 6,
+        enable: true,
+        successRate: 99.1,
+        lastRunTime: '2024-11-05 18:25:00',
+        tags: ['数据库', '备份', '恢复'],
+        latestBuildStageStatus: [
+          {
+            stageId: 'stage-1',
+            name: '备份检查',
+            status: 'FAILED',
+            elapsed: 45,
+            showMsg: '备份文件校验失败'
+          }
+        ],
+        latestBuildStartTime: 1760688008000,
+        latestBuildStatus: 'FAILED',
+        latestBuildUserId: 'wangwu',
+        latestVersionStatus: 'ARCHIVED',
+        trigger: '定时'
+      }
       resolve(mockData);
     }, 300);
   });
@@ -320,18 +356,15 @@ export async function copyContent(id: string, newName?: string): Promise<Content
 /**
  * 另存为模板
  */
-export async function saveAsTemplate(id: string, templateName?: string): Promise<{ templateId: string; templateName: string }> {
+export async function saveAsTemplate(flowId: string, params: SaveAsTemplateParams): Promise<void> {
   // TODO: 调用实际接口
-  // const response = await http.post(`/api/flow/content/${id}/save-as-template`, { templateName });
+  // const response = await http.post(`/api/flow/content/${flowId}/save-as-template`, { templateName });
   // return response.data;
   
   // 模拟数据
   return new Promise((resolve) => {
     setTimeout(() => {
-      resolve({
-        templateId: `template-${Date.now()}`,
-        templateName: templateName || `模板-${id}`
-      });
+      resolve();
     }, 300);
   });
 }
@@ -339,9 +372,9 @@ export async function saveAsTemplate(id: string, templateName?: string): Promise
 /**
  * 添加至创作流组
  */
-export async function addToFlowGroup(contentId: string, groupId: string): Promise<void> {
+export async function addToFlowGroup(flowId: string, groupId: string): Promise<void> {
   // TODO: 调用实际接口
-  // await http.post(`/api/flow/content/${contentId}/add-to-group`, { groupId });
+  // await http.post(`/api/flow/content/${flowId}/add-to-group`, { groupId });
   
   // 模拟数据
   return new Promise((resolve) => {
@@ -373,6 +406,7 @@ export async function createContent(params: CreateContentParams): Promise<Conten
         flowCount: 0,
         successRate: 0,
         tags: [],
+        enable: true,
         latestBuildStatus: 'SUCCEED',
         latestVersionStatus: 'DRAFT',
         trigger: '手动'
@@ -407,6 +441,7 @@ export async function importContent(params: ImportContentParams): Promise<Conten
         updateTime: new Date().toISOString(),
         flowCount: 0,
         successRate: 0,
+        enable: true,
         tags: ['导入'],
         latestBuildStatus: 'SUCCEED',
         latestVersionStatus: 'DRAFT',
@@ -441,6 +476,7 @@ export async function getContentDetail(id: string): Promise<ContentTableItem> {
         lastRunTime: '2024-11-06 14:15:00',
         tags: ['前端', '部署', '自动化'],
         favorite: true,
+        enable: true,
         latestBuildStageStatus: [
           {
             stageId: 'stage-1',
@@ -466,6 +502,115 @@ export async function getContentDetail(id: string): Promise<ContentTableItem> {
         trigger: '手动'
       };
       resolve(mockData);
+    }, 300);
+  });
+}
+
+/**
+ * 获取动态流水线组数据
+ */
+export async function getMatchDynamicView(params: MatchDynamicViewParams): Promise<string[]> {
+  // TODO: 调用实际接口
+  // const response = await http.post('/api/flow/content', params);
+  // return response.data;
+  
+  // 模拟数据
+  return new Promise((resolve) => {
+    setTimeout(() => {
+      resolve(['personal-1']);
+    }, 300);
+  });
+}
+
+/**
+ * 获取项目标签数据
+ */
+export async function getProjectTags(projectId: string): Promise<any[]> {
+  // TODO: 调用实际接口获取项目标签
+  // const response = await http.get('/api/project/tags', { params });
+  // return response.data;
+  
+  // 模拟数据
+  return new Promise((resolve) => {
+    setTimeout(() => {
+      resolve([
+        {
+            "id": "mobdjbyp",
+            "projectId": "yu-test",
+            "name": "标签一",
+            "createTime": 1741333022,
+            "updateTime": 1741333022,
+            "createUser": "v_yjjiaoyu",
+            "updateUser": "v_yjjiaoyu",
+            "labels": [
+                {
+                    "id": "mobdjgap",
+                    "groupId": "mobdjbyp",
+                    "name": "测试标签",
+                    "createTime": 1741333039,
+                    "uptimeTime": 1741333039,
+                    "createUser": "v_yjjiaoyu",
+                    "updateUser": "v_yjjiaoyu"
+                },
+                {
+                    "id": "pwgdbjop",
+                    "groupId": "mobdjbyp",
+                    "name": "测试标签2",
+                    "createTime": 1741333053,
+                    "uptimeTime": 1741333053,
+                    "createUser": "v_yjjiaoyu",
+                    "updateUser": "v_yjjiaoyu"
+                },
+                {
+                    "id": "pdraqqdp",
+                    "groupId": "mobdjbyp",
+                    "name": "测试标签3",
+                    "createTime": 1762852870,
+                    "uptimeTime": 1762852870,
+                    "createUser": "v_yjjiaoyu",
+                    "updateUser": "v_yjjiaoyu"
+                }
+            ]
+        },
+        {
+            "id": "mobdjbyp1",
+            "projectId": "yu-test",
+            "name": "标签一",
+            "createTime": 1741333022,
+            "updateTime": 1741333022,
+            "createUser": "v_yjjiaoyu",
+            "updateUser": "v_yjjiaoyu",
+            "labels": [
+                {
+                    "id": "mobdjgap",
+                    "groupId": "mobdjbyp",
+                    "name": "测试标签",
+                    "createTime": 1741333039,
+                    "uptimeTime": 1741333039,
+                    "createUser": "v_yjjiaoyu",
+                    "updateUser": "v_yjjiaoyu"
+                },
+                {
+                    "id": "pwgdbjop",
+                    "groupId": "mobdjbyp",
+                    "name": "测试标签2",
+                    "createTime": 1741333053,
+                    "uptimeTime": 1741333053,
+                    "createUser": "v_yjjiaoyu",
+                    "updateUser": "v_yjjiaoyu"
+                },
+                {
+                    "id": "pdraqqdp",
+                    "groupId": "mobdjbyp",
+                    "name": "测试标签3",
+                    "createTime": 1762852870,
+                    "uptimeTime": 1762852870,
+                    "createUser": "v_yjjiaoyu",
+                    "updateUser": "v_yjjiaoyu"
+                }
+            ]
+        }
+    ]);
     }, 300);
   });
 }

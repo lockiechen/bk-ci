@@ -1,8 +1,8 @@
-import { defineComponent } from "vue";
+import { defineComponent } from 'vue'
 
 export interface SvgIconProps {
-  name: string;
-  size?: number | string;
+  name: string
+  size?: number | string
 }
 
 export const SvgIcon = defineComponent<SvgIconProps>({
@@ -19,6 +19,6 @@ export const SvgIcon = defineComponent<SvgIconProps>({
       <svg width={props.size} height={props.size} style="fill: currentColor">
         <use href={`#ci-flow-${props.name}`} />
       </svg>
-    );
+    )
   },
-});
+})

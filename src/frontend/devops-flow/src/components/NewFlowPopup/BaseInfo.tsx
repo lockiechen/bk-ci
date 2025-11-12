@@ -60,7 +60,6 @@ export default defineComponent({
           <Form.FormItem
             label={t('flow.content.name')}
             property="flowName"
-            placeholder={t('flow.content.inputFlowName')}
             required
             maxlength={128}
           >

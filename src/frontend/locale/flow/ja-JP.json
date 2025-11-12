@@ -171,6 +171,24 @@
       },
       "deleteConfirm": {
         "title": "削除確認"
+      },
+      "saveAsTemplate": {
+        "templateName": "テンプレート名",
+        "isCopySetting": "設定を適用",
+        "templateNamePlaceholder": "テンプレート名を入力してください、30文字以内",
+        "settingTooltip": "「はい」を選択すると、作成フロー設定がコピーされたテンプレートに適用されます",
+        "true": "はい",
+        "false": "いいえ"
+      },
+      "copyCreation": {
+        "name": "名称",
+        "desc": "説明",
+        "labels": "タグ",
+        "dynamicPipelineGroup": "動的作成フローグループ",
+        "staticPipelineGroup": "静的作成フローグループ",
+        "dynamicMatchPlaceholder": "作成フローの名前やタグなどの属性に基づいて自動的に一致します",
+        "addLabel": "新しいタグを追加",
+        "noLabels": "現在のプロジェクトには利用可能なタグがありません"
       }
     },
     "actions": {
@@ -179,7 +197,8 @@
       "unpin": "固定解除",
       "delete": "削除",
       "permissionManage": "創作流グループ権限管理",
-      "confirmDelete": "\"{name}\"を削除してもよろしいですか？"
+      "confirmDelete": "\"{name}\"を削除してもよろしいですか？",
+      "refresh": "更新"
     }
   }
 }

@@ -171,6 +171,24 @@
       },
       "deleteConfirm": {
         "title": "确认删除"
+      },
+      "saveAsTemplate": {
+        "templateName": "模板名称",
+        "isCopySetting": "应用设置",
+        "templateNamePlaceholder": "请输入模板名称，不能超过30个字符",
+        "settingTooltip": "选“是”则将创作流设置应用于复制后的模版",
+        "true": "是",
+        "false": "否"
+      },
+      "copyCreation": {
+        "name": "名称",
+        "desc": "描述",
+        "labels": "标签",
+        "dynamicPipelineGroup": "动态创作流组",
+        "staticPipelineGroup": "静态创作流组",
+        "dynamicMatchPlaceholder": "将根据创作流的名称、标签等属性自动匹配",
+        "addLabel": "新建标签",
+        "noLabels": "当前项目暂无标签"
       }
     },
     "actions": {
@@ -179,7 +197,8 @@
       "unpin": "取消置顶",
       "delete": "删除",
       "permissionManage": "创作流组权限管理",
-      "confirmDelete": "确定要删除\"{name}\"吗？"
+      "confirmDelete": "确定要删除\"{name}\"吗？",
+      "refresh": "刷新"
     }
   }
 }

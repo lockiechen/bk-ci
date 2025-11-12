@@ -171,6 +171,24 @@
       },
       "deleteConfirm": {
         "title": "Confirm Delete"
+      },
+      "saveAsTemplate": {
+        "templateName": "Template Name",
+        "isCopySetting": "Apply Settings",
+        "templateNamePlaceholder": "Please enter a template name, no more than 30 characters",
+        "settingTooltip": "Selecting 'Yes' will apply the creation flow settings to the copied template",
+        "true": "Yes",
+        "false": "No"
+      },
+      "copyCreation": {
+        "name": "Name",
+        "desc": "Description",
+        "labels": "Tags",
+        "dynamicPipelineGroup": "Dynamic Creation Flow Group",
+        "staticPipelineGroup": "Static Creation Flow Group",
+        "dynamicMatchPlaceholder": "Will automatically match based on the creation flow's name, tags, and other attributes",
+        "addLabel": "Add New Tag",
+        "noLabels": "No tags available in the current project"
       }
     },
     "actions": {
@@ -179,7 +197,8 @@
       "unpin": "Unpin",
       "delete": "Delete",
       "permissionManage": "Flow Group Permission Management",
-      "confirmDelete": "Are you sure you want to delete \"{name}\"?"
+      "confirmDelete": "Are you sure you want to delete \"{name}\"?",
+      "refresh": "Refresh"
     }
   }
 }

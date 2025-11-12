@@ -1,8 +1,8 @@
-import { defineComponent, ref, computed, watch, h, shallowRef, type PropType } from 'vue'
+import { defineComponent, ref, computed, watch, h } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useRouter } from 'vue-router'
-import { ORDER_ENUM, FLOW_SORT_FILED } from '@/utils/flowConst.ts'
-import { Button, Table, Loading, Dropdown, Dialog } from 'bkui-vue'
+import { FLOW_SORT_FILED } from '@/utils/flowConst.ts'
+import { Button, Table, Loading, Dropdown, Message } from 'bkui-vue'
 import type { Column } from 'bkui-vue/lib/table/props'
 import SearchSelect from '@blueking/search-select-v3'
 import ExtMenu from '@/components/ExtMenu/index'
@@ -10,7 +10,14 @@ import EmptyTableStatus from '@/components/EmptyTable/index'
 import { SvgIcon } from '@/components/SvgIcon'
 import ImportFlowPopup from '@/components/ImportFlowPopup'
 import NewFlowPopup from '@/components/NewFlowPopup'
-import { type ContentTableItem } from '@/api/flowContentList'
+import AddToGroupPopup from '@/components/AddToGroupPopup'
+import CopyFlowPopup from '@/components/CopyFlowPopup'
+import SaveAsTemplatePopup from '@/components/SaveAsTemplatePopup'
+import {
+  type ContentTableItem,
+  type SaveAsTemplateParams,
+  type CopyFlowParams,
+} from '@/api/flowContentList'
 import { useTableHeight } from '@/hooks/useTableHeight'
 import { useFlowListData } from '@/hooks/useFlowListData'
 import { useDeleteConfirm } from '@/hooks/useDeleteConfirm'
@@ -25,6 +32,9 @@ export const FlowTable = defineComponent({
     ImportFlowPopup,
     NewFlowPopup,
     SearchSelect,
+    AddToGroupPopup,
+    CopyFlowPopup,
+    SaveAsTemplatePopup,
   },
   props: {
     groupId: {
@@ -35,6 +45,7 @@ export const FlowTable = defineComponent({
   setup(props) {
     const { t } = useI18n()
     const router = useRouter()
+    const confirmLoading = ref(false)
     const tableContainerRef = ref<HTMLDivElement>()
     const { maxHeight } = useTableHeight(tableContainerRef)
     const { showDeleteConfirm } = useDeleteConfirm()
@@ -57,6 +68,7 @@ export const FlowTable = defineComponent({
       newFromTemplatePopupShow,
       importFlowPopupShow,
 
+      updateQuery,
       changeSortType,
       closeAllDialogs,
       handleTableSortChange,
@@ -84,6 +96,11 @@ export const FlowTable = defineComponent({
       },
       { immediate: true },
     )
+
+    watch([currentSortType, currentCollation], () => {
+      loadContentDataWithGroupId(props.groupId)
+      updateQuery()
+    })
 
     const fieldToSortTypeMap: Record<string, string> = {
       name: FLOW_SORT_FILED.flowName,
@@ -139,7 +156,12 @@ export const FlowTable = defineComponent({
             field: 'actions',
             render: ({ row }: any) => (
               <div class={styles.actions}>
-                <Button text theme="primary" onClick={() => row.handleExecute(row)}>
+                <Button
+                  text
+                  theme="primary"
+                  disabled={!row.enable}
+                  onClick={() => row.handleExecute(row)}
+                >
                   {t('flow.content.execute')}
                 </Button>
                 <ExtMenu data={row} config={row.flowAction} />
@@ -157,10 +179,12 @@ export const FlowTable = defineComponent({
 
     function pageChange(current: number) {
       handlePageChange(current)
+      loadContentDataWithGroupId(props.groupId)
     }
 
     function limitChange(limit: number) {
       handleLimitChange(limit)
+      loadContentDataWithGroupId(props.groupId)
     }
 
     // 处理删除操作
@@ -179,7 +203,7 @@ export const FlowTable = defineComponent({
 
     // 处理启用/禁用操作
     function handleEnableAction(data: any) {
-      const isEnable = data?.status === 'enable'
+      const isEnable = data?.enable
       const objectName = data?.name || data?.id
       showDeleteConfirm({
         title: t('flow.content.enableOrDisable'),
@@ -190,7 +214,7 @@ export const FlowTable = defineComponent({
         theme: 'primary',
         confirmText: t('flow.common.confirm'),
         onConfirm: async () => {
-          await confirmEnableAction(data?.id)
+          await confirmEnableAction(data?.id, !data.enable)
         },
       })
     }
@@ -244,6 +268,53 @@ export const FlowTable = defineComponent({
     const handleSearch = () => {
       // TODO: 触发搜索，重新加载数据
       console.log('Search triggered:', searchValue.value)
+    }
+
+    const handleAddTo = async (flowId: string, groupId: string) => {
+      confirmLoading.value = true
+      try {
+        await addContentToFlowGroup(flowId, groupId)
+        Message({
+          theme: 'success',
+          message: t('flow.content.addTo') + t('flow.common.success'),
+        })
+      } catch (error: any) {
+        Message({ theme: 'error', message: error || error.message })
+      } finally {
+        confirmLoading.value = false
+      }
+    }
+
+    const handleCopyFlow = async (flowId: string, params: CopyFlowParams) => {
+      confirmLoading.value = true
+      try {
+        const res = await copyContentItem(flowId, params)
+        if (res) {
+          Message({
+            theme: 'success',
+            message: t('flow.content.copyCreationFlow') + t('flow.common.success'),
+          })
+        }
+      } catch (error: any) {
+        Message({ theme: 'error', message: error || error.message })
+      } finally {
+        confirmLoading.value = false
+      }
+    }
+
+    const handleSaveAsTemplate = async (flowId: string, params: SaveAsTemplateParams) => {
+      confirmLoading.value = true
+      try {
+        await saveContentAsTemplate(flowId, params)
+        Message({
+          theme: 'success',
+          message: t('flow.content.saveAsTemplate') + t('flow.common.success'),
+        })
+      } catch (error: any) {
+        Message({ theme: 'error', message: error || error.message })
+      } finally {
+        confirmLoading.value = false
+      }
     }
 
     return () => (
@@ -357,71 +428,29 @@ export const FlowTable = defineComponent({
           onConfirm={importNewContent}
         />
 
-        {/* 添加到组弹窗 */}
-        <Dialog
-          is-show={isShowAddToDialog.value}
-          title={t('flow.content.addTo')}
-          onClosed={closeAllDialogs}
-        >
-          <div>
-            <p>{t('flow.content.selectGroupToAdd')}</p>
-            <p>
-              {t('flow.content.flowLabel')}:{' '}
-              {currentActionData.value?.name || currentActionData.value?.id}
-            </p>
-            {/* TODO: 添加组选择器 */}
-          </div>
-          <template v-slot:footer>
-            <Button onClick={closeAllDialogs}>{t('flow.common.cancel')}</Button>
-            <Button theme="primary" onClick={addContentToFlowGroup}>
-              {t('flow.common.confirm')}
-            </Button>
-          </template>
-        </Dialog>
+        <AddToGroupPopup
+          isShow={isShowAddToDialog.value}
+          data={currentActionData.value}
+          loading={confirmLoading.value}
+          onUpdate:isShow={closeAllDialogs}
+          onConfirm={handleAddTo}
+        />
 
-        {/* 复制弹窗 */}
-        <Dialog
-          is-show={isShowCopyDialog.value}
-          title={t('flow.content.copyCreationFlow')}
-          onClosed={closeAllDialogs}
-        >
-          <div>
-            <p>{t('flow.content.inputNewFlowName')}</p>
-            <p>
-              {t('flow.content.originalFlow')}:{' '}
-              {currentActionData.value?.name || currentActionData.value?.id}
-            </p>
-            {/* TODO: 添加名称输入框 */}
-          </div>
-          <template v-slot:footer>
-            <Button onClick={closeAllDialogs}>{t('flow.common.cancel')}</Button>
-            <Button theme="primary" onClick={copyContentItem}>
-              {t('flow.common.confirm')}
-            </Button>
-          </template>
-        </Dialog>
+        <CopyFlowPopup
+          isShow={isShowCopyDialog.value}
+          data={currentActionData.value}
+          loading={confirmLoading.value}
+          onUpdate:isShow={closeAllDialogs}
+          onConfirm={handleCopyFlow}
+        />
 
-        {/* 另存为模板弹窗 */}
-        <Dialog
-          is-show={isShowSaveAsTemplateDialog.value}
-          title={t('flow.content.saveAsTemplate')}
-          onClosed={closeAllDialogs}
-        >
-          <div>
-            <p>{t('flow.content.inputTemplateName')}</p>
-            <p>
-              {t('flow.content.flowLabel')}:{' '}
-              {currentActionData.value?.name || currentActionData.value?.id}
-            </p>
-            {/* TODO: 添加模板名称输入框 */}
-          </div>
-          <template v-slot:footer>
-            <Button onClick={closeAllDialogs}>{t('flow.common.cancel')}</Button>
-            <Button theme="primary" onClick={saveContentAsTemplate}>
-              {t('flow.common.confirm')}
-            </Button>
-          </template>
-        </Dialog>
+        <SaveAsTemplatePopup
+          isShow={isShowSaveAsTemplateDialog.value}
+          data={currentActionData.value}
+          loading={confirmLoading.value}
+          onUpdate:isShow={closeAllDialogs}
+          onConfirm={handleSaveAsTemplate}
+        />
       </div>
     )
   },

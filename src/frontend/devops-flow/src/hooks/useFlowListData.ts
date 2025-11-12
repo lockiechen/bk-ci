@@ -1,4 +1,4 @@
-import { computed, onMounted, ref, watch } from 'vue'
+import { computed, onMounted, ref } from 'vue'
 import { storeToRefs } from 'pinia'
 import { useRoute, useRouter } from 'vue-router'
 import { useI18n } from 'vue-i18n'
@@ -77,20 +77,7 @@ export function useFlowListData() {
     }))
   })
 
-  watch([currentSortType, currentCollation], () => {
-    loadContentData()
-    updateQuery()
-  })
-
-  watch(
-    () => route.params.groupId,
-    () => {
-      loadContentData()
-    },
-  )
-
   onMounted(() => {
-    loadContentData()
     updateQuery()
   })
 
@@ -207,7 +194,6 @@ export function useFlowListData() {
    */
   function handlePageChange(current: number) {
     pagination.value.current = current
-    loadContentData()
   }
 
   /**
@@ -216,7 +202,6 @@ export function useFlowListData() {
   function handleLimitChange(limit: number) {
     pagination.value.limit = limit
     pagination.value.current = 1
-    loadContentData()
   }
 
   /**
@@ -254,6 +239,7 @@ export function useFlowListData() {
     handlePageChange,
     handleLimitChange,
     handleClearSearch,
+    updateQuery,
 
     // 操作方法（直接暴露 store 的方法）
     closeAllDialogs: store.closeAllDialogs,
@@ -266,5 +252,7 @@ export function useFlowListData() {
     addContentToFlowGroup: store.addContentToFlowGroup,
     setDeleteActionCallback: store.setDeleteActionCallback,
     setEnableActionCallback: store.setEnableActionCallback,
+    getMatchDynamicData: store.getMatchDynamicData,
+    getProjectTagList: store.getProjectTagList,
   }
 }
