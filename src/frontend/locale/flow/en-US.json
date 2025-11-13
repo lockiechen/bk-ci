@@ -106,6 +106,8 @@
       "originalFlow": "Original Creation Flow",
       "inputTemplateName": "Please enter the template name:",
       "codeMode": "Code Mode",
+      "loadingPipeline": "Loading pipeline component...",
+      "toggleFullScreen": "Toggle Full Screen",
       "pipeline": "Pipeline",
       "favorite": "Favorite",
       "export": "Export",

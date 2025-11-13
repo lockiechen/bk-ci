@@ -1,0 +1,73 @@
+import { defineComponent } from 'vue'
+import { useI18n } from 'vue-i18n'
+import { useModeStore } from '@/stores/flowMode'
+import { useFlowModel } from '@/hooks/useFlowModel'
+import ModeSwitch from '@/components/ModeSwitch'
+import EmptyPage from '@/components/EmptyPage/index'
+import CodeEditor from '@/components/CodeEditor'
+import styles from './FlowModel.module.css'
+
+import BkPipeline from 'bkui-pipeline'
+import 'bkui-pipeline/dist/bkui-pipeline.css'
+import { useRoute } from 'vue-router'
+
+export default defineComponent({
+  name: 'FlowModel',
+  components: {
+    ModeSwitch,
+    EmptyPage,
+    BkPipeline,
+    CodeEditor,
+  },
+  setup(props, { emit }) {
+    const { t } = useI18n()
+    const route = useRoute()
+    const modeStore = useModeStore()
+
+    // 使用 useFlowModel hook 管理数据
+    const {
+      pipelineModel,
+      yamlContent,
+      loading,
+      isPipelineEmpty,
+    } = useFlowModel({
+      flowId: route.params.flowId as string, // TODO: 从路由参数获取实际的 flowId
+      autoLoad: true,
+    })
+
+
+    return () => (
+      <div class={styles.flowModel}>
+        <ModeSwitch></ModeSwitch>
+
+        <div class={styles.modelContent}>
+          {loading.value ? (
+            <div class={styles.loadingWrapper}>
+              <div class={styles.loadingSpinner}></div>
+              <span>{t('flow.content.loadingPipeline')}</span>
+            </div>
+          ) : modeStore.isCodeMode ? (
+            <div class={styles.codeEditorWrapper}>
+              <CodeEditor
+                modelValue={yamlContent.value}
+                readOnly={true}
+                height="100%"
+              />
+            </div>
+          ) : (
+            <div>
+              {!isPipelineEmpty.value && pipelineModel.value ? (
+                <BkPipeline editable={false} pipeline={pipelineModel.value} />
+              ) : (
+                <EmptyPage
+                  title={t('flow.content.blankTemplateNoOrchestration')}
+                  desc={t('flow.content.createToAddFirstStage')}
+                />
+              )}
+            </div>
+          )}
+        </div>
+      </div>
+    )
+  },
+})

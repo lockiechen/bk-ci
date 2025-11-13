@@ -106,6 +106,8 @@
       "originalFlow": "原创作流",
       "inputTemplateName": "请输入模板名称：",
       "codeMode": "Code方式",
+      "loadingPipeline": "正在加载流水线组件...",
+      "toggleFullScreen": "切换全屏",
       "pipeline": "流水线",
       "favorite": "收藏",
       "export": "导出",

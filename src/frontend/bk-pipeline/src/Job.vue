@@ -50,12 +50,15 @@
             >
                 <bk-checkbox
                     class="atom-canskip-checkbox"
-                    v-model="container.runContainer"
+                    :model-value="container.runContainer"
+                    @change="handleContainerRunChange"
                     :disabled="disabled"
                 ></bk-checkbox>
             </span>
             <Logo
-                v-if="(reactiveData.editable || reactiveData.isPreview) && container.matrixGroupFlag
+                v-if="
+                    (reactiveData.editable || reactiveData.isPreview) &&
+                        container.matrixGroupFlag
                 "
                 name="matrix"
                 size="16"
@@ -101,20 +104,20 @@
 </template>
 
 <script>
-    import { localeMixins } from './locale'
+    import { localeMixins } from "./locale"
     import {
         eventBus,
         getDependOnDesc,
         hashID,
         isObject,
         isTriggerContainer,
-        randomString
-    } from './util'
+        randomString,
+    } from "./util"
 
-    import AtomList from './AtomList'
-    import ContainerType from './ContainerType'
-    import Logo from './Logo'
-    import StatusIcon from './StatusIcon'
+    import AtomList from "./AtomList"
+    import ContainerType from "./ContainerType"
+    import Logo from "./Logo"
+    import StatusIcon from "./StatusIcon"
     import {
         CLICK_EVENT_NAME,
         COPY_EVENT_NAME,
@@ -123,25 +126,25 @@
         DOCKER_BUILD_TYPE,
         PUBLIC_BCS_BUILD_TYPE,
         PUBLIC_DEVCLOUD_BUILD_TYPE,
-        STATUS_MAP
-    } from './constants'
+        STATUS_MAP,
+    } from "./constants"
 
     export default {
         components: {
             StatusIcon,
             ContainerType,
             AtomList,
-            Logo
+            Logo,
         },
         mixins: [localeMixins],
         props: {
             stage: {
                 type: Object,
-                required: true
+                required: true,
             },
             container: {
                 type: Object,
-                required: true
+                required: true,
             },
             stageIndex: Number,
             containerIndex: Number,
@@ -151,59 +154,64 @@
             disabled: Boolean,
             handleChange: {
                 type: Function,
-                required: true
+                required: true,
             },
             stageLength: Number,
-            updateCruveConnectHeight: Function
+            updateCruveConnectHeight: Function,
         },
-        inject: ['reactiveData', 'emitPipelineChange'],
+        inject: ["reactiveData", "emitPipelineChange"],
         emits: [DELETE_EVENT_NAME, COPY_EVENT_NAME],
         data () {
             return {
                 showContainerName: false,
                 showAtomName: false,
                 showAtomList: true,
-                cruveHeight: 0
+                cruveHeight: 0,
             }
         },
         computed: {
             containerStatus () {
-                return this.container && this.container.status ? this.container.status : ''
+                return this.container && this.container.status
+                    ? this.container.status
+                    : ""
             },
             containerTypeCls () {
-                return { 'hover-hide': this.showCopyJob }
+                return { "hover-hide": this.showCopyJob }
             },
             jobTitleCls () {
                 return {
-                    'container-title': true,
-                    'first-ctitle': this.containerIndex === 0,
+                    "container-title": true,
+                    "first-ctitle": this.containerIndex === 0,
                     DISABLED: this.disabled,
-                    [this.containerStatus]: true
+                    [this.containerStatus]: true,
                 }
             },
             displayNameCls () {
                 return {
-                    'skip-name': this.disabled || this.containerStatus === STATUS_MAP.SKIP
+                    "skip-name": this.disabled || this.containerStatus === STATUS_MAP.SKIP,
                 }
             },
             matrixFoldLogoCls () {
                 return {
-                    'fold-atom-icon': true,
+                    "fold-atom-icon": true,
                     open: this.showAtomList,
-                    [this.containerStatus || 'readonly']: true
+                    [this.containerStatus || "readonly"]: true,
                 }
             },
             displayName () {
                 try {
                     const { matrixContext, status, name } = this.container
                     const suffix = isObject(matrixContext)
-                        ? Object.values(matrixContext).join(', ')
-                        : ''
+                        ? Object.values(matrixContext).join(", ")
+                        : ""
                     const isPrepare
-                        = status === STATUS_MAP.PREPARE_ENV && this.containerGroupIndex === undefined
-                    return isPrepare ? this.t('prepareEnv') : `${name}${suffix ? `(${suffix})` : ''}`
+                        = status === STATUS_MAP.PREPARE_ENV
+                            && this.containerGroupIndex === undefined
+                    return isPrepare
+                        ? this.t("prepareEnv")
+                        : `${name}${suffix ? `(${suffix})` : ""}`
                 } catch (error) {
-                    return 'unknow'
+                    return "unknow"
                 }
             },
             showCopyJob () {
@@ -215,7 +223,7 @@
                     if (this.container.matrixGroupFlag) {
                         jobSerialNum = parseInt(this.container.id, 10) % 1000
                     }
-                    return `${this.stage.id.replace('stage-', '')}-${jobSerialNum}`
+                    return `${this.stage.id.replace("stage-", "")}-${jobSerialNum}`
                 }
                 return `${this.stageIndex + 1}-${this.containerIndex + 1}`
             },
@@ -227,12 +235,14 @@
             },
 
             dependOnValue () {
-                if (isTriggerContainer(this.container)) return ''
+                if (isTriggerContainer(this.container)) return ""
                 const val = getDependOnDesc(this.container)
-                return `${this.t('dependOn')} 【${val}】`
+                return `${this.t("dependOn")} 【${val}】`
             },
             showMatrixFold () {
-                return this.reactiveData.isExecDetail && this.containerGroupIndex !== undefined
+                return (
+                    this.reactiveData.isExecDetail && this.containerGroupIndex !== undefined
+                )
             },
             buildResourceType () {
                 try {
@@ -244,15 +254,15 @@
             showDebugBtn () {
                 const {
                     reactiveData,
-                    container: { baseOS, status }
+                    container: { baseOS, status },
                 } = this
                 const isshowDebugType = [
                     DOCKER_BUILD_TYPE,
                     PUBLIC_DEVCLOUD_BUILD_TYPE,
-                    PUBLIC_BCS_BUILD_TYPE
+                    PUBLIC_BCS_BUILD_TYPE,
                 ].includes(this.buildResourceType)
                 return (
-                    baseOS === 'LINUX'
+                    baseOS === "LINUX"
                     && isshowDebugType
                     && reactiveData.isExecDetail
                     && reactiveData.isLatestBuild
@@ -261,31 +271,33 @@
             },
             isUnExecThisTime () {
                 return this.container?.executeCount < this.reactiveData.currentExecCount
-            }
+            },
         },
         watch: {
-            'container.runContainer' (newVal) {
+            "container.runContainer" (newVal) {
                 const { elements } = this.container
                 if (this.disabled && newVal) return
                 elements
                     .filter(
-                        (item) => item.additionalOptions === undefined || item.additionalOptions.enable
+                        (item) =>
+                            item.additionalOptions === undefined
+                            || item.additionalOptions.enable
                     )
                     .forEach((item) => {
                         item.canElementSkip = newVal
                     })
                 this.handleChange(this.container, { elements })
             },
-            'container.locateActive' (val) {
+            "container.locateActive" (val) {
                 if (val) {
                     const ele = document.getElementById(this.container.id)
-                ele?.scrollIntoView?.({
-                    block: 'center',
-                    inline: 'center',
-                    behavior: 'smooth'
-                })
+                    ele?.scrollIntoView?.({
+                        block: "center",
+                        inline: "center",
+                        behavior: "smooth",
+                    })
                 }
-            }
+            },
         },
         methods: {
             toggleShowAtom (show) {
@@ -297,7 +309,7 @@
 
                 this.$emit(DELETE_EVENT_NAME, {
                     stageIndex,
-                    containerIndex: isOnlyOneContainer ? undefined : containerIndex
+                    containerIndex: isOnlyOneContainer ? undefined : containerIndex,
                 })
             },
             showContainerPanel () {
@@ -305,39 +317,40 @@
                     stageIndex: this.stageIndex,
                     containerIndex: this.containerIndex,
                     containerGroupIndex: this.containerGroupIndex,
-                    container: this.container
+                    container: this.container,
                 })
             },
 
             handleCopyContainer () {
                 try {
                     const copyContainer = JSON.parse(JSON.stringify(this.container))
-                    const { containerHashId, containerId, ...resetContainerProps } = copyContainer
+                    const { containerHashId, containerId, ...resetContainerProps }
+                        = copyContainer
                     const container = {
                         ...resetContainerProps,
                         containerId: `c-${hashID()}`,
                         jobId: `job_${randomString(3)}`,
                         elements: copyContainer.elements.map((element) => ({
                             ...element,
-                            id: `e-${hashID()}`
+                            id: `e-${hashID()}`,
                         })),
                         jobControlOption: copyContainer.jobControlOption
                             ? {
                                 ...copyContainer.jobControlOption,
-                                dependOnType: 'ID',
-                                dependOnId: []
+                                dependOnType: "ID",
+                                dependOnId: [],
                             }
-                            : undefined
+                            : undefined,
                     }
                     this.$emit(COPY_EVENT_NAME, {
                         containerIndex: this.containerIndex,
-                        container
+                        container,
                     })
                 } catch (e) {
                     console.error(e)
                     this.$showTips({
-                        theme: 'error',
-                        message: this.t('copyJobFail')
+                        theme: "error",
+                        message: this.t("copyJobFail"),
                     })
                 }
             },
@@ -346,10 +359,21 @@
                     stageIndex: this.stageIndex,
                     containerIndex: this.containerIndex,
                     containerGroupIndex: this.containerGroupIndex,
-                    container: this.container
+                    container: this.container,
                 })
-            }
-        }
+            },
+            handleContainerRunChange (value) {
+                const newElements = this.container.elements.map((element) => ({
+                    ...element,
+                    runContainer: value,
+                }))
+                this.handleChange({
+                    ...this.container,
+                    elements: newElements,
+                    runContainer: value,
+                })
+            },
+        },
     }
 </script>
 
@@ -358,108 +382,107 @@
 @import "./conf";
 
 .devops-stage-container {
-    .container-title {
-        display: flex;
-        height: $itemHeight;
-        background: #33333f;
-        cursor: pointer;
-        color: white;
-        font-size: 14px;
-        align-items: center;
-        position: relative;
-        margin: 0 0 16px 0;
-        z-index: 3;
+  .container-title {
+    display: flex;
+    height: $itemHeight;
+    background: #33333f;
+    cursor: pointer;
+    color: white;
+    font-size: 14px;
+    align-items: center;
+    position: relative;
+    margin: 0 0 16px 0;
+    z-index: 3;
 
-        >.container-name {
-            @include ellipsis();
-            flex: 1;
-            padding: 0 6px;
-        }
-
-        .atom-canskip-checkbox {
-            margin-right: 6px;
-
-            &.is-disabled .bk-checkbox {
-                background-color: transparent;
-                border-color: #979ba4;
-            }
-        }
-
-        input[type="checkbox"] {
-            border-radius: 3px;
-        }
-
-        .matrix-flag-icon {
-            position: absolute;
-            top: 0px;
-            font-size: 16px;
-        }
-
-        .fold-atom-icon {
-            position: absolute;
-            background: white;
-            border-radius: 50%;
-            bottom: -10px;
-            left: calc(50% - 9px);
-            color: #c4cdd6;
-            transition: all 0.3s ease;
-
-            &.open {
-                transform: rotate(-180deg);
-            }
-        }
-
-        .copyJob {
-            display: none;
-            margin-right: 10px;
-            color: $fontLighterColor;
-            cursor: pointer;
-
-            &:hover {
-                color: $primaryColor;
-            }
-        }
-
-        .close {
-            @include add-plus-icon(#2e2e3a, #2e2e3a, #c4c6cd, 16px, true);
-            @include add-plus-icon-hover($dangerColor, $dangerColor, white);
-            border: none;
-            display: none;
-            margin-right: 10px;
-            transform: rotate(45deg);
-            cursor: pointer;
-
-            &:before,
-            &:after {
-                left: 7px;
-                top: 4px;
-            }
-        }
-
-        .debug-btn {
-            position: absolute;
-            height: 100%;
-            right: 0;
-        }
-
-        .container-locate-icon {
-            position: absolute;
-            left: -30px;
-            top: 13px;
-            color: $primaryColor;
-        }
-
-        &:hover {
-
-            .copyJob,
-            .close {
-                display: block;
-            }
-
-            .hover-hide {
-                display: none;
-            }
-        }
+    > .container-name {
+      @include ellipsis();
+      flex: 1;
+      padding: 0 6px;
     }
+
+    .atom-canskip-checkbox {
+      margin-right: 6px;
+
+      &.is-disabled .bk-checkbox {
+        background-color: transparent;
+        border-color: #979ba4;
+      }
+    }
+
+    input[type="checkbox"] {
+      border-radius: 3px;
+    }
+
+    .matrix-flag-icon {
+      position: absolute;
+      top: 0px;
+      font-size: 16px;
+    }
+
+    .fold-atom-icon {
+      position: absolute;
+      background: white;
+      border-radius: 50%;
+      bottom: -10px;
+      left: calc(50% - 9px);
+      color: #c4cdd6;
+      transition: all 0.3s ease;
+
+      &.open {
+        transform: rotate(-180deg);
+      }
+    }
+
+    .copyJob {
+      display: none;
+      margin-right: 10px;
+      color: $fontLighterColor;
+      cursor: pointer;
+
+      &:hover {
+        color: $primaryColor;
+      }
+    }
+
+    .close {
+      @include add-plus-icon(#2e2e3a, #2e2e3a, #c4c6cd, 16px, true);
+      @include add-plus-icon-hover($dangerColor, $dangerColor, white);
+      border: none;
+      display: none;
+      margin-right: 10px;
+      transform: rotate(45deg);
+      cursor: pointer;
+
+      &:before,
+      &:after {
+        left: 7px;
+        top: 4px;
+      }
+    }
+
+    .debug-btn {
+      position: absolute;
+      height: 100%;
+      right: 0;
+    }
+
+    .container-locate-icon {
+      position: absolute;
+      left: -30px;
+      top: 13px;
+      color: $primaryColor;
+    }
+
+    &:hover {
+      .copyJob,
+      .close {
+        display: block;
+      }
+
+      .hover-hide {
+        display: none;
+      }
+    }
+  }
 }
 </style>

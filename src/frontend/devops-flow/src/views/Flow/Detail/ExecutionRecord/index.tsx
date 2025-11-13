@@ -1,25 +1,17 @@
-import { defineComponent, ref, computed, watch, shallowRef } from 'vue'
+import { defineComponent, ref, computed, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { Table, DatePicker, Checkbox } from 'bkui-vue'
 import SearchSelect from '@blueking/search-select-v3'
-import { useRoute, useRouter } from 'vue-router'
+import { useRoute } from 'vue-router'
 import { useExecutionRecordData } from '@/hooks/useExecutionRecordData'
 import type { ExecutionRecord } from '@/api/executionRecord'
-import styles from './Detail.module.css'
-import layoutStyles from '@/styles/layout.module.css'
-
-interface MenuItem {
-  key: string
-  label: string
-  children?: MenuItem[]
-}
+import styles from './executionRecord.module.css'
 
 export default defineComponent({
-  name: 'FlowDetail',
+  name: 'ExecutionRecord',
   setup() {
     const { t } = useI18n()
     const route = useRoute()
-    const router = useRouter()
     const flowId = route.params.flowId as string
 
     // 使用 hook 管理执行记录数据
@@ -35,48 +27,6 @@ export default defineComponent({
       handleSelect,
       updateQueryParams,
     } = useExecutionRecordData(flowId)
-
-    // 菜单数据
-    const menuItems = computed(() => [
-      {
-        key: 'execution-info',
-        label: t('flow.content.executionInfo'),
-        children: [
-          { key: 'execution-record', label: t('flow.content.executionRecord') },
-          { key: 'trigger-record', label: t('flow.content.triggerRecord') },
-        ],
-      },
-      {
-        key: 'workflow-config',
-        label: t('flow.content.workflowConfig'),
-        children: [
-          { key: 'workflow-orchestration', label: t('flow.content.workflowOrchestration') },
-          { key: 'workflow-environment', label: t('flow.content.workflowEnvironment') },
-          { key: 'trigger-events', label: t('flow.content.triggerEvents') },
-          { key: 'notification-config', label: t('flow.content.notificationConfig') },
-          { key: 'basic-settings', label: t('flow.content.basicSettings') },
-        ],
-      },
-
-      {
-        key: 'more',
-        label: t('flow.content.more'),
-        children: [
-          { key: 'permission-settings', label: t('flow.content.permissionSettings') },
-          { key: 'permission-delegation', label: t('flow.content.permissionDelegation') },
-          { key: 'operation-log', label: t('flow.content.operationLog') },
-        ],
-      },
-    ])
-
-    // 当前激活的菜单项
-    const activeKey = ref('execution-record')
-
-    // 处理菜单点击
-    const handleMenuClick = (key: string) => {
-      activeKey.value = key
-      // TODO: 根据key跳转到对应页面
-    }
 
     // 日期范围
     const dateRange = ref<[Date, Date] | null>(null)
@@ -309,83 +259,44 @@ export default defineComponent({
     ])
 
     return () => (
-      <div class={layoutStyles.content}>
-        <nav class={styles.sidebar}>
-          {menuItems.value.map((item) => (
-            <div key={item.key} class={styles.menuGroup}>
-              {item.children ? (
-                <>
-                  <div class={styles.menuCategory}>{item.label}</div>
-                  <div class={styles.subMenu}>
-                    {item.children.map((child) => (
-                      <button
-                        key={child.key}
-                        class={[
-                          styles.menuItem,
-                          activeKey.value === child.key && styles.menuItemActive,
-                        ]}
-                        onClick={() => handleMenuClick(child.key)}
-                      >
-                        {child.label}
-                      </button>
-                    ))}
-                  </div>
-                </>
-              ) : (
-                <button
-                  class={[
-                    styles.menuItem,
-                    styles.menuItemTopLevel,
-                    activeKey.value === item.key && styles.menuItemActive,
-                  ]}
-                  onClick={() => handleMenuClick(item.key)}
-                >
-                  {item.label}
-                </button>
-              )}
-            </div>
-          ))}
-        </nav>
-
-        <div class={styles.content}>
-          {/* 筛选区域 */}
-          <div class={styles.filterBar}>
-            <div class={styles.filterLeft}>
-              <DatePicker
-                type="daterange"
-                placeholder={t('flow.content.selectStartTimeRange')}
-                v-model={dateRange.value}
-                class={styles.datePicker}
-              />
-            </div>
-            <div class={styles.filterRight}>
-              <SearchSelect
-                modelValue={searchValue.value}
-                data={searchData.value}
-                unique-select
-                placeholder={searchPlaceHolder.value}
-                class={styles.searchInput}
-                onUpdate:modelValue={handleSearchChange}
-                onSearch={handleSearch}
-              />
-            </div>
+      <>
+        {/* 筛选区域 */}
+        <div class={styles.filterBar}>
+          <div class={styles.filterLeft}>
+            <DatePicker
+              type="daterange"
+              placeholder={t('flow.content.selectStartTimeRange')}
+              v-model={dateRange.value}
+              class={styles.datePicker}
+            />
           </div>
-
-          {/* 表格区域 */}
-          <div class={styles.tableWrapper}>
-            <Table
-              data={tableData.value}
-              columns={tableColumns.value}
-              class={styles.table}
-              pagination={pagination.value}
-              border="outer"
-              loading={loading.value}
-              onPageChange={handlePageChange}
-              onPageLimitChange={handleLimitChange}
+          <div class={styles.filterRight}>
+            <SearchSelect
+              modelValue={searchValue.value}
+              data={searchData.value}
+              unique-select
+              placeholder={searchPlaceHolder.value}
+              class={styles.searchInput}
+              onUpdate:modelValue={handleSearchChange}
+              onSearch={handleSearch}
             />
           </div>
         </div>
-      </div>
+
+        {/* 表格区域 */}
+        <div class={styles.tableWrapper}>
+          <Table
+            data={tableData.value}
+            columns={tableColumns.value}
+            class={styles.table}
+            pagination={pagination.value}
+            border="outer"
+            loading={loading.value}
+            onPageChange={handlePageChange}
+            onPageLimitChange={handleLimitChange}
+          />
+        </div>
+      </>
     )
   },
 })

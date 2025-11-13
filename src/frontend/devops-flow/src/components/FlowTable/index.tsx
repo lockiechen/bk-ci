@@ -14,6 +14,7 @@ import { type ContentTableItem } from '@/api/flowContentList'
 import { useTableHeight } from '@/hooks/useTableHeight'
 import { useFlowListData } from '@/hooks/useFlowListData'
 import { useDeleteConfirm } from '@/hooks/useDeleteConfirm'
+import { ROUTE_NAMES } from '@/constants/routes'
 import styles from './FlowTable.module.css'
 
 export const FlowTable = defineComponent({
@@ -110,8 +111,10 @@ export const FlowTable = defineComponent({
                   class={styles.nameLink}
                   onClick={() => {
                     router.push({
-                      name: 'flowDetail',
-                      params: { flowId: item.id },
+                      name: ROUTE_NAMES.FLOW_DETAIL_EXECUTION_RECORD,
+                      params: {
+                        flowId: item.id,
+                      },
                     })
                   }}
                 >

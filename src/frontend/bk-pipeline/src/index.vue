@@ -1,5 +1,5 @@
 <template>
-    <draggable
+    <VueDraggable
         v-model="computedStages"
         v-bind="dragOptions"
         :move="checkMove"
@@ -26,14 +26,21 @@
             @[DELETE_EVENT_NAME_VALUE]="handleDeleteStage"
         >
         </Stage>
-    </draggable>
+    </VueDraggable>
 </template>
 
 <script setup>
-    import { ref, computed, provide, onMounted, onBeforeUnmount, nextTick } from 'vue'
-    import draggable from 'vuedraggable'
-    import Stage from './Stage'
-    import { eventBus, hashID, isTriggerContainer } from './util'
+    import {
+        ref,
+        computed,
+        provide,
+        onMounted,
+        onBeforeUnmount,
+        nextTick,
+    } from "vue"
+    import { VueDraggable } from "vue-draggable-plus"
+    import Stage from "./Stage"
+    import { eventBus, hashID, isTriggerContainer } from "./util"
     import {
         ADD_STAGE,
         ATOM_ADD_EVENT_NAME,
@@ -46,13 +53,13 @@
         DEBUG_CONTAINER,
         DELETE_EVENT_NAME,
         STAGE_CHECK,
-        STAGE_RETRY
-    } from './constants'
+        STAGE_RETRY,
+    } from "./constants"
 
     // 定义 emits - 必须在 defineProps 之前，且不能引用局部变量
     const emit = defineEmits([
-        'input',
-        'change',
+        "input",
+        "change",
         CLICK_EVENT_NAME,
         DELETE_EVENT_NAME,
         ATOM_REVIEW_EVENT_NAME,
@@ -63,7 +70,7 @@
         ADD_STAGE,
         STAGE_CHECK,
         STAGE_RETRY,
-        DEBUG_CONTAINER
+        DEBUG_CONTAINER,
     ])
 
     const customEvents = [
@@ -77,56 +84,55 @@
         ADD_STAGE,
         STAGE_CHECK,
         STAGE_RETRY,
-        DEBUG_CONTAINER
+        DEBUG_CONTAINER,
     ]
 
     const props = defineProps({
         editable: {
             type: Boolean,
-            default: true
+            default: true,
         },
         isPreview: {
             type: Boolean,
-            default: false
+            default: false,
         },
         currentExecCount: {
             type: Number,
-            default: 1
+            default: 1,
         },
         isExecDetail: {
             type: Boolean,
-            default: false
+            default: false,
         },
         isLatestBuild: {
             type: Boolean,
-            default: false
+            default: false,
         },
         canSkipElement: {
             type: Boolean,
-            default: false
+            default: false,
         },
         pipeline: {
             type: Object,
-            required: true
+            required: true,
         },
         cancelUserId: {
             type: String,
-            default: 'unknow'
+            default: "unknow",
         },
         userName: {
             type: String,
-            default: 'unknow'
+            default: "unknow",
         },
         matchRules: {
             type: Array,
-            default: () => []
+            default: () => [],
         },
         isExpandAllMatrix: {
             type: Boolean,
-            default: true
-        }
+            default: true,
+        },
     })
-
 
     // 使用 ref 存储 stage refs
     const stageRefs = ref({})
@@ -137,28 +143,28 @@
     // Vue 3: 虽然推荐使用 reactive，但 Object.defineProperty 仍然可以工作
     const reactiveData = {}
     const keys = [
-        'currentExecCount',
-        'isPreview',
-        'userName',
-        'matchRules',
-        'editable',
-        'isExecDetail',
-        'isLatestBuild',
-        'canSkipElement',
-        'cancelUserId',
-        'isExpandAllMatrix'
+        "currentExecCount",
+        "isPreview",
+        "userName",
+        "matchRules",
+        "editable",
+        "isExecDetail",
+        "isLatestBuild",
+        "canSkipElement",
+        "cancelUserId",
+        "isExpandAllMatrix",
     ]
 
     keys.forEach((key) => {
         Object.defineProperty(reactiveData, key, {
             enumerable: true,
             get: () => props[key],
-            configurable: true
+            configurable: true,
         })
     })
 
-    provide('reactiveData', reactiveData)
-    provide('emitPipelineChange', () => {
+    provide("reactiveData", reactiveData)
+    provide("emitPipelineChange", () => {
         emitPipelineChange(props.pipeline)
     })
 
@@ -177,24 +183,24 @@
                     return {
                         id,
                         name,
-                        containers: [stage]
+                        containers: [stage],
                     }
                 }
                 return stage
             })
             updatePipeline(props.pipeline, {
-                stages: data.filter(stage => stage.containers.length)
+                stages: data.filter((stage) => stage.containers.length),
             })
-        }
+        },
     })
 
     const dragOptions = computed(() => {
         return {
-            group: 'pipeline-job',
-            ghostClass: 'sortable-ghost-atom',
-            chosenClass: 'sortable-chosen-atom',
+            group: "pipeline-job",
+            ghostClass: "sortable-ghost-atom",
+            chosenClass: "sortable-chosen-atom",
             animation: 130,
-            disabled: !props.editable
+            disabled: !props.editable,
         }
     })
 
@@ -209,8 +215,8 @@
     })
 
     const emitPipelineChange = (newVal) => {
-        emit('input', newVal)
-        emit('change', newVal)
+        emit("input", newVal)
+        emit("change", newVal)
     }
 
     const registeCustomEvent = (destory = false) => {
@@ -238,12 +244,12 @@
     const checkMove = (event) => {
         const dragContext = event.draggedContext || {}
         const element = dragContext.element || {}
-        const isTrigger = element.containers[0]?.['@type'] === 'trigger'
+        const isTrigger = element.containers[0]?.["@type"] === "trigger"
         const isFinally = element.finally === true
 
         const relatedContext = event.relatedContext || {}
         const relatedelement = relatedContext.element || {}
-        const isRelatedTrigger = relatedelement['@type'] === 'trigger'
+        const isRelatedTrigger = relatedelement["@type"] === "trigger"
 
         const isTriggerStage = checkIsTriggerStage(relatedelement)
         const isRelatedFinally = relatedelement.finally === true
@@ -258,24 +264,36 @@
     }
 
     const handleCopyStage = ({ stageIndex, stage }) => {
-        props.pipeline.stages.splice(stageIndex + 1, 0, stage)
-        emitPipelineChange()
+        const newStages = [...props.pipeline.stages]
+        newStages.splice(stageIndex + 1, 0, stage)
+        emitPipelineChange({
+            ...props.pipeline,
+            stages: newStages,
+        })
     }
 
     const handleDeleteStage = (stageId) => {
-        props.pipeline.stages = props.pipeline.stages.filter(stage => stage.id !== stageId)
-        emitPipelineChange()
+        const newStages = props.pipeline.stages.filter(
+            (stage) => stage.id !== stageId
+        )
+        emitPipelineChange({
+            ...props.pipeline,
+            stages: newStages,
+        })
     }
 
     const expandPostAction = (stageId, matrixId, containerId) => {
         return new Promise((resolve) => {
             try {
-                let jobInstance = stageRefs.value[stageId]?.[0]?.$refs?.[containerId]?.[0]?.$refs?.jobBox
+                let jobInstance
+                    = stageRefs.value[stageId]?.[0]?.$refs?.[containerId]?.[0]?.$refs?.jobBox
                 if (matrixId) {
-                    jobInstance = stageRefs.value[stageId]?.[0]?.$refs?.[matrixId]?.[0]?.$refs?.jobBox?.$refs[containerId]?.[0]
+                    jobInstance
+                        = stageRefs.value[stageId]?.[0]?.$refs?.[matrixId]?.[0]?.$refs?.jobBox
+                            ?.$refs[containerId]?.[0]
                 }
-                console.log(jobInstance, 'jobInstance')
-            jobInstance?.$refs?.atomList?.expandPostAction?.()
+                console.log(jobInstance, "jobInstance")
+                jobInstance?.$refs?.atomList?.expandPostAction?.()
                 nextTick(() => {
                     resolve(true)
                 })
@@ -287,14 +305,15 @@
     }
 
     const expandMatrix = (stageId, matrixId, containerId, expand = true) => {
-        console.log('expandMatrix', stageId, matrixId, containerId)
+        console.log("expandMatrix", stageId, matrixId, containerId)
         return new Promise((resolve) => {
             try {
-                const jobInstance = stageRefs.value[stageId]?.[0]?.$refs?.[matrixId]?.[0]?.$refs?.jobBox
-            jobInstance?.toggleMatrixOpen?.(expand)
+                const jobInstance
+                    = stageRefs.value[stageId]?.[0]?.$refs?.[matrixId]?.[0]?.$refs?.jobBox
+                jobInstance?.toggleMatrixOpen?.(expand)
                 nextTick(() => {
-                jobInstance?.$refs[containerId]?.[0]?.toggleShowAtom(expand)
-                resolve(true)
+                    jobInstance?.$refs[containerId]?.[0]?.toggleShowAtom(expand)
+                    resolve(true)
                 })
             } catch (error) {
                 console.error(error)
@@ -304,11 +323,12 @@
     }
 
     const expandJob = (stageId, containerId, expand = true) => {
-        console.log('expandJob', stageId, containerId)
+        console.log("expandJob", stageId, containerId)
         return new Promise((resolve) => {
             try {
-                const jobInstance = stageRefs.value[stageId]?.[0]?.$refs?.[containerId]?.[0]?.$refs?.jobBox
-            jobInstance?.toggleShowAtom(expand)
+                const jobInstance
+                    = stageRefs.value[stageId]?.[0]?.$refs?.[containerId]?.[0]?.$refs?.jobBox
+                jobInstance?.toggleShowAtom(expand)
                 resolve(true)
             } catch (error) {
                 console.error(error)
@@ -340,7 +360,7 @@
     defineExpose({
         expandPostAction,
         expandMatrix,
-        expandJob
+        expandJob,
     })
 </script>
 

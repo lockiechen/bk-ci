@@ -106,6 +106,7 @@
       "originalFlow": "元の作成フロー",
       "inputTemplateName": "テンプレート名を入力してください：",
       "codeMode": "コードモード",
+      "loadingPipeline": "パイプラインコンポーネントを読み込み中...",
       "pipeline": "パイプライン",
       "favorite": "お気に入り",
       "export": "エクスポート",

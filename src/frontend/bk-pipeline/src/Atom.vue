@@ -129,7 +129,10 @@
             >
                 <span class="atom-review-diasbled-tips">{{ t("aborted") }}</span>
                 <template slot="content">
-                    <p>{{ t("abortTips") }}{{ t("checkUser") }}{{ reactiveData.cancelUserId }}</p>
+                    <p>
+                        {{ t("abortTips") }}{{ t("checkUser")
+                        }}{{ reactiveData.cancelUserId }}
+                    </p>
                 </template>
             </bk-popover>
             <template v-else-if="atom.status === 'PAUSE'">
@@ -217,7 +220,8 @@
             >
                 <bk-checkbox
                     class="atom-canskip-checkbox"
-                    v-model="atom.canElementSkip"
+                    :model-value="atom.canElementSkip"
+                    @change="handleAtomSkipChange"
                     :disabled="isSkip"
                 />
             </span>
@@ -226,10 +230,10 @@
 </template>
 
 <script setup>
-    import { ref, computed, inject, watch, onMounted, onBeforeUnmount } from 'vue'
-    import { bkCheckbox, bkPopover } from 'bk-magic-vue'
-    import Logo from './Logo'
-    import StatusIcon from './StatusIcon'
+    import { ref, computed, inject, watch, onMounted, onBeforeUnmount } from "vue"
+    import { bkCheckbox, bkPopover } from "./ui-compat"
+    import Logo from "./Logo"
+    import StatusIcon from "./StatusIcon"
     import {
         ATOM_CONTINUE_EVENT_NAME,
         ATOM_EXEC_EVENT_NAME,
@@ -240,63 +244,71 @@
         DELETE_EVENT_NAME,
         QUALITY_IN_ATOM_CODE,
         QUALITY_OUT_ATOM_CODE,
-        STATUS_MAP
-    } from './constants'
-    import { t } from './locale'
+        STATUS_MAP,
+    } from "./constants"
+    import { t } from "./locale"
     import {
         convertMStoString,
         eventBus,
         hashID,
         isTriggerContainer,
-        randomString
-    } from './util'
+        randomString,
+    } from "./util"
 
     const props = defineProps({
         stage: {
             type: Object,
-            required: true
+            required: true,
         },
         container: {
             type: Object,
-            required: true
+            required: true,
         },
         atom: {
             type: Object,
-            required: true
+            required: true,
         },
         stageIndex: {
             type: Number,
-            required: true
+            required: true,
         },
         containerIndex: {
             type: Number,
-            required: true
+            required: true,
         },
         containerGroupIndex: Number,
         atomIndex: {
             type: Number,
-            required: true
+            required: true,
         },
         isWaiting: Boolean,
         containerDisabled: Boolean,
         isLastAtom: Boolean,
         prevAtom: {
-            type: Object
-        }
+            type: Object,
+        },
     })
 
-    const emit = defineEmits([COPY_EVENT_NAME, DELETE_EVENT_NAME])
+    const emit = defineEmits([
+        COPY_EVENT_NAME,
+        DELETE_EVENT_NAME,
+        "atom-skip-change",
+    ])
 
-    const reactiveData = inject('reactiveData')
+    const reactiveData = inject("reactiveData")
 
     const isBusy = ref(false)
     const timer = ref(null)
-    const execTime = ref(props.atom.startEpoch
-        ? convertMStoString(Date.now() - props.atom.startEpoch)
-        : '--')
+    const execTime = ref(
+        props.atom.startEpoch
+            ? convertMStoString(Date.now() - props.atom.startEpoch)
+            : "--"
+    )
     const isQualityGate = (atom) => {
         try {
-            return [QUALITY_IN_ATOM_CODE, QUALITY_OUT_ATOM_CODE].includes(atom.atomCode)
+            return [QUALITY_IN_ATOM_CODE, QUALITY_OUT_ATOM_CODE].includes(
+                atom.atomCode
+            )
         } catch (error) {
             return false
         }
@@ -305,7 +317,7 @@
     const isSkip = computed(() => {
         try {
             return (
-                props.atom.status === 'SKIP'
+                props.atom.status === "SKIP"
                 || props.atom.additionalOptions?.enable === false
                 || props.containerDisabled
             )
@@ -319,14 +331,16 @@
             if (props.atom.status) {
                 return props.atom.status
             }
-            return props.isWaiting ? STATUS_MAP.WAITING : ''
+            return props.isWaiting ? STATUS_MAP.WAITING : ""
         } catch (error) {
-            return ''
+            return ""
         }
     })
 
     const isExecuting = computed(() => {
-        return [STATUS_MAP.RUNNING].includes(atomStatus.value) && props.atom.startEpoch
+        return (
+            [STATUS_MAP.RUNNING].includes(atomStatus.value) && props.atom.startEpoch
+        )
     })
 
     const isReviewing = computed(() => {
@@ -338,7 +352,7 @@
             const list
                 = props.atom?.reviewUsers ?? props.atom?.data?.input?.reviewers ?? []
             const reviewUsersList = list
-                .map((user) => user.split(';').map((val) => val.trim()))
+                .map((user) => user.split(";").map((val) => val.trim()))
                 .reduce((prev, curr) => {
                     return prev.concat(curr)
                 }, [])
@@ -369,13 +383,13 @@
     })
 
     const skipSpanCls = computed(() => {
-        return { 'skip-name': isSkip.value }
+        return { "skip-name": isSkip.value }
     })
 
     const resumeSpanCls = computed(() => {
         return {
             disabled: isBusy.value || !hasExecPerm.value,
-            'pause-button': true
+            "pause-button": true,
         }
     })
 
@@ -393,14 +407,16 @@
 
     const qualityStatus = computed(() => {
         switch (true) {
-            case [STATUS_MAP.SUCCEED, STATUS_MAP.REVIEW_PROCESSED].includes(props.atom.status):
+            case [STATUS_MAP.SUCCEED, STATUS_MAP.REVIEW_PROCESSED].includes(
+                props.atom.status
+            ):
                 return STATUS_MAP.SUCCEED
             case [STATUS_MAP.QUALITY_CHECK_FAIL, STATUS_MAP.REVIEW_ABORT].includes(
                 props.atom.status
             ):
                 return STATUS_MAP.FAILED
         }
-        return ''
+        return ""
     })
 
     const isQualityGateAtom = computed(() => {
@@ -422,51 +438,52 @@
             }
             return atomStatus.value
         } catch (error) {
-            console.error('get atom cls error', error)
-            return ''
+            console.error("get atom cls error", error)
+            return ""
         }
     })
 
     const logoCls = computed(() => {
         return {
-            'atom-icon': true,
-            'skip-icon': isSkip.value
+            "atom-icon": true,
+            "skip-icon": isSkip.value,
         }
     })
 
     const atomCls = computed(() => {
         return {
             readonly: !reactiveData.editable,
-            'bk-pipeline-atom': true,
-            'trigger-atom': isTriggerContainer(props.container),
+            "bk-pipeline-atom": true,
+            "trigger-atom": isTriggerContainer(props.container),
             [STATUS_MAP.REVIEWING]: isReviewing.value,
             [qualityStatus.value]: isQualityGateAtom.value && !!qualityStatus.value,
             [atomStatusCls.value]: !!atomStatusCls.value,
-            'quality-atom': isQualityGateAtom.value,
-            'is-sub-pipeline-atom': props.atom.atomCode === 'SubPipelineExec',
-            'is-error': props.atom.isError,
-            'is-intercept': isQualityCheckAtom.value,
-            'template-compare-atom': props.atom.templateModify,
-            'last-quality-atom': isLastQualityAtom.value,
-            'quality-prev-atom': isPrevAtomQuality.value,
-            'un-exec-this-time': reactiveData.isExecDetail && isUnExecThisTime.value
+            "quality-atom": isQualityGateAtom.value,
+            "is-sub-pipeline-atom": props.atom.atomCode === "SubPipelineExec",
+            "is-error": props.atom.isError,
+            "is-intercept": isQualityCheckAtom.value,
+            "template-compare-atom": props.atom.templateModify,
+            "last-quality-atom": isLastQualityAtom.value,
+            "quality-prev-atom": isPrevAtomQuality.value,
+            "un-exec-this-time": reactiveData.isExecDetail && isUnExecThisTime.value,
         }
     })
 
     const svgAtomIcon = computed(() => {
         if (isHookAtom.value) {
-            return 'build-hooks'
+            return "build-hooks"
         }
         const { atomCode } = props.atom
         if (!atomCode) {
-            return 'placeholder'
+            return "placeholder"
         }
         return atomCode
     })
 
     const pauseReviewerStr = computed(() => {
         return (
-            Array.isArray(props.atom.pauseReviewers) && props.atom.pauseReviewers.join(';')
+            Array.isArray(props.atom.pauseReviewers)
+            && props.atom.pauseReviewers.join(";")
         )
     })
 
@@ -475,7 +492,7 @@
             const totalCost = Math.max(0, props.atom?.timeCost?.totalCost ?? 0)
             return convertMStoString(totalCost)
         } catch (error) {
-            return '--'
+            return "--"
         }
     })
 
@@ -485,40 +502,46 @@
             && reactiveData.matchRules.some(
                 (rule) =>
                     rule.taskId === props.atom.atomCode
-                    && (rule.ruleList.some((val) => props.atom.name.indexOf(val.gatewayId) > -1)
+                    && (rule.ruleList.some(
+                        (val) => props.atom.name.indexOf(val.gatewayId) > -1
+                    )
                         || rule.ruleList.every((val) => !val.gatewayId))
             )
         )
     })
 
     const showProgress = computed(() => {
-        return isExecuting.value && typeof props.atom.progressRate === 'number' && props.atom.progressRate < 1
+        return (
+            isExecuting.value
+            && typeof props.atom.progressRate === "number"
+            && props.atom.progressRate < 1
+        )
     })
 
     const progressConf = computed(() => {
         return {
             width: 28,
-            numUnit: '',
+            numUnit: "",
             numStyle: {
-                fontSize: '10px',
-                color: '#333',
-                transform: 'translate(-50%, -50%)'
+                fontSize: "10px",
+                color: "#333",
+                transform: "translate(-50%, -50%)",
             },
             config: {
                 strokeWidth: 12,
-                bgColor: '#f0f1f5',
-                activeColor: '#459fff'
-            }
+                bgColor: "#f0f1f5",
+                activeColor: "#459fff",
+            },
         }
     })
 
     const retryIndicateList = computed(() => {
-        return ['retryCountAuto', 'retryCountManual'].reduce((acc, cur) => {
+        return ["retryCountAuto", "retryCountManual"].reduce((acc, cur) => {
             const count = props.atom?.[cur] ?? 0
             if (count > 0) {
                 acc.push({
                     retryType: cur,
-                    tips: t(`${cur}Tips`, [count])
+                    tips: t(`${cur}Tips`, [count]),
                 })
             }
             return acc
@@ -542,7 +565,7 @@
             stageIndex: props.stageIndex,
             containerIndex: props.containerIndex,
             containerGroupIndex: props.containerGroupIndex,
-            elementIndex: props.atomIndex
+            elementIndex: props.atomIndex,
         })
     }
 
@@ -554,24 +577,35 @@
                 JSON.stringify({
                     ...restAttr,
                     stepId: randomString(3),
-                    id: `e-${hashID()}`
+                    id: `e-${hashID()}`,
                 })
-            )
+            ),
         })
     }
 
     const deleteAtom = () => {
         emit(DELETE_EVENT_NAME, {
-            elementIndex: props.atomIndex
+            elementIndex: props.atomIndex,
+        })
+    }
+
+    const handleAtomSkipChange = (value) => {
+        emit("atom-skip-change", {
+            elementIndex: props.atomIndex,
+            canElementSkip: value,
         })
     }
 
     const asyncEvent = (...args) => {
         return new Promise((resolve, reject) => {
-            eventBus.$emit(...args, () => {
-                isBusy.value = false
-                resolve()
-            }, reject)
+            eventBus.$emit(
+                ...args,
+                () => {
+                    isBusy.value = false
+                    resolve()
+                },
+                reject
+            )
         })
     }
 
@@ -586,12 +620,12 @@
             containerIndex,
             containerGroupIndex,
             isContinue,
-            showPanelType: 'PAUSE',
+            showPanelType: "PAUSE",
             elementIndex: atomIndex,
             stageId: props.stage.id,
             containerId: props.container.id,
             taskId: props.atom.id,
-            atom: props.atom
+            atom: props.atom,
         })
     }
 
@@ -599,14 +633,15 @@
         if (hasReviewPerm.value) {
             try {
                 isBusy.value = true
-                const { stageIndex, containerIndex, containerGroupIndex, atomIndex } = props
+                const { stageIndex, containerIndex, containerGroupIndex, atomIndex }
+                    = props
                 const data = {
                     elementId: props.atom.id,
                     stageIndex,
                     containerIndex,
                     containerGroupIndex,
                     atomIndex,
-                    action
+                    action,
                 }
                 await asyncEvent(ATOM_QUALITY_CHECK_EVENT_NAME, data)
             } catch (error) {
@@ -622,7 +657,7 @@
 
             await asyncEvent(ATOM_CONTINUE_EVENT_NAME, {
                 taskId: props.atom.id,
-                skip
+                skip,
             })
         } catch (error) {
             console.error(error)
@@ -637,16 +672,19 @@
         }
     })
 
-    watch(() => props.atom.locateActive, (val) => {
-        if (val) {
-            const ele = document.getElementById(props.atom.id)
-        ele?.scrollIntoView?.({
-            block: 'center',
-            inline: 'center',
-            behavior: 'smooth'
-        })
+    watch(
+        () => props.atom.locateActive,
+        (val) => {
+            if (val) {
+                const ele = document.getElementById(props.atom.id)
+                ele?.scrollIntoView?.({
+                    block: "center",
+                    inline: "center",
+                    behavior: "smooth",
+                })
+            }
         }
-    })
+    )
 
     watch(atomStatus, () => {
         isBusy.value = false
@@ -796,10 +834,10 @@
     right: 10px;
     color: $primaryColor;
     .atom-retry-indicate-icon {
-        width: 18px;
-        height: 18px;
-        background-color: white;
-        border-radius: 50%;
+      width: 18px;
+      height: 18px;
+      background-color: white;
+      border-radius: 50%;
     }
   }
 
@@ -845,7 +883,7 @@
     color: $primaryColor;
     font-size: 12px;
   }
-  .atom-operate-area{
+  .atom-operate-area {
     margin: 0 8px 0 0;
     color: $primaryColor;
     font-size: 12px;

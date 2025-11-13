@@ -4,6 +4,7 @@ import { Tab } from 'bkui-vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useI18n } from 'vue-i18n'
 import { FlowTable } from '@/components/FlowTable'
+import { ROUTE_NAMES } from '@/constants/routes'
 import styles from './index.module.css'
 import layoutStyles from '@/styles/layout.module.css'
 
@@ -21,7 +22,7 @@ export default defineComponent({
     const { t } = useI18n()
 
     const activeTab = computed(() => {
-      return (route.name ?? 'flowList') as string
+      return (route.name ?? ROUTE_NAMES.FLOW_LIST) as string
     })
 
     const handleTabChange = (name: string) => {
@@ -42,8 +43,11 @@ export default defineComponent({
             class={styles.navTabs}
             onChange={handleTabChange}
           >
-            <Tab.TabPanel name="flowList" label={t('flow.tabs.flow')}></Tab.TabPanel>
-            <Tab.TabPanel name="template" label={t('flow.tabs.template')}></Tab.TabPanel>
+            <Tab.TabPanel name={ROUTE_NAMES.FLOW_LIST} label={t('flow.tabs.flow')}></Tab.TabPanel>
+            <Tab.TabPanel
+              name={ROUTE_NAMES.TEMPLATE}
+              label={t('flow.tabs.template')}
+            ></Tab.TabPanel>
           </Tab>
         </div>
         <div class={layoutStyles.content}>

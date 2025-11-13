@@ -1,0 +1,60 @@
+/**
+ * 路由名称常量
+ * 统一管理所有路由名称，便于维护和管理
+ */
+export const ROUTE_NAMES = {
+  // 主路由
+  ROOT: 'root',
+  FLOW_LIST: 'flowList',
+  TEMPLATE: 'template',
+
+  // Flow 详情相关路由
+  FLOW_DETAIL: 'flowDetail',
+  FLOW_DETAIL_EDIT: 'flowDetailEdit',
+
+  // Flow Detail 子路由
+  FLOW_DETAIL_EXECUTION_RECORD: 'executionRecord',
+  FLOW_DETAIL_TRIGGER_EVENTS: 'triggerEvents',
+  FLOW_DETAIL_WORKFLOW_ORCHESTRATION: 'workflowOrchestration',
+  FLOW_DETAIL_WORKFLOW_ENVIRONMENT: 'workflowEnvironment',
+  FLOW_DETAIL_NOTIFICATION_CONFIG: 'notificationConfig',
+  FLOW_DETAIL_BASIC_SETTINGS: 'basicSettings',
+  FLOW_DETAIL_PERMISSION_SETTINGS: 'permissionSettings',
+  FLOW_DETAIL_PERMISSION_DELEGATION: 'permissionDelegation',
+  FLOW_DETAIL_OPERATION_LOG: 'operationLog',
+} as const
+
+/**
+ * Flow Detail Tab 常量
+ * 直接使用路由名称作为 tab 值，避免重复定义
+ */
+export const FLOW_DETAIL_TABS = {
+  EXECUTION_RECORD: ROUTE_NAMES.FLOW_DETAIL_EXECUTION_RECORD,
+  TRIGGER_EVENTS: ROUTE_NAMES.FLOW_DETAIL_TRIGGER_EVENTS,
+  WORKFLOW_ORCHESTRATION: ROUTE_NAMES.FLOW_DETAIL_WORKFLOW_ORCHESTRATION,
+  WORKFLOW_ENVIRONMENT: ROUTE_NAMES.FLOW_DETAIL_WORKFLOW_ENVIRONMENT,
+  NOTIFICATION_CONFIG: ROUTE_NAMES.FLOW_DETAIL_NOTIFICATION_CONFIG,
+  BASIC_SETTINGS: ROUTE_NAMES.FLOW_DETAIL_BASIC_SETTINGS,
+  PERMISSION_SETTINGS: ROUTE_NAMES.FLOW_DETAIL_PERMISSION_SETTINGS,
+  PERMISSION_DELEGATION: ROUTE_NAMES.FLOW_DETAIL_PERMISSION_DELEGATION,
+  OPERATION_LOG: ROUTE_NAMES.FLOW_DETAIL_OPERATION_LOG,
+} as const
+
+/**
+ * 默认 tab
+ */
+export const DEFAULT_FLOW_DETAIL_TAB = FLOW_DETAIL_TABS.EXECUTION_RECORD
+
+/**
+ * 所有合法的 tab 值数组
+ */
+export const VALID_FLOW_DETAIL_TABS = Object.values(FLOW_DETAIL_TABS)
+
+/**
+ * 检查 tab 是否合法
+ */
+export function isValidFlowDetailTab(
+  tab: string,
+): tab is (typeof FLOW_DETAIL_TABS)[keyof typeof FLOW_DETAIL_TABS] {
+  return VALID_FLOW_DETAIL_TABS.includes(tab as any)
+}
