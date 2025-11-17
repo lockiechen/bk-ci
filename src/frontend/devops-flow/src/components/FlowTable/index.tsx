@@ -326,7 +326,7 @@ export const FlowTable = defineComponent({
             </div>
           </div>
           <div class={styles.flowTable} ref={tableContainerRef}>
-            <Loading loading={tableLoading.value}>
+            <Loading loading={tableLoading.value} mode="spin" theme="primary" size="small">
               <Table
                 data={flowTableList.value}
                 columns={tableColumn.value}

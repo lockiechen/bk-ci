@@ -2,12 +2,29 @@ import { defineConfig } from 'vite'
 import vue from '@vitejs/plugin-vue'
 import vueJsx from '@vitejs/plugin-vue-jsx'
 import path from 'path'
+import fs from 'fs'
+
+// 自定义插件：复制类型声明文件
+function copyDtsPlugin () {
+    return {
+        name: 'copy-dts',
+        closeBundle () {
+            const src = path.resolve(__dirname, 'index.d.ts')
+            const dest = path.resolve(__dirname, 'dist/index.d.ts')
+            if (fs.existsSync(src)) {
+                fs.copyFileSync(src, dest)
+                console.log('✓ Type declaration file copied to dist/')
+            }
+        }
+    }
+}
 
 // https://vitejs.dev/config/
 export default defineConfig({
     plugins: [
         vue(),
-        vueJsx()
+        vueJsx(),
+        copyDtsPlugin()
     ],
     resolve: {
         alias: {

@@ -114,3 +114,13 @@
   color: #858585 !important;
   margin-left: 8px;
 }
+
+/* Highlight block styles - global styles for Monaco Editor */
+:global(.code-highlight-block) {
+  background: #232d46 !important;
+}
+
+/* CodeLens styles */
+:global(.monaco-editor .codelens-decoration) {
+  color: #63656e !important;
+}

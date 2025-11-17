@@ -17,7 +17,7 @@ export default defineComponent({
     const currentTab = computed(() => {
       const routeName = route.name as string
       // 如果路由名称在 FLOW_DETAIL_TABS 中，直接返回
-      if (isValidFlowDetailTab(routeName as any)) {
+      if (isValidFlowDetailTab(routeName as string)) {
         return routeName
       }
       return FLOW_DETAIL_TABS.EXECUTION_RECORD
@@ -30,13 +30,14 @@ export default defineComponent({
     const menuItems = [
       {
         title: t('flow.content.executionInfo'),
-        tabs: [FLOW_DETAIL_TABS.EXECUTION_RECORD, FLOW_DETAIL_TABS.TRIGGER_EVENTS],
+        tabs: [FLOW_DETAIL_TABS.EXECUTION_RECORD, FLOW_DETAIL_TABS.TRIGGER_RECORD,],
       },
       {
         title: t('flow.content.workflowConfig'),
         tabs: [
           FLOW_DETAIL_TABS.WORKFLOW_ORCHESTRATION,
           FLOW_DETAIL_TABS.WORKFLOW_ENVIRONMENT,
+          FLOW_DETAIL_TABS.TRIGGER_EVENTS,
           FLOW_DETAIL_TABS.NOTIFICATION_CONFIG,
           FLOW_DETAIL_TABS.BASIC_SETTINGS,
         ],

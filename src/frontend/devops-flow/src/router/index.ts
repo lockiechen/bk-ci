@@ -39,6 +39,12 @@ const router = createRouter({
               props: true,
             },
             {
+              path: 'trigger-record',
+              component: () => import('../views/Flow/Detail/TriggerRecord'),
+              name: ROUTE_NAMES.FLOW_DETAIL_TRIGGER_RECORD,
+              props: true,
+            },
+            {
               path: 'trigger-events',
               component: () => import('../views/Flow/Detail/TriggerEvent'),
               name: ROUTE_NAMES.FLOW_DETAIL_TRIGGER_EVENTS,

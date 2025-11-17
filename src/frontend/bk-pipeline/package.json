@@ -5,6 +5,7 @@
   "type": "module",
   "main": "dist/bk-pipeline.cjs.js",
   "module": "dist/bk-pipeline.esm.js",
+  "types": "dist/index.d.ts",
   "unpkg": "dist/bk-pipeline.min.js",
   "jsdelivr": "dist/bk-pipeline.min.js",
   "exports": {
@@ -19,7 +20,8 @@
   "files": [
     "dist",
     "src",
-    "index.js"
+    "index.js",
+    "index.d.ts"
   ],
   "scripts": {
     "dev": "vite",

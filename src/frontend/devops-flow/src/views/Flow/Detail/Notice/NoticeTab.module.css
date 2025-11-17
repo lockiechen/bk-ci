@@ -1,11 +1,4 @@
-.noticeTab {
-  padding: var(--spacing-lg);
-  padding-right: var(--spacing-xl);
-}
-
-.content {
-  margin-top: var(--spacing-lg);
-}
+/* 组件特有的样式保留在这里 */
 
 .collapse {
   :global(.bk-collapse-icon svg) {
@@ -39,3 +32,5 @@
   border-radius: 2px;
   padding: 22px 24px;
 }
+
+/* Loading styles and code editor wrapper moved to layout.module.css */

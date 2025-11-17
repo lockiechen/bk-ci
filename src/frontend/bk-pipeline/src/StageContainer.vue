@@ -50,14 +50,15 @@
         <Component
             :is="jobComponentName"
             v-bind="jobComponentProps"
-            v-on="$listeners || listeners"
+            v-on="listeners"
             ref="jobBox"
         />
     </div>
 </template>
 
 <script setup>
-    import { ref, computed, onMounted, onBeforeUnmount, nextTick, inject, getCurrentInstance } from 'vue'
+    import { ref, computed, onMounted, onBeforeUnmount, nextTick, inject } from 'vue'
+    import { useListeners } from './hooks/useListeners'
     import CruveLine from './CruveLine'
     import Job from './Job'
     import Logo from './Logo'
@@ -98,26 +99,8 @@
     const cruveHeight = ref(0)
     let resizeObserver = null
 
-    // Vue 2.7 和 Vue 3 兼容：处理 $listeners
-    // Vue 2.7: $listeners 在模板中直接可用
-    // Vue 3: 所有监听器都在 $attrs 中
-    const instance = getCurrentInstance()
-    const listeners = computed(() => {
-        // Vue 2.7: 使用 $listeners
-        if (instance?.proxy?.$listeners) {
-            return instance.proxy.$listeners
-        }
-        // Vue 3: 从 $attrs 中提取事件监听器
-        const attrs = instance?.attrs || {}
-        const eventListeners = {}
-        Object.keys(attrs).forEach(key => {
-            if (key.startsWith('on') && typeof attrs[key] === 'function') {
-                const eventName = key.slice(2).toLowerCase()
-                eventListeners[eventName] = attrs[key]
-            }
-        })
-        return eventListeners
-    })
+    // 使用统一的useListeners Hook处理事件监听器兼容性
+    const listeners = useListeners()
 
     const containerDisabled = computed(() => {
         return !!(props.container.jobControlOption && props.container.jobControlOption.enable === false) || props.stageDisabled
@@ -211,7 +194,7 @@
             }
             border-radius: 50%;
         }
-        
+
         // 三角箭头
         .container-connect-triangle {
             position: absolute;

@@ -1,10 +1,4 @@
-.authoringEnv {
-  padding: var(--spacing-lg);
-}
-
-.content {
-  margin-top: var(--spacing-lg);
-}
+/* 组件特有的样式保留在这里 */
 
 .headerText {
   font-size: var(--font-size-xs);
@@ -72,3 +66,7 @@
   font-size: var(--font-size-xs);
   color: var(--color-text-disabled);
 }
+
+/* Loading styles and code editor wrapper moved to layout.module.css */
+
+/* Removed section navigation styles as they are no longer needed */
