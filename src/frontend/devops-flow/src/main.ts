@@ -1,4 +1,5 @@
 import { createApp, h } from 'vue'
+import * as Vue from 'vue'
 import { createPinia } from 'pinia'
 import { createI18n } from 'vue-i18n'
 import bkui from 'bkui-vue'
@@ -10,7 +11,8 @@ import { getCookies } from './utils/cookie'
 import ZhCN from '../../locale/flow/zh-CN.json'
 import EnUS from '../../locale/flow/en-US.json'
 import JaJP from '../../locale/flow/ja-JP.json'
-import { bkTooltips } from 'bkui-vue/lib/directives';
+import { bkTooltips } from 'bkui-vue/lib/directives'
+import { VueDraggable } from 'vue-draggable-plus'
 
 // 导入全局样式
 import './styles/variables.css'
@@ -35,7 +37,7 @@ const localeAliasMap: Record<string, string> = {
   en: 'en-US',
   us: 'en-US',
   en_US: 'en-US',
-  en_us: 'en-US'
+  en_us: 'en-US',
 }
 
 const bkUiLocaleAliasMap: Record<string, any> = {
@@ -51,14 +53,14 @@ const bkUiLocaleAliasMap: Record<string, any> = {
   en: bkuiEn,
   us: bkuiEn,
   en_US: bkuiEn,
-  en_us: bkuiEn
+  en_us: bkuiEn,
 }
 
 // 获取当前语言设置
 const cookiesObj = getCookies()
 const i18n = createI18n({
   legacy: false,
-  locale: localeAliasMap[cookiesObj.blueking_language ?? 'zh-CN'] ?? 'zh-CN' ,
+  locale: localeAliasMap[cookiesObj.blueking_language ?? 'zh-CN'] ?? 'zh-CN',
   fallbackLocale: 'zh-CN',
   messages: {
     'zh-CN': ZhCN,
@@ -68,24 +70,24 @@ const i18n = createI18n({
 })
 
 const app = createApp({
-  render: () => h(
-    'div',
-    {
-      class: 'devops-flow-app',
-    },
-    [     
-      h(RouterView),
-    ]
-  ),
+  render: () =>
+    h(
+      'div',
+      {
+        class: 'devops-flow-app',
+      },
+      [h(RouterView)],
+    ),
 })
 
-app.directive('bk-tooltips', bkTooltips);
+app.directive('bk-tooltips', bkTooltips)
 app.use(createPinia())
 app.use(router)
 app.use(bkui, {
-  locale: bkUiLocaleAliasMap[cookiesObj.blueking_language ?? 'zh-CN'] || bkuiZhCn
+  locale: bkUiLocaleAliasMap[cookiesObj.blueking_language ?? 'zh-CN'] || bkuiZhCn,
 })
 app.use(i18n)
+app.use(VueDraggable)
 
 // 注册指令
 app.directive('clickoutside', clickoutside)

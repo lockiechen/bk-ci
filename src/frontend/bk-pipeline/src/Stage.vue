@@ -44,7 +44,7 @@
             >
                 <bk-checkbox
                     class="atom-canskip-checkbox"
-                    v-model="stage.runStage"
+                    :model-value="stage.runStage"
                     @change="handleStageRun"
                     :disabled="stageDisabled"
                 ></bk-checkbox>
@@ -92,7 +92,7 @@
                 class="connector-angle"
             />
         </span>
-        <draggable
+        <VueDraggable
             v-model="computedContainer"
             v-bind="dragOptions"
             :move="checkMove"
@@ -117,7 +117,7 @@
                 @[DELETE_EVENT_NAME_VALUE]="handleDeleteContainer"
             >
             </stage-container>
-        </draggable>
+        </VueDraggable>
 
         <template v-if="reactiveData.editable">
             <span
@@ -168,46 +168,66 @@
 </template>
 
 <script setup>
-    import { ref, computed, inject, onMounted, onBeforeUnmount, onUpdated, nextTick, getCurrentInstance } from 'vue'
-    import draggable from 'vuedraggable'
-    import CruveLine from './CruveLine'
-    import InsertStageMenu from './InsertStageMenu'
-    import Logo from './Logo'
-    import StageCheckIcon from './StageCheckIcon'
-    import StageContainer from './StageContainer'
-    import { t } from './locale'
+    import {
+        ref,
+        computed,
+        inject,
+        onMounted,
+        onBeforeUnmount,
+        onUpdated,
+        nextTick,
+        getCurrentInstance,
+    } from "vue"
+    import { VueDraggable } from "vue-draggable-plus"
+    import CruveLine from "./CruveLine"
+    import InsertStageMenu from "./InsertStageMenu"
+    import Logo from "./Logo"
+    import StageCheckIcon from "./StageCheckIcon"
+    import StageContainer from "./StageContainer"
+    import { t } from "./locale"
     import {
         ADD_STAGE,
         CLICK_EVENT_NAME,
         COPY_EVENT_NAME,
         DELETE_EVENT_NAME,
         STAGE_RETRY,
-        STATUS_MAP
-    } from './constants'
-    import { eventBus, getOuterHeight, hashID, isTriggerContainer, randomString } from './util'
+        STATUS_MAP,
+    } from "./constants"
+    import {
+        eventBus,
+        getOuterHeight,
+        hashID,
+        isTriggerContainer,
+        randomString,
+    } from "./util"
 
     const props = defineProps({
         containers: {
             type: Array,
-            default: []
+            default: [],
         },
         stage: {
             type: Object,
-            required: true
+            required: true,
         },
         stageIndex: Number,
         stageLength: Number,
         hasFinallyStage: Boolean,
         handleChange: {
             type: Function,
-            required: true
-        }
+            required: true,
+        },
     })
 
-    const emit = defineEmits([CLICK_EVENT_NAME, ADD_STAGE, DELETE_EVENT_NAME, COPY_EVENT_NAME])
+    const emit = defineEmits([
+        CLICK_EVENT_NAME,
+        ADD_STAGE,
+        DELETE_EVENT_NAME,
+        COPY_EVENT_NAME,
+    ])
 
-    const reactiveData = inject('reactiveData')
-    const emitPipelineChange = inject('emitPipelineChange')
+    const reactiveData = inject("reactiveData")
+    const emitPipelineChange = inject("emitPipelineChange")
     const instance = getCurrentInstance()
 
     // 获取 $showTips 方法（如果存在）
@@ -215,7 +235,7 @@
         if (instance?.proxy?.$showTips) {
             instance.proxy.$showTips(options)
         } else {
-            console.warn('$showTips is not available')
+            console.warn("$showTips is not available")
         }
     }
 
@@ -270,17 +290,18 @@
     })
 
     const stageTitle = computed(() => {
-        return props.stage ? props.stage.name : 'stage'
+        return props.stage ? props.stage.name : "stage"
     })
 
     const stageDisabled = computed(() => {
         return !!(
-            props.stage.stageControlOption && props.stage.stageControlOption.enable === false
+            props.stage.stageControlOption
+            && props.stage.stageControlOption.enable === false
         )
     })
 
     const stageStatusCls = computed(() => {
-        return props.stage && props.stage.status ? props.stage.status : ''
+        return props.stage && props.stage.status ? props.stage.status : ""
     })
 
     const isStageSkip = computed(() => {
@@ -288,18 +309,18 @@
     })
 
     const stageStatusIcon = computed(() => {
-        if (isStageSkip.value) return 'redo-arrow'
+        if (isStageSkip.value) return "redo-arrow"
         switch (stageStatusCls.value) {
             case STATUS_MAP.SUCCEED:
-                return 'check-circle'
+                return "check-circle"
             case STATUS_MAP.FAILED:
-                return 'close-circle'
+                return "close-circle"
             case STATUS_MAP.SKIP:
-                return 'redo-arrow'
+                return "redo-arrow"
             case STATUS_MAP.RUNNING:
-                return 'circle-2-1'
+                return "circle-2-1"
             default:
-                return ''
+                return ""
         }
     })
 
@@ -309,30 +330,30 @@
 
     const stageTitleCls = computed(() => {
         return {
-            'stage-entry-name': true,
-            'skip-name': stageDisabled.value || props.stage.status === STATUS_MAP.SKIP
+            "stage-entry-name": true,
+            "skip-name": stageDisabled.value || props.stage.status === STATUS_MAP.SKIP,
         }
     })
 
     const stageNameStatusCls = computed(() => {
         return {
-            'stage-name-status-icon': true,
+            "stage-name-status-icon": true,
             [stageStatusCls.value]: true,
-            'spin-icon': stageStatusCls.value === STATUS_MAP.RUNNING
+            "spin-icon": stageStatusCls.value === STATUS_MAP.RUNNING,
         }
     })
 
     const pipelineStageCls = computed(() => {
         return [
             stageStatusCls.value,
-            'pipeline-stage',
+            "pipeline-stage",
             {
-                'is-final-stage': isFinallyStage.value,
-                'pipeline-drag': reactiveData.editable && !isTriggerStage.value,
+                "is-final-stage": isFinallyStage.value,
+                "pipeline-drag": reactiveData.editable && !isTriggerStage.value,
                 readonly: !reactiveData.editable || stageDisabled.value,
                 editable: reactiveData.editable,
-                'un-exec-this-time': reactiveData.isExecDetail && isUnExecThisTime.value
-            }
+                "un-exec-this-time": reactiveData.isExecDetail && isUnExecThisTime.value,
+            },
         ]
     })
 
@@ -356,30 +377,30 @@
                 })
             } else {
                 props.handleChange(props.stage, {
-                    containers: data
+                    containers: data,
                 })
             }
-        }
+        },
     })
 
     const dragOptions = computed(() => {
         return {
-            group: props.stage.finally ? 'finally-stage-job' : 'pipeline-job',
-            ghostClass: 'sortable-ghost-atom',
-            chosenClass: 'sortable-chosen-atom',
+            group: props.stage.finally ? "finally-stage-job" : "pipeline-job",
+            ghostClass: "sortable-ghost-atom",
+            chosenClass: "sortable-chosen-atom",
             animation: 130,
-            disabled: !reactiveData.editable
+            disabled: !reactiveData.editable,
         }
     })
 
     const iconCls = computed(() => {
         switch (true) {
             case !isAddMenuShow.value:
-                return 'add-plus-icon'
+                return "add-plus-icon"
             case isAddMenuShow.value:
-                return 'minus-icon'
+                return "minus-icon"
             default:
-                return 'add-plus-icon'
+                return "add-plus-icon"
         }
     })
 
@@ -392,25 +413,26 @@
         containers
             .filter(
                 (container) =>
-                    container.jobControlOption === undefined || container.jobControlOption.enable
+                    container.jobControlOption === undefined
+                    || container.jobControlOption.enable
             )
             .forEach((container) => {
                 container.runContainer = checked
             })
         props.handleChange(props.stage, {
-            containers
+            containers,
         })
     }
 
     const triggerStageRetry = () => {
         eventBus.$emit(STAGE_RETRY, {
-            taskId: props.stage.id
+            taskId: props.stage.id,
         })
     }
 
     const stageEntryClick = () => {
         eventBus.$emit(CLICK_EVENT_NAME, {
-            stageIndex: props.stageIndex
+            stageIndex: props.stageIndex,
         })
     }
 
@@ -424,28 +446,35 @@
     const checkMove = (event) => {
         const dragContext = event.draggedContext || {}
         const element = dragContext.element || {}
-        const isTrigger = element['@type'] === 'trigger'
+        const isTrigger = element["@type"] === "trigger"
         const relatedContext = event.relatedContext || {}
         const relatedelement = relatedContext.element || {}
-        const isRelatedTrigger = relatedelement['@type'] === 'trigger'
-        const isTriggerStageValue = isTriggerContainer(relatedelement?.containers?.[0])
+        const isRelatedTrigger = relatedelement["@type"] === "trigger"
+        const isTriggerStageValue = isTriggerContainer(
+    relatedelement?.containers?.[0]
+        )
         const isFinallyStageValue = relatedelement.finally === true
 
-        return !isTrigger && !isRelatedTrigger && !isTriggerStageValue && !isFinallyStageValue
+        return (
+            !isTrigger
+            && !isRelatedTrigger
+            && !isTriggerStageValue
+            && !isFinallyStageValue
+        )
     }
 
     const editStage = (isParallel, isFinally, isLast) => {
         eventBus.$emit(ADD_STAGE, {
             stageIndex: isFinally || isLast ? props.stageLength : props.stageIndex,
             isParallel,
-            isFinally
+            isFinally,
         })
         hideAddStage()
     }
 
     const toggleAddMenu = (isShow, isLast = false) => {
         if (!reactiveData.editable) return
-        const show = typeof isShow === 'boolean' ? isShow : false
+        const show = typeof isShow === "boolean" ? isShow : false
         if (isLast) {
             lastAddMenuShow.value = show
         } else {
@@ -470,17 +499,25 @@
     }
 
     const handleCopyContainer = ({ containerIndex, container }) => {
-        props.stage.containers.splice(containerIndex + 1, 0, container)
-        emitPipelineChange()
+        const newContainers = [...props.stage.containers]
+        newContainers.splice(containerIndex + 1, 0, container)
+        props.handleChange({
+            ...props.stage,
+            containers: newContainers,
+        })
     }
 
     const handleDeleteContainer = ({ containerIndex }) => {
         if (Number.isInteger(containerIndex)) {
-            props.stage.containers.splice(containerIndex, 1)
+            const newContainers = [...props.stage.containers]
+            newContainers.splice(containerIndex, 1)
+            props.handleChange({
+                ...props.stage,
+                containers: newContainers,
+            })
         } else {
             deleteStageHandler()
         }
-        emitPipelineChange()
     }
 
     const copyStage = () => {
@@ -496,37 +533,37 @@
                     containerHashId: undefined,
                     elements: container.elements.map((element) => ({
                         ...element,
-                        id: `e-${hashID()}`
+                        id: `e-${hashID()}`,
                     })),
                     jobControlOption: container.jobControlOption
                         ? {
                             ...container.jobControlOption,
-                            dependOnType: 'ID',
-                            dependOnId: []
+                            dependOnType: "ID",
+                            dependOnId: [],
                         }
-                        : undefined
-                }))
+                        : undefined,
+                })),
             }
             emit(COPY_EVENT_NAME, {
                 stageIndex: props.stageIndex,
-                stage
+                stage,
             })
         } catch (e) {
             console.error(e)
             showTips({
-                theme: 'error',
-                message: t('copyStageFail')
+                theme: "error",
+                message: t("copyStageFail"),
             })
         }
     }
 
     onMounted(() => {
         updateHeight()
-        document.addEventListener('click', hideAddStage)
+        document.addEventListener("click", hideAddStage)
     })
 
     onBeforeUnmount(() => {
-        document.removeEventListener('click', hideAddStage)
+        document.removeEventListener("click", hideAddStage)
     })
 
     onUpdated(() => {
@@ -750,12 +787,12 @@ $entryBtnWidth: 80px;
     }
 
     .add-plus-connector {
-        position: absolute;
-        width: 24px;
-        height: 2px;
-        left: 17px;
-        top: 8px;
-        background-color: $primaryColor;
+      position: absolute;
+      width: 24px;
+      height: 2px;
+      left: 17px;
+      top: 8px;
+      background-color: $primaryColor;
     }
   }
 

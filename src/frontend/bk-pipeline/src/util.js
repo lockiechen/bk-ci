@@ -1,11 +1,24 @@
-import { v4 as uuidv4 } from 'uuid'
-import Vue from 'vue'
+import { v4 as uuidv4 } from "uuid"
 import {
     NORMAL_CONTAINER_TYPE,
     STATUS_MAP,
     TRIGGER_CONTAINER_TYPE,
-    VM_CONTAINER_TYPE
-} from './constants'
+    VM_CONTAINER_TYPE,
+} from "./constants"
+
+// Vue 2.7 和 Vue 3 兼容的导入
+// 在 ES 模块环境中，不直接导入 Vue，而是通过运行时检测
+let Vue = null
+try {
+    // 尝试从全局获取 Vue（UMD 环境）
+    if (typeof window !== "undefined" && window.Vue) {
+        Vue = window.Vue
+    } else if (typeof global !== "undefined" && global.Vue) {
+        Vue = global.Vue
+    }
+} catch (e) {
+    // 忽略错误
+}
 
 // Vue 2.7 和 Vue 3 兼容的事件总线
 // Vue 2.7: 使用 new Vue() 作为事件总线
@@ -13,10 +26,10 @@ import {
 let eventBus
 try {
     // Vue 2.7 支持 new Vue()
-    if (Vue && typeof Vue === 'function' && Vue.prototype) {
+    if (Vue && typeof Vue === "function" && Vue.prototype && Vue.prototype.$on) {
         eventBus = new Vue()
     } else {
-        // Vue 3 或无法创建 Vue 实例时，使用简单的事件发射器
+    // Vue 3 或无法创建 Vue 实例时，使用简单的事件发射器
         eventBus = createEventEmitter()
     }
 } catch (e) {
@@ -37,16 +50,16 @@ function createEventEmitter () {
         $off (event, callback) {
             if (!events[event]) return
             if (callback) {
-                events[event] = events[event].filter(cb => cb !== callback)
+                events[event] = events[event].filter((cb) => cb !== callback)
             } else {
                 delete events[event]
             }
         },
         $emit (event, ...args) {
             if (events[event]) {
-                events[event].forEach(callback => callback(...args))
+                events[event].forEach((callback) => callback(...args))
             }
-        }
+        },
     }
 }
 
@@ -58,10 +71,14 @@ export { eventBus }
  * @param {obj} 判断是否为DOM节点
  * @returns boolean
  */
-const isDOMElement = obj => {
-    return (
-        typeof HTMLElement === 'object' ? obj instanceof HTMLElement : obj && typeof obj === 'object' && obj !== null && obj.nodeType === 1 && typeof obj.nodeName === 'string'
-    )
+const isDOMElement = (obj) => {
+    return typeof HTMLElement === "object"
+        ? obj instanceof HTMLElement
+        : obj
+        && typeof obj === "object"
+        && obj !== null
+        && obj.nodeType === 1
+        && typeof obj.nodeName === "string"
 }
 
 /**
@@ -71,7 +88,11 @@ const isDOMElement = obj => {
  * @returns
  */
 const getDOMRect = (selector, parent) => {
-    const target = isDOMElement(selector) ? selector : parent ? parent.querySelector(selector) : document.querySelector(selector)
+    const target = isDOMElement(selector)
+        ? selector
+        : parent
+            ? parent.querySelector(selector)
+            : document.querySelector(selector)
 
     if (!target) {
         return {}
@@ -85,7 +106,7 @@ const getDOMRect = (selector, parent) => {
         marginTop: style.marginTop,
         marginBottom: style.marginBottom,
         marginLeft: style.marginLeft,
-        marginRight: style.marginRight
+        marginRight: style.marginRight,
     }
 }
 
@@ -99,13 +120,13 @@ export const getOuterHeight = (selector, parent) => {
 }
 
 export const hashID = (len = 32) => {
-    const uuid = uuidv4().replace(/-/g, '')
+    const uuid = uuidv4().replace(/-/g, "")
     return uuid.substring(0, len)
 }
 
 export const randomString = (len) => {
-    const chars = 'ABCDEFGHJKLMNPQRSTWXYZabcdefhijklmnprstwxyz_0123456789'
-    let tempStr = ''
+    const chars = "ABCDEFGHJKLMNPQRSTWXYZabcdefhijklmnprstwxyz_0123456789"
+    let tempStr = ""
     for (let i = 0; i < len; ++i) {
         const tempLen = i === 0 ? chars.length - 10 : chars.length
         tempStr += chars.charAt(Math.floor(Math.random() * tempLen))
@@ -114,7 +135,7 @@ export const randomString = (len) => {
 }
 
 export function pad (n) {
-    return ('00' + n).slice(-2)
+    return ("00" + n).slice(-2)
 }
 
 /**
@@ -131,7 +152,7 @@ export function convertMStoString (ms) {
     const hour = Math.floor((ms % _1day) / _1hour)
     const min = Math.floor((ms % _1hour) / _1min)
     const sec = Math.floor((ms % _1min) / _1sec)
-    
+
     switch (true) {
         case day > 0:
             return `${day} ${pad(hour)}:${pad(min)}:${pad(sec)}`
@@ -143,7 +164,7 @@ export function convertMStoString (ms) {
 }
 
 export function checkContainerType (typeName) {
-    return (container) => container?.['@type'] === typeName
+    return (container) => container?.["@type"] === typeName
 }
 
 /**
@@ -168,21 +189,21 @@ export function getDependOnDesc (job) {
     try {
         const { status, jobControlOption = {} } = job
         const { dependOnType, dependOnId, dependOnName } = jobControlOption
-        if (status !== STATUS_MAP.DEPENDENT_WAITING) return ''
-        let val = ''
-        if (dependOnType === 'ID') {
+        if (status !== STATUS_MAP.DEPENDENT_WAITING) return ""
+        let val = ""
+        if (dependOnType === "ID") {
             val = dependOnId || []
         } else if (dependOnType) {
-            val = dependOnName || ''
+            val = dependOnName || ""
         }
         return val
     } catch (e) {
-        return ''
+        return ""
     }
 }
 
 export function isObject (o) {
-    return o !== null && typeof o === 'object' && !Array.isArray(o)
+    return o !== null && typeof o === "object" && !Array.isArray(o)
 }
 
 export function getStatusCls (status) {
@@ -195,31 +216,31 @@ export function getStatusCls (status) {
         case STATUS_MAP.LOOP_WAITING:
         case STATUS_MAP.DEPENDENT_WAITING:
         case STATUS_MAP.CALL_WAITING:
-            return 'DOING'
+            return "DOING"
         case STATUS_MAP.UNEXEC:
         case STATUS_MAP.DISABLED:
         case STATUS_MAP.WAITING:
-            return 'NORMAL'
+            return "NORMAL"
         case STATUS_MAP.CANCELED:
         case STATUS_MAP.REVIEW_ABORT:
         case STATUS_MAP.TRY_FINALLY:
         case STATUS_MAP.SKIP:
-            return 'WARNING'
+            return "WARNING"
         case STATUS_MAP.FAILED:
         case STATUS_MAP.TERMINATE:
         case STATUS_MAP.HEARTBEAT_TIMEOUT:
         case STATUS_MAP.QUALITY_CHECK_FAIL:
         case STATUS_MAP.QUEUE_TIMEOUT:
         case STATUS_MAP.EXEC_TIMEOUT:
-            return 'FAILED'
+            return "FAILED"
         case STATUS_MAP.SUCCEED:
         case STATUS_MAP.REVIEW_PROCESSED:
         case STATUS_MAP.STAGE_SUCCESS:
-            return 'SUCCESS'
+            return "SUCCESS"
         case STATUS_MAP.PAUSE:
-            return 'PAUSE'
+            return "PAUSE"
         default:
-            return ''
+            return ""
     }
 }
 
@@ -236,15 +257,30 @@ export function areDeeplyEqual (obj1, obj2) {
             continue
         }
 
-        if (typeof left !== 'object' || left === null
-            || typeof right !== 'object' || right === null) {
+        if (
+            typeof left !== "object"
+      || left === null
+      || typeof right !== "object"
+      || right === null
+        ) {
             return false
         }
 
-        const ignoreKeys = ['isError', 'id', 'pipelineCreator', 'containerHashId', 'containerId', 'executeCount']
+        const ignoreKeys = [
+            "isError",
+            "id",
+            "pipelineCreator",
+            "containerHashId",
+            "containerId",
+            "executeCount",
+        ]
         // 排除 isError 字段
-        const leftKeys = Object.keys(left).filter(key => !ignoreKeys.includes(key))
-        const rightKeys = Object.keys(right).filter(key => !ignoreKeys.includes(key))
+        const leftKeys = Object.keys(left).filter(
+            (key) => !ignoreKeys.includes(key)
+        )
+        const rightKeys = Object.keys(right).filter(
+            (key) => !ignoreKeys.includes(key)
+        )
         if (leftKeys.length !== rightKeys.length) {
             return false
         }
@@ -257,7 +293,7 @@ export function areDeeplyEqual (obj1, obj2) {
             if (left[key] === right[key]) {
                 continue
             }
-            if (typeof left[key] === 'object' && typeof right[key] === 'object') {
+            if (typeof left[key] === "object" && typeof right[key] === "object") {
                 stack.push([left[key], right[key]])
             } else {
                 return false

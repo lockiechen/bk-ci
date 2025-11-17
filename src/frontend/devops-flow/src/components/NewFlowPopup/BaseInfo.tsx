@@ -2,7 +2,7 @@ import { defineComponent, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { Form, Input } from 'bkui-vue'
 import { SvgIcon } from '@/components/SvgIcon'
-import AuthoringContent from '@/components/FlowConfig/AuthoringEnv/AuthoringContent.tsx'
+import AuthoringContent from '@/views/Flow/Detail/AuthoringEnv/AuthoringContent'
 import styles from './Index.module.css'
 
 export default defineComponent({

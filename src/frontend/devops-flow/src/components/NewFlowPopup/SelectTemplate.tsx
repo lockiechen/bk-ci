@@ -3,8 +3,14 @@ import { useI18n } from 'vue-i18n'
 import { useRouter } from 'vue-router'
 import { Radio, Checkbox, Message } from 'bkui-vue'
 import { SvgIcon } from '@/components/SvgIcon'
-import { FlowModel, AuthoringEnv, TriggerTab, NoticeTab, SettingTab } from '@/components/FlowConfig'
+import FlowModel from '@/views/Flow/Detail/FlowModel'
+import AuthoringEnv from '@/views/Flow/Detail/AuthoringEnv'
+import TriggerTab from '@/views/Flow/Detail/TriggerEvent'
+import NoticeTab from '@/views/Flow/Detail/Notice'
+import SettingTab from '@/views/Flow/Detail/BasicSetting'
+
 import styles from './Index.module.css'
+type FlowTabTypeEnum = typeof FlowModel | typeof AuthoringEnv | typeof TriggerTab | typeof NoticeTab | typeof SettingTab
 
 export default defineComponent({
   name: 'SelectTemplate',
@@ -82,7 +88,7 @@ export default defineComponent({
       })),
     )
 
-    const configComponentMap: Record<string, any> = {
+    const configComponentMap: Record<string, FlowTabTypeEnum> = {
       flowModel: FlowModel,
       authoringEnv: AuthoringEnv,
       trigger: TriggerTab,
