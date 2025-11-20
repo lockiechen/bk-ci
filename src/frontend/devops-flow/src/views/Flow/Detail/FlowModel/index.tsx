@@ -10,7 +10,7 @@ import CodeEditor from '@/components/CodeEditor'
 import styles from './FlowModel.module.css'
 import layoutStyles from '@/styles/layout.module.css'
 
-import BkPipeline from 'bkui-pipeline'
+import BkPipeline from 'bkui-pipeline/vue3'
 import 'bkui-pipeline/dist/bkui-pipeline.css'
 
 export default defineComponent({

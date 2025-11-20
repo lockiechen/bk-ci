@@ -1,10 +1,9 @@
 import { defineConfig } from 'vite'
-import vue from '@vitejs/plugin-vue'
-import vueJsx from '@vitejs/plugin-vue-jsx'
+import vue2 from '@vitejs/plugin-vue2'
 import path from 'path'
 import fs from 'fs'
 
-// 自定义插件：复制类型声明文件
+// Custom plugin: copy type declaration file to dist/
 function copyDtsPlugin () {
     return {
         name: 'copy-dts',
@@ -19,11 +18,10 @@ function copyDtsPlugin () {
     }
 }
 
-// https://vitejs.dev/config/
+// Vite config for Vue 2.7 build
 export default defineConfig({
     plugins: [
-        vue(),
-        vueJsx(),
+        vue2(),
         copyDtsPlugin()
     ],
     resolve: {
@@ -33,9 +31,9 @@ export default defineConfig({
         extensions: ['.js', '.vue', '.json', '.ts', '.scss', '.css']
     },
     optimizeDeps: {
-        // 预构建依赖，提高开发体验
+        // Pre-bundle deps for better DX in dev (if we ever dev the Vue 2 build)
         include: ['vue', 'uuid', 'vue-draggable-plus'],
-        // 排除可选的 UI 库，让它们按需加载
+        // Exclude optional UI libs so they stay external
         exclude: ['bk-magic-vue', 'bkui-vue']
     },
     css: {
@@ -57,40 +55,38 @@ export default defineConfig({
             formats: ['es', 'cjs', 'umd']
         },
         rollupOptions: {
-            // 确保外部化处理那些你不想打包进库的依赖
+            // Keep these deps external so they are provided by the host app
             external: ['vue', 'bk-magic-vue', 'bkui-vue', 'vue-draggable-plus'],
             output: {
-                // 在 UMD 构建模式下为这些外部化的依赖提供一个全局变量
                 globals: {
                     vue: 'Vue',
                     'bk-magic-vue': 'bkMagic',
                     'bkui-vue': 'bkuiVue',
                     'vue-draggable-plus': 'VueDraggablePlus'
                 },
-                // 保留样式
                 assetFileNames: (assetInfo) => {
+                    // Keep CSS file name stable inside vue2 subdir
                     if (assetInfo.name === 'style.css') return 'bk-pipeline.css'
                     return assetInfo.name
                 }
             }
         },
-        // 压缩选项
+        // Use terser for minification
         minify: 'terser',
         terserOptions: {
             format: {
                 comments: false
             }
         },
-        // 输出目录（Vue 3+ 版本使用根 dist 目录）
-        outDir: 'dist/vue3',
-        // 保留可能存在的其他构建产物
+        // Output Vue 2 build into a dedicated sub directory
+        outDir: 'dist/vue2',
+        // Do not wipe the whole dist when building vue2; only vue2 subdir matters
         emptyOutDir: false,
-        // 生成 sourcemap
         sourcemap: false
     },
-    // 开发服务器配置（用于本地测试）
+    // Dev server config (mainly for local debugging if needed)
     server: {
-        port: 3000,
+        port: 3001,
         open: false
     }
 })

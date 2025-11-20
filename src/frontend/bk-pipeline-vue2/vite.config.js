@@ -1,41 +1,46 @@
 import { defineConfig } from 'vite'
-import vue from '@vitejs/plugin-vue'
-import vueJsx from '@vitejs/plugin-vue-jsx'
+import vue2 from '@vitejs/plugin-vue2'
 import path from 'path'
 import fs from 'fs'
 
-// 自定义插件：复制类型声明文件
+// Paths pointing back to the main bk-pipeline package
+const PIPELINE_ROOT = path.resolve(__dirname, '../bk-pipeline')
+const SRC_ROOT = path.resolve(PIPELINE_ROOT, 'src')
+const ENTRY_FILE = path.resolve(PIPELINE_ROOT, 'index.js')
+const DTS_FILE = path.resolve(PIPELINE_ROOT, 'index.d.ts')
+const OUT_DIR = path.resolve(PIPELINE_ROOT, 'dist/vue2')
+
+// Copy type declaration file from main package to vue2 dist
 function copyDtsPlugin () {
     return {
         name: 'copy-dts',
         closeBundle () {
-            const src = path.resolve(__dirname, 'index.d.ts')
-            const dest = path.resolve(__dirname, 'dist/index.d.ts')
-            if (fs.existsSync(src)) {
-                fs.copyFileSync(src, dest)
-                console.log('✓ Type declaration file copied to dist/')
+            if (!fs.existsSync(DTS_FILE)) {
+                console.warn('[bk-pipeline-vue2] index.d.ts not found in main package')
+                return
             }
+            fs.mkdirSync(OUT_DIR, { recursive: true })
+            const dest = path.resolve(OUT_DIR, 'index.d.ts')
+            fs.copyFileSync(DTS_FILE, dest)
+            console.log('[bk-pipeline-vue2] Type declaration file copied to', dest)
         }
     }
 }
 
-// https://vitejs.dev/config/
 export default defineConfig({
     plugins: [
-        vue(),
-        vueJsx(),
+        vue2(),
         copyDtsPlugin()
     ],
     resolve: {
         alias: {
-            '@': path.resolve(__dirname, 'src')
+            // Use bk-pipeline's src as the single source of truth
+            '@': SRC_ROOT
         },
         extensions: ['.js', '.vue', '.json', '.ts', '.scss', '.css']
     },
     optimizeDeps: {
-        // 预构建依赖，提高开发体验
         include: ['vue', 'uuid', 'vue-draggable-plus'],
-        // 排除可选的 UI 库，让它们按需加载
         exclude: ['bk-magic-vue', 'bkui-vue']
     },
     css: {
@@ -47,7 +52,7 @@ export default defineConfig({
     },
     build: {
         lib: {
-            entry: path.resolve(__dirname, 'index.js'),
+            entry: ENTRY_FILE,
             name: 'bkPipeline',
             fileName: (format) => {
                 if (format === 'es') return 'bk-pipeline.esm.js'
@@ -57,40 +62,32 @@ export default defineConfig({
             formats: ['es', 'cjs', 'umd']
         },
         rollupOptions: {
-            // 确保外部化处理那些你不想打包进库的依赖
             external: ['vue', 'bk-magic-vue', 'bkui-vue', 'vue-draggable-plus'],
             output: {
-                // 在 UMD 构建模式下为这些外部化的依赖提供一个全局变量
                 globals: {
                     vue: 'Vue',
                     'bk-magic-vue': 'bkMagic',
                     'bkui-vue': 'bkuiVue',
                     'vue-draggable-plus': 'VueDraggablePlus'
                 },
-                // 保留样式
                 assetFileNames: (assetInfo) => {
                     if (assetInfo.name === 'style.css') return 'bk-pipeline.css'
                     return assetInfo.name
                 }
             }
         },
-        // 压缩选项
         minify: 'terser',
         terserOptions: {
             format: {
                 comments: false
             }
         },
-        // 输出目录（Vue 3+ 版本使用根 dist 目录）
-        outDir: 'dist/vue3',
-        // 保留可能存在的其他构建产物
+        outDir: OUT_DIR,
         emptyOutDir: false,
-        // 生成 sourcemap
         sourcemap: false
     },
-    // 开发服务器配置（用于本地测试）
     server: {
-        port: 3000,
+        port: 4300,
         open: false
     }
 })

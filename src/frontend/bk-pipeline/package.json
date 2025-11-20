@@ -14,8 +14,18 @@
       "require": "./dist/bk-pipeline.cjs.js",
       "types": "./dist/index.d.ts"
     },
-    "./dist/bkui-pipeline.css": "./dist/bkui-pipeline.css",
-    "./dist/bk-pipeline.css": "./dist/bkui-pipeline.css"
+    "./vue2": {
+      "import": "./dist/vue2/bk-pipeline.esm.js",
+      "require": "./dist/vue2/bk-pipeline.cjs.js",
+      "types": "./dist/index.d.ts"
+    },
+    "./vue3": {
+      "import": "./dist/vue3/bk-pipeline.esm.js",
+      "require": "./dist/vue3/bk-pipeline.cjs.js",
+      "types": "./dist/index.d.ts"
+    },
+    "./dist/bkui-pipeline.css": "./dist/vue3/bkui-pipeline.css",
+    "./dist/bk-pipeline.css": "./dist/vue2/bk-pipeline.css"
   },
   "files": [
     "dist",
@@ -25,9 +35,11 @@
   ],
   "scripts": {
     "dev": "vite",
-    "build": "vite build",
-    "public": "vite build",
-    "public:master": "vite build",
+    "build": "vite build && pnpm --filter bkui-pipeline-vue2-build run build",
+    "build:vue3": "vite build",
+    "build:vue2": "pnpm --filter bkui-pipeline-vue2-build run build",
+    "public": "pnpm run build",
+    "public:master": "pnpm run build",
     "preview": "vite preview",
     "patch": "npm version patch && npm publish",
     "test": "echo \"Error: no test specified\" && exit 1"
@@ -38,6 +50,7 @@
     "@babel/eslint-parser": "^7.23.0",
     "@vitejs/plugin-vue": "^5.0.0",
     "@vitejs/plugin-vue-jsx": "^3.1.0",
+    "@vitejs/plugin-vue2": "^2.3.3",
     "eslint": "^8.56.0",
     "eslint-plugin-promise": "^6.1.1",
     "eslint-plugin-vue": "^9.20.0",
