@@ -84,6 +84,7 @@
 /* 选择模板 */
 .selectTemplate {
   height: 100%;
+  overflow: hidden;
 }
 
 .headerAside {
@@ -111,6 +112,7 @@
   background: var(--bg-primary);
   border: 1px solid var(--border-color);
   border-radius: var(--border-radius);
+  cursor: pointer;
 }
 
 .activeImage {
@@ -186,10 +188,94 @@
 }
 
 .configContent {
+  display: flex;
   flex: 1;
   background-color: var(--bg-primary);
 }
 
 .btn {
   margin-left: var(--spacing-sm);
+}
+
+/* 模板列表样式 */
+.templateList {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(256px, 1fr));
+  gap: var(--spacing-lg);
+  padding-top: 6px;
+  max-height: 440px;
+  overflow-y: auto;
+}
+
+.templateItem {
+  display: flex;
+  align-items: center;
+  position: relative;
+  height: 72px;
+  padding: 14px var(--spacing-lg);
+  border: 1px solid var(--border-color);
+  border-radius: var(--border-radius);
+  cursor: pointer;
+  transition: all 0.2s ease;
+  background: var(--bg-primary);
+}
+
+.templateItem:hover {
+  border-color: var(--color-primary-hover);
+  box-shadow: var(--shadow-sm);
+}
+
+.templateCorner {
+  display: none;
+  border-color: #3a84ff #0000 #0000 #3a84ff;
+  border-style: solid;
+  border-width: 12px 10px;
+  color: #fff;
+  height: 0;
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 0;
+
+  svg {
+    position: absolute;
+    top: -11px;
+    left: -9px;
+    color: var(--bg-primary);
+  }
+}
+
+.templateItemActive {
+  border-color: var(--color-primary);
+
+  .templateCorner {
+    display: block;
+  }
+}
+
+.templateImage {
+  color: var(--color-text-tertiary);
+  padding-right: var(--spacing-md);
+}
+
+.templateName {
+  font-size: var(--font-size-sm);
+  color: var(--color-text-primary);
+}
+
+.templateStore {
+  display: inline-block;
+  margin-left: var(--spacing-sm);
+  border-radius: var(--border-radius);
+  text-align: center;
+
+  svg {
+    vertical-align: sub;
+  }
+}
+
+.templateDesc {
+  font-size: var(--font-size-xs);
+  color: var(--color-text-tertiary);
+  line-height: 1.4;
 }

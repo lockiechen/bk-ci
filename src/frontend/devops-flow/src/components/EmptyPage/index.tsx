@@ -4,7 +4,7 @@ import { Exception } from 'bkui-vue'
 import styles from './EmptyPage.module.css'
 
 export default defineComponent({
-  name: 'EmptyTableStatus',
+  name: 'EmptyPage',
   props: {
     title: {
       type: String,

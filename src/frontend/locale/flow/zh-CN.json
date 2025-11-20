@@ -24,7 +24,8 @@
       "failed": "失败",
       "confirm": "确定",
       "cancel": "取消",
-      "close": "关闭"
+      "close": "关闭",
+      "reset": "清空"
     },
     "sidebar": {
       "myFlows": "我的创作流",
@@ -35,6 +36,13 @@
       "group": "创作流组",
       "recycleBin": "回收站"
     },
+    "restore": {
+      "restore": "恢复",
+      "deleter": "删除人",
+      "deleteTime": "删除时间",
+      "restoreSuc": "恢复成功",
+      "restoreFlowConfirm": "确定恢复创作流【{0}】"
+    },
     "content": {
       "newFlow": "新建创作流",
       "batchManage": "批量管理",
@@ -44,6 +52,9 @@
       "groupName": "所在创作流组",
       "lastExecution": "最近执行",
       "executionTime": "执行时间",
+      "lastModify": "最近修改时间",
+      "creator": "创建人",
+      "createTime": "创建时间",
       "actions": "操作",
       "execute": "执行",
       "orderByAlpha": "按名称A-Z",
@@ -160,7 +171,24 @@
       "editStep": "插件设置",
       "loadingConfiguration": "正在加载配置...",
       "noConfigurationFound": "暂未找到配置",
-      "pleaseConfigureFirst": "请先进行配置后再查看"
+      "pleaseConfigureFirst": "请先进行配置后再查看",
+      "unexecute": "未执行",
+      "showStageProgress": "展示 Stage 进度",
+      "showBuildInfo": "展示构建信息",
+      "skipStageDesc": "已跳过",
+      "toCheck": "审核",
+      "execedTimes": "已运行",
+      "totalTime": "耗时{0}",
+      "timeMap": {
+        "days": "天",
+        "hours": "小时",
+        "minutes": "分",
+        "seconds": "秒",
+        "ago": "前"
+      },
+      "draft": "草稿",
+      "branch": "分支",
+      "deleteAlready": "创作流已删除"
     },
     "dialog": {
       "createGroup": {
@@ -181,6 +209,17 @@
       "deleteConfirm": {
         "title": "确认删除"
       },
+      "addGroup": {
+        "searchFlowGroup": "搜索创作流组",
+        "personalFlowGroup": "个人创作流组",
+        "addToGroupTitle": "将创作流 <b>{0}</b> 添加至下方所选创作流组",
+        "resultPreview": "结果预览",
+        "selectedGroup": "将添加至",
+        "selectedGroupSuffix": "个用户组",
+        "pleaseSelectGroup": "请选择创作流组",
+        "added": "已添加",
+        "dynamicGroup": "动态分组"
+      },
       "saveAsTemplate": {
         "templateName": "模板名称",
         "isCopySetting": "应用设置",
@@ -193,8 +232,8 @@
         "name": "名称",
         "desc": "描述",
         "labels": "标签",
-        "dynamicPipelineGroup": "动态创作流组",
-        "staticPipelineGroup": "静态创作流组",
+        "dynamicFlowGroup": "动态创作流组",
+        "staticFlowGroup": "静态创作流组",
         "dynamicMatchPlaceholder": "将根据创作流的名称、标签等属性自动匹配",
         "addLabel": "新建标签",
         "noLabels": "当前项目暂无标签"
@@ -208,6 +247,46 @@
       "permissionManage": "创作流组权限管理",
       "confirmDelete": "确定要删除\"{name}\"吗？",
       "refresh": "刷新"
+    },
+    "triggerRecord": {
+      "pickTimeRange": "选择日期时间范围",
+      "triggerType": "触发器类型",
+      "eventType": "事件类型",
+      "trigger": "触发人",
+      "loadingTips": "数据加载中，请稍候",
+      "today": "今天",
+      "yesterday": "昨天",
+      "last3days": "近3天",
+      "last7days": "近7天"
+    },
+    "delegation": {
+      "delegationPermission": "权限代持",
+      "tips1": "如下场景将使用代持人的权限：",
+      "tips2": "1. 云桌面事件触发、定时触发、子创作流触发等场景，平台将校验权限代持人是否有{0}；如果没有，触发失败。",
+      "tips3": "2. 流水线运行时，代持人将赋值给内置变量 {0}，部分插件会根据此数据校验是否有对应系统/功能的操作权限。",
+      "tips4": "代持人授权前，请明确创作流的功能、操作范围，避免越权。",
+      "tips5": "代持人默认为创作流创建人；若需修改，请{0}在此重置。",
+      "newOperator": "新负责人",
+      "flowExecPermission": "创作流执行权限",
+      "proxyHolderForExecutionPermissions": "执行权限代持人",
+      "resetAuthorization": "重置授权",
+      "confirmReset": "确认重置授权？",
+      "yourPermission": "你的权限",
+      "resetAuthTips1": "重置后，代码库触发、定时触发、子流水线触发等场景，将使用 {0} 执行流水线。",
+      "resetAuthTips2": "请确认是否可以授权。",
+      "reset": "重置",
+      "cancel": "取消",
+      "resetSuc": "重置成功",
+      "authTime": "授权时间",
+      "expired": "已失效",
+      "expiredTips": "无执行权限，已失效",
+      "resetFailed": "重置授权失败",
+      "confirm": "确定"
+    },
+    "operator": {
+      "operator": "操作人",
+      "operateTime": "操作时间",
+      "operateLogDesc": "操作说明"
     }
   }
 }

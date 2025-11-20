@@ -24,7 +24,8 @@
       "allFlows": "すべてのフロー",
       "noData": "データなし",
       "success": "成功",
-      "failed": "失敗"
+      "failed": "失敗",
+      "reset": "クリア"
     },
     "sidebar": {
       "myFlows": "マイフロー",
@@ -35,6 +36,13 @@
       "group": "フローグループ",
       "recycleBin": "ゴミ箱"
     },
+    "restore": {
+      "restore": "復元",
+      "deleter": "削除者",
+      "deleteTime": "削除時間",
+      "restoreSuc": "復元成功",
+      "restoreFlowConfirm": "作成フロー【{0}】を復元してよろしいですか"
+    },
     "content": {
       "newFlow": "新しいフロー",
       "batchManage": "一括管理",
@@ -44,6 +52,9 @@
       "groupName": "所属作成フローグループ",
       "lastExecution": "最近の実行",
       "executionTime": "実行時間",
+      "lastModify": "最終更新時間",
+      "creator": "作成者",
+      "createTime": "作成時間",
       "actions": "操作",
       "execute": "実行",
       "orderByAlpha": "名前順 A-Z",
@@ -160,7 +171,24 @@
       "editStep": "プラグイン設定",
       "loadingConfiguration": "設定を読み込み中...",
       "noConfigurationFound": "設定が見つかりません",
-      "pleaseConfigureFirst": "まず設定を行ってからご覧ください"
+      "pleaseConfigureFirst": "まず設定を行ってからご覧ください",
+      "unexecute": "未実行",
+      "showStageProgress": "ステージ進捗を表示",
+      "showBuildInfo": "ビルド情報を表示",
+      "skipStageDesc": "スキップ済み",
+      "toCheck": "レビュー",
+      "execedTimes": "実行回数",
+      "totalTime": "経過時間 {0}",
+      "timeMap": {
+        "days": "日",
+        "hours": "時間",
+        "minutes": "分",
+        "seconds": "秒",
+        "ago": "前"
+      },
+      "draft": "下書き",
+      "branch": "ブランチ",
+      "deleteAlready": "作成フローは削除されました"
     },
     "dialog": {
       "createGroup": {
@@ -181,6 +209,17 @@
       "deleteConfirm": {
         "title": "削除確認"
       },
+      "addGroup": {
+        "searchFlowGroup": "作成フローグループを検索",
+        "personalFlowGroup": "個人作成フローグループ",
+        "addToGroupTitle": "作成フロー <b>{0}</b> を下の選択した作成フローグループに追加",
+        "resultPreview": "結果プレビュー",
+        "selectedGroup": "に追加される予定",
+        "selectedGroupSuffix": "ユーザーグループ",
+        "pleaseSelectGroup": "作成フローグループを選択してください",
+        "added": "追加済み",
+        "dynamicGroup": "動的グループ"
+      },
       "saveAsTemplate": {
         "templateName": "テンプレート名",
         "isCopySetting": "設定を適用",
@@ -193,8 +232,8 @@
         "name": "名称",
         "desc": "説明",
         "labels": "タグ",
-        "dynamicPipelineGroup": "動的作成フローグループ",
-        "staticPipelineGroup": "静的作成フローグループ",
+        "dynamicFlowGroup": "動的作成フローグループ",
+        "staticFlowGroup": "静的作成フローグループ",
         "dynamicMatchPlaceholder": "作成フローの名前やタグなどの属性に基づいて自動的に一致します",
         "addLabel": "新しいタグを追加",
         "noLabels": "現在のプロジェクトには利用可能なタグがありません"
@@ -208,6 +247,46 @@
       "permissionManage": "創作流グループ権限管理",
       "confirmDelete": "\"{name}\"を削除してもよろしいですか？",
       "refresh": "更新"
+    },
+    "triggerRecord": {
+      "pickTimeRange": "日付時間範囲を選択",
+      "triggerType": "トリガータイプ",
+      "eventType": "イベントタイプ",
+      "trigger": "トリガーした人",
+      "loadingTips": "データを読み込み中です。しばらくお待ちください。",
+      "today": "今日",
+      "yesterday": "昨日",
+      "last3days": "過去3日間",
+      "last7days": "過去7日間"
+    },
+    "delegation": {
+      "delegationPermission": "権限の委譲",
+      "tips1": "次のシナリオでは、委譲者の権限が使用されます：",
+      "tips2": "1. クラウドデスクトップのイベントトリガー、スケジュールトリガー、サブ作成フロートリガーなどのシナリオで、プラットフォームは委譲者が{0}を持っているか確認します。持っていない場合、トリガーは失敗します。",
+      "tips3": "2. パイプライン実行中、委譲者は組み込み変数{0}に割り当てられ、一部のプラグインはこのデータに基づいて対応するシステム/機能の操作権限を確認します。",
+      "tips4": "越権を避けるために、委譲者を承認する前に、作成フローの機能と操作範囲を明確にしてください。",
+      "tips5": "デフォルトの委譲者は作成フローの作成者です。変更が必要な場合は、ここで{0}リセットしてください。",
+      "newOperator": "新しい責任者",
+      "flowExecPermission": "作成フロー実行権限",
+      "proxyHolderForExecutionPermissions": "実行権限の委譲者",
+      "resetAuthorization": "認可のリセット",
+      "confirmReset": "認可のリセットを確認しますか？",
+      "yourPermission": "あなたの権限",
+      "resetAuthTips1": "リセット後、リポジトリトリガー、スケジュールトリガー、サブパイプライントリガーなどのシナリオでは{0}を使用してパイプラインを実行します。",
+      "resetAuthTips2": "認可可能か確認してください。",
+      "reset": "リセット",
+      "cancel": "キャンセル",
+      "resetSuc": "リセット成功",
+      "authTime": "認可時間",
+      "expired": "期限切れ",
+      "expiredTips": "実行権限がなく、期限切れです",
+      "resetFailed": "認可のリセットに失敗しました",
+      "confirm": "確認"
+    },
+    "operator": {
+      "operator": "オペレーター",
+      "operateTime": "操作時間",
+      "operateLogDesc": "操作説明"
     }
   }
 }

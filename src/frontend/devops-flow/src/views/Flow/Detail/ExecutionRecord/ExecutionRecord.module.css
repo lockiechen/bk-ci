@@ -24,6 +24,10 @@
   flex: 1;
 }
 
+.searchInput :global(.bk-search-select-container .search-container) {
+  position: inherit;
+}
+
 /* 修复 search-select 组件获得焦点时的抖动问题 */
 /* 目标元素是 .bk-search-select-container，确保边框宽度不变，允许高度自然展开 */
 .searchInput :global(.bk-search-select-container) {
@@ -37,6 +41,7 @@
     border-color var(--transition-fast),
     box-shadow var(--transition-fast),
     height var(--transition-normal) !important;
+  background-color: var(--bg-primary);
 }
 
 .filterBar {

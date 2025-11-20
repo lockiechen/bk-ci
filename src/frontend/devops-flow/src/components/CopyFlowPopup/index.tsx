@@ -104,7 +104,7 @@ export default defineComponent({
       },
       {
         property: 'dynamicGroup',
-        label: t('flow.dialog.copyCreation.dynamicPipelineGroup'),
+        label: t('flow.dialog.copyCreation.dynamicFlowGroup'),
         component: 'Select',
         props: {
           disabled: true,
@@ -115,7 +115,7 @@ export default defineComponent({
       },
       {
         property: 'staticView',
-        label: t('flow.dialog.copyCreation.staticPipelineGroup'),
+        label: t('flow.dialog.copyCreation.staticFlowGroup'),
         component: 'Select',
         props: {
           multiple: true,

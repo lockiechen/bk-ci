@@ -1,6 +1,7 @@
 import { useI18n } from 'vue-i18n'
-import { ref } from 'vue'
+import { computed, ref } from 'vue'
 import { defineStore } from 'pinia'
+import { statusAlias } from '@/utils/flowStatus'
 import {
   getContentTableData,
   createContent,
@@ -13,6 +14,7 @@ import {
   getContentDetail,
   getMatchDynamicView,
   getProjectTags,
+  toggleFlowFavorite,
   type ContentTableItem,
   type ContentTableParams,
   type CreateContentParams,
@@ -20,7 +22,10 @@ import {
   type SaveAsTemplateParams,
   type CopyFlowParams,
   type MatchDynamicViewParams,
+  type BuildStageStatus,
 } from '@/api/flowContentList'
+import { VERSION_STATUS_ENUM } from "@/utils/flowConst";
+import { convertTime } from "@/utils/util";
 
 // 操作列弹窗类型枚举
 export enum DialogType {
@@ -29,8 +34,16 @@ export enum DialogType {
   SAVE_AS_TEMPLATE = 'saveAsTemplate',
 }
 
+type IconMap = {
+  SUCCEED: string
+  FAILED: string
+  RUNNING: string
+  PAUSE: string
+  SKIP: string
+}
+
 export const useFlowHomeContentStore = defineStore('flowContentList', () => {
-  const { t } = useI18n()
+  const { t, locale } = useI18n()
   const flowTableList = ref<ContentTableItem[]>([])
   const tableLoading = ref(false)
   const pagination = ref({
@@ -40,6 +53,14 @@ export const useFlowHomeContentStore = defineStore('flowContentList', () => {
   })
 
   const currentActionData = ref<any>(null)
+  const statusIconMap = computed<IconMap>(() => ({
+    SUCCEED: 'check-circle-shape',
+    FAILED: 'close-circle-shape',
+    RUNNING: 'circle-2-1',
+    PAUSE: 'play-circle-shape',
+    SKIP: 'redo-arrow',
+    CANCELED: 'abort',
+  }))
 
   const isShowAddToDialog = ref(false)
   const isShowCopyDialog = ref(false)
@@ -67,8 +88,30 @@ export const useFlowHomeContentStore = defineStore('flowContentList', () => {
    * 添加操作按钮配置
    */
   function processContentItem(content: ContentTableItem): ContentTableItem {
+    const isDraft = content.latestVersionStatus === VERSION_STATUS_ENUM.COMMITTING
+    const isBranch = content.latestVersionStatus === VERSION_STATUS_ENUM.BRANCH
     return {
       ...content,
+      latestBuildRoute: {
+        name: 'pipelinesDetail',
+        params: {
+          type: 'executeDetail',
+          projectId: content.id,
+          pipelineId: content.id,
+          buildNo: content.latestBuildId,
+        },
+      },
+      updater: content.lastModifyUser,
+      updateDate: convertTime(content.updateTime),
+      createDate: convertTime(content.createTime),
+      duration: calcDuration(content),
+      progress: calcProgress(content),
+      onlyDraftVersion: isDraft,
+      onlyBranchVersion: isBranch,
+      latestBuildStartDate: content.latestBuildStartTime
+        ? convertTime(content.latestBuildStartTime)
+        : '--',
+      latestBuildStageStatus: getLatestBuildStageStatus(content),
       handleExecute: (row: ContentTableItem) => handleExecute(row),
       flowAction: [
         {
@@ -106,6 +149,163 @@ export const useFlowHomeContentStore = defineStore('flowContentList', () => {
         },
       ],
     }
+  }
+
+  function calcProgress({
+    latestBuildStatus,
+    lastBuildFinishCount = 0,
+    lastBuildTotalCount = 1,
+    currentTimestamp,
+    latestBuildStartTime,
+  }: ContentTableItem) {
+    if (latestBuildStatus === statusAlias.RUNNING) {
+      return `${t('flow.content.execedTimes')}${convertMStoStringByRule(currentTimestamp - latestBuildStartTime)}(${Math.floor((lastBuildFinishCount / lastBuildTotalCount) * 100)}%)`
+    }
+    return ''
+  }
+
+  /**
+   *  将毫秒值转换成x时x分x秒的形式并使用格式化规则
+   *  @param {Number} time - 时间的毫秒形式
+   *  @return {String} str - 转换后的字符串
+   */
+  function convertMStoStringByRule(time: number) {
+    if (time < 0) {
+      return '--'
+    }
+    let res = ''
+    if (locale.value === 'en-US') {
+      res = convertToEn(time)
+    } else {
+      res = convertToCn(time)
+    }
+    return res
+  }
+
+  function convertToCn(time: number) {
+    const str = convertMStoString(time)
+    let res = str
+    const arr = str.match(/^\d{1,}([\u4e00-\u9fa5]){1,}/) || []
+    if (arr.length) {
+      switch (arr[1]) {
+        case '秒':
+          res = '1分钟内'
+          break
+        case '天':
+          res = `大于${arr[0]}`
+          break
+        case '时':
+          res = str.replace(/\d{1,}秒/, '')
+          break
+      }
+    }
+    return res
+  }
+
+  function convertToEn(time: number) {
+    const sec = time / 1000
+    let res = ''
+    if (sec <= 60) {
+      res = 'less than 1 minute'
+    } else if (sec <= 60 * 60) {
+      res = `${Math.floor(sec / 60)}m and ${Math.floor(sec % 60)}s`
+    } else if (time <= 60 * 60 * 24) {
+      res = `${Math.floor(sec / 3600)}h and ${Math.floor((sec % 60) / 60)}m`
+    } else {
+      res = `more than ${Math.floor(sec / 86400)} days`
+    }
+    return res
+  }
+
+  /**
+   * 获取执行耗时
+   */
+  function calcDuration({
+    latestBuildEndTime,
+    latestBuildStartTime,
+    latestBuildNum,
+  }: ContentTableItem) {
+    if (latestBuildNum) {
+      const duration = convertMStoStringByRule(latestBuildEndTime - latestBuildStartTime)
+      return t('flow.content.totalTime', [duration])
+    }
+    return '--'
+  }
+
+  /**
+   *  将毫秒值转换成x时x分x秒的形式
+   *  @param {Number} time - 时间的毫秒形式
+   *  @return {String} str - 转换后的字符串
+   */
+  function convertMStoString(time: number) {
+    function getSeconds(sec: number) {
+      return `${sec}${t('flow.content.timeMap.seconds')}`
+    }
+
+    function getMinutes(sec: number) {
+      if (sec / 60 >= 1) {
+        return `${Math.floor(sec / 60)}${t('flow.content.timeMap.minutes')}${getSeconds(sec % 60)}`
+      } else {
+        return getSeconds(sec)
+      }
+    }
+
+    function getHours(sec: number) {
+      if (sec / 3600 >= 1) {
+        return `${Math.floor(sec / 3600)}${t('flow.content.timeMap.hours')}${getMinutes(sec % 3600)}`
+      } else {
+        return getMinutes(sec)
+      }
+    }
+
+    function getDays(sec: number) {
+      if (sec / 86400 >= 1) {
+        return `${Math.floor(sec / 86400)}${t('flow.content.timeMap.days')}${getHours(sec % 86400)}`
+      } else {
+        return getHours(sec)
+      }
+    }
+
+    return time ? getDays(Math.floor(time / 1000)) : `0${t('flow.content.timeMap.seconds')}`
+  }
+
+  function getStageTooltip(stage: BuildStageStatus) {
+    switch (true) {
+      case !!stage.elapsed:
+        return `${stage.name}: ${convertMStoString(stage.elapsed)}`
+      case stage.status === 'PAUSE':
+        return t('flow.content.toCheck')
+      case stage.status === 'SKIP':
+        return t('flow.content.skipStageDesc')
+    }
+  }
+
+  /**
+   * 获取最近执行stage进度数据
+   */
+  function getLatestBuildStageStatus(item: ContentTableItem) {
+    return item.latestBuildStageStatus
+      ? item.latestBuildStageStatus.slice(1).map((stage: BuildStageStatus) => {
+          const supportedStatuses = [
+            'SUCCEED',
+            'FAILED',
+            'RUNNING',
+            'PAUSE',
+            'SKIP',
+            'CANCELED',
+          ] as const
+          const icon = supportedStatuses.includes(stage.status as any)
+            ? statusIconMap.value[stage.status as keyof IconMap]
+            : 'circle'
+
+          return {
+            ...stage,
+            tooltip: getStageTooltip(stage),
+            icon,
+            statusCls: stage.status,
+          }
+        })
+      : undefined
   }
 
   /**
@@ -210,6 +410,7 @@ export const useFlowHomeContentStore = defineStore('flowContentList', () => {
    */
   function handleExecute(row: ContentTableItem) {
     console.log('执行创作流', row)
+    // TODO
   }
 
   /**
@@ -323,6 +524,18 @@ export const useFlowHomeContentStore = defineStore('flowContentList', () => {
       throw error
     }
   }
+  
+  async function updateCollect(hasCollect: boolean, flowId: string) {
+    try {
+      // 调用收藏接口
+      const result = await toggleFlowFavorite(flowId, hasCollect)
+      return result
+    } catch (error) {
+      console.error(error)
+      throw error
+    }
+  }
+
 
   return {
     // State
@@ -334,6 +547,7 @@ export const useFlowHomeContentStore = defineStore('flowContentList', () => {
     isShowSaveAsTemplateDialog,
     currentActionData,
     // Actions
+    convertMStoString,
     closeAllDialogs,
     fetchFlowList,
     loadContentDetail,
@@ -348,5 +562,6 @@ export const useFlowHomeContentStore = defineStore('flowContentList', () => {
     setEnableActionCallback,
     getMatchDynamicData,
     getProjectTagList,
+    updateCollect,
   }
 })

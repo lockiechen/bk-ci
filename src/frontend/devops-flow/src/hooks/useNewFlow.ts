@@ -1,40 +1,34 @@
-import { ref, watch } from 'vue'
+import { ref } from 'vue'
 import { storeToRefs } from 'pinia'
 import { useNewFlowStore } from '@/stores/createFlowStore'
 
 /**
  * NewFlowPopup组件业务逻辑 Hook
  */
-interface UseNewFlowProps {
-  isShow: boolean
-}
-
-export function useNewFlow(props: UseNewFlowProps) {
+export function useNewFlow() {
   const store = useNewFlowStore()
-  const { currentStep, formData, isLoading, validationErrors } = storeToRefs(store)
+  const {
+    currentStep,
+    formData,
+    isLoading,
+    authoringEnvList,
+    authoringNodeList,
+    envListLoading,
+    nodeListLoading,
+    projectModelList,
+    storeModelList,
+    projectModelLoading,
+    storeModelLoading,
+  } = storeToRefs(store)
 
   // 本地状态
   const baseInfoRef = ref<any>()
-
-  /**
-   * 监听弹窗显示状态变化
-   */
-  watch(
-    () => props.isShow,
-    (newVal) => {
-      if (newVal) {
-        store.resetForm()
-        clearFormValidation()
-      }
-    },
-  )
 
   /**
    * 清除表单验证
    */
   function clearFormValidation() {
     baseInfoRef.value?.formRef?.clearValidate?.()
-    store.clearValidationErrors()
   }
 
   /**
@@ -63,7 +57,13 @@ export function useNewFlow(props: UseNewFlowProps) {
     const isValid = await validateCurrentStep()
     if (!isValid) return
 
-    store.setCurrentStep(targetStep)
+    // 如果是下一步且当前是第一步，保存基础设置
+    if (targetStep > currentStep.value && currentStep.value === 1) {
+      const saveSuccess = await store.saveBaseInfoData()
+      if (!saveSuccess) return
+    }
+
+    currentStep.value = targetStep
   }
 
   /**
@@ -73,28 +73,18 @@ export function useNewFlow(props: UseNewFlowProps) {
     const isValid = await validateCurrentStep()
     if (!isValid) return
 
-    store.nextStep()
+    // 保存基础设置
+    const saveSuccess = await store.saveBaseInfoData()
+    if (!saveSuccess) return
+
+    currentStep.value++
   }
 
   /**
    * 上一步
    */
   function handlePrevStep(): void {
-    store.prevStep()
-  }
-
-  /**
-   * 更新基础信息
-   */
-  function handleUpdateBaseInfo(data: { flowName: string; desc: string; authoringEnv: string }) {
-    store.updateBaseInfo(data)
-  }
-
-  /**
-   * 更新模板信息
-   */
-  function handleUpdateTemplateInfo(data: any) {
-    store.updateTemplateInfo(data)
+    currentStep.value--
   }
 
   /**
@@ -107,21 +97,21 @@ export function useNewFlow(props: UseNewFlowProps) {
     await store.createNewFlow()
   }
 
-  /**
-   * 关闭弹窗
-   */
-  function handleClose(): void {
-    store.resetForm()
-  }
-
   return {
     // Store状态
     currentStep,
     formData,
     isLoading,
-    validationErrors,
+    authoringEnvList,
+    authoringNodeList,
+    envListLoading,
+    nodeListLoading,
+    projectModelList,
+    storeModelList,
+    projectModelLoading,
+    storeModelLoading,
 
-    // 本地引用
+    // 本地状态
     baseInfoRef,
 
     // 方法
@@ -130,9 +120,13 @@ export function useNewFlow(props: UseNewFlowProps) {
     handleStepChange,
     handleNextStep,
     handlePrevStep,
-    handleUpdateBaseInfo,
-    handleUpdateTemplateInfo,
     handleConfirm,
-    handleClose,
+    resetForm: store.resetForm,
+    updateBaseInfo: store.updateBaseInfo,
+    updateTemplateInfo: store.updateTemplateInfo,
+    fetchAuthoringEnvList: store.fetchAuthoringEnvList,
+    fetchAuthoringNodeList: store.fetchAuthoringNodeList,
+    fetchProjectTemplates: store.fetchProjectTemplates,
+    fetchStoreTemplates: store.fetchStoreTemplates,
   }
 }

@@ -9,32 +9,64 @@ export interface BuildStageStatus {
   showMsg?: string;
   startEpoch?: number;
 }
+interface PromiseObj {
+  canManage: boolean;
+  canDelete: boolean;
+  canView: boolean;
+  canEdit: boolean;
+  canExecute: boolean;
+  canDownload: boolean;
+  canShare: boolean;
+  canArchive: boolean;
+}
+export type StatusType = 'SUCCEED' | 'FAILED' | 'CANCELED' | 'RUNNING' | 'TERMINATE' | 'REVIEWING'
+  | 'REVIEW_ABORT' | 'REVIEW_PROCESSED' | 'HEARTBEAT_TIMEOUT' | 'PREPARE_ENV' | 'UNEXEC' | 'SKIP' 
+  | 'QUALITY_CHECK_FAIL' | 'QUEUE' | 'QUEUE_CACHE' | 'LOOP_WAITING' | 'CALL_WAITING' | 'TRY_FINALLY'
+  | 'QUEUE_TIMEOUT' | 'EXEC_TIMEOUT' | 'RETRY' | 'PAUSE' | 'STAGE_SUCCESS' | 'QUOTA_FAILED'
+  | 'DEPENDENT_WAITING' | 'QUALITY_CHECK_PASS' | 'QUALITY_CHECK_WAIT' | 'UNKNOWN'
+
+type TriggerType = 'manualTrigger' | 'timerTrigger' | 'codeGitWebHookTrigger' | 'remoteTrigger'
 
 export interface ContentTableItem {
   id: string;
   name: string;
   description?: string;
-  status: string;
+  status?: string;
   creator: string;
-  createTime: string;
-  updateTime: string;
-  flowCount: number;
-  successRate: number;
+  createTime: number;
+  updateTime: number;
+  flowCount?: number;
+  successRate?: number;
   lastRunTime?: string;
+  latestBuildNum?: number;
+  permissions?: PromiseObj;
+  latestBuildRoute?: object;
+  latestBuildId?: string;
+  lastBuildMsg?: string;
+  startType?: TriggerType;
+  latestBuildStartDate?: string;
+  duration?: string;
+  progress?: string;
+  latestBuildEndTime: number;
+  lastBuildFinishCount?: number;
+  lastBuildTotalCount?: number;
+  currentTimestamp: number;
   tags?: string[];
   favorite?: boolean;
   flowAction?: MenuItem[];
   handleExecute?: (data: ContentTableItem) => void;
   latestBuildStageStatus?: BuildStageStatus[];
   viewNames?: string[];
-  latestBuildStartTime?: number;
-  latestBuildStatus?: string;
+  latestBuildStartTime: number;
+  latestBuildStatus?: StatusType;
   latestBuildUserId?: string;
   latestVersionStatus?: string;
   webhookAliasName?: string;
   webhookMessage?: string;
   trigger?: string;
-  enable?: boolean
+  enable?: boolean;
+  hasCollect: boolean;
+  [key: string]: any;
 }
 
 export interface ContentTableResponse {
@@ -45,13 +77,16 @@ export interface ContentTableResponse {
   records: ContentTableItem[];
 }
 
+export type SortType = 'NAME' | 'CREATE_DATE' | 'LATEST_BUILD_START_DATA' | 'UPDATE_TIME'
+export type Collation = 'asc' | 'desc' | 'null'
+
 export interface ContentTableParams {
   page?: number;
   pageSize?: number;
   keyword?: string;
   status?: string;
-  sortBy?: 'createTime' | 'updateTime' | 'flowCount' | 'successRate';
-  sortOrder?: 'asc' | 'desc';
+  sortType?: SortType;
+  collation?: Collation;
   groupId: string;
 }
 
@@ -102,6 +137,62 @@ export interface MatchDynamicViewParams {
   flowName: string;
 }
 
+/**
+ * 创作环境信息
+ */
+export interface AuthoringEnvItem {
+  id: string;
+  name: string;
+  displayName: string;
+  envType: string;
+  status: string;
+  createTime: number;
+  updateTime: number;
+}
+
+/**
+ * 创作节点信息
+ */
+export interface AuthoringNodeItem {
+  id: string;
+  name: string;
+  displayName: string;
+  status: string;
+  ip: string;
+  port: number;
+  createTime: number;
+  updateTime: number;
+}
+
+/**
+ * 保存基础设置参数
+ */
+export interface SaveBaseInfoParams {
+  flowName: string;
+  desc: string;
+  authoringEnv: string;
+  projectId: string;
+}
+
+/**
+ * 获取已选中的tree数据接口返回格式
+ */
+export interface SelectedTreeDataResponse {
+  status: number;
+  data: Array<{
+    id: string;
+    projectId: string;
+    name: string;
+    projected: boolean;
+    createTime: number;
+    updateTime: number;
+    creator: string;
+    top: boolean;
+    viewType: number;
+    pipelineCount: number;
+    pac: boolean;
+  }>;
+}
 
 /**
  * 获取创作流内容表格数据
@@ -111,9 +202,8 @@ export async function getContentTableData(params: ContentTableParams): Promise<C
     page = 1,
     pageSize = 20,
     keyword = '',
-    status = '',
-    sortBy = 'updateTime',
-    sortOrder = 'desc',
+    sortType = 'NAME',
+    collation = 'asc',
     groupId
   } = params;
 
@@ -132,30 +222,54 @@ export async function getContentTableData(params: ContentTableParams): Promise<C
           description: '自动化构建和部署前端项目',
           status: 'running',
           creator: '张三',
-          createTime: '2024-01-15 10:30:00',
-          updateTime: '2024-11-06 14:20:00',
+          createTime: 1762775123000,
+          updateTime: 1762777795000,
           flowCount: 8,
           successRate: 98.5,
           lastRunTime: '2024-11-06 14:15:00',
           tags: ['前端', '部署', '自动化'],
           favorite: true,
+          lastModifyUser: 'zhangsan',
           enable: true,
           latestBuildStageStatus: [
             {
-              stageId: 'stage-1',
-              name: 'stage-1',
-              status: 'SUCCEED',
-              elapsed: 782,
-              showMsg: '运行成功'
+                "stageId": "stage-1",
+                "name": "stage-1",
+                "status": "SUCCEED",
+                "elapsed": 455,
+                "showMsg": "构建已取消"
             },
             {
-              stageId: 'stage-2',
-              name: 'stage-2',
-              status: 'SUCCEED',
-              startEpoch: 1760690426368
+                "stageId": "stage-2",
+                "name": "stage-1",
+                "status": "SUCCEED",
+                "startEpoch": 1761723856324
+            },
+            {
+                "stageId": "stage-3",
+                "name": "stage-1",
+                "status": "SUCCEED",
+                "startEpoch": 1761723876050
             }
           ],
-          viewNames: ['组1'],
+          latestBuildNum: 2,
+          permissions: {
+            "canManage": true,
+            "canDelete": true,
+            "canView": false,
+            "canEdit": true,
+            "canExecute": true,
+            "canDownload": true,
+            "canShare": true,
+            "canArchive": true
+          },
+          hasCollect: false,
+          currentTimestamp: 1763968392914,
+          latestBuildEndTime: 1761723906000,
+          latestBuildId: "b-dfe6c98576be46e9983fc5e1d7fed112",
+          lastBuildMsg: "手动触发",
+          startType: "manualTrigger",
+          viewNames: ['personal-1', 'personal-4'],
           latestBuildStartTime: 1760690426000,
           latestBuildStatus: 'SUCCEED',
           latestBuildUserId: 'zhangsan',
@@ -165,16 +279,75 @@ export async function getContentTableData(params: ContentTableParams): Promise<C
           trigger: '手动'
         },
         {
+          id: "yu-test",
+          pipelineId: "p-e1bc052fa1e34e86b42391bb0d460477",
+          name: "ceui",
+          pipelineDesc: "",
+          taskCount: 1,
+          buildCount: 0,
+          lock: true,
+          canManualStartup: true,
+          latestBuildStartTime: 0,
+          latestBuildEndTime: 0,
+          latestBuildNum: 0,
+          latestBuildEstimatedExecutionSeconds: 1,
+          deploymentTime: 1762777695000,
+          createTime: 1762775165000,
+          updateTime: 1762779995000,
+          pipelineVersion: 1,
+          currentTimestamp: 1764036305272,
+          runningBuildCount: 0,
+          hasPermission: true,
+          hasCollect: true,
+          latestBuildUserId: "",
+          instanceFromTemplate: false,
+          updater: "v_yjjiaoyu",
+          creator: "v_yjjiaoyu",
+          lastBuildTotalCount: 0,
+          lastBuildFinishCount: 0,
+          delete: false,
+          latestVersionStatus: "COMMITTING",
+          permissions: {
+              canManage: true,
+              canDelete: true,
+              canView: true,
+              canEdit: true,
+              canExecute: true,
+              canDownload: true,
+              canShare: true,
+              canArchive: true
+          },
+          yamlExist: false,
+          archivingFlag: false
+        },
+        {
           id: 'content-2',
           name: '后端服务监控告警',
           description: '监控后端服务状态并发送告警',
           status: 'running',
           creator: '李四',
           enable: true,
-          createTime: '2024-02-20 09:15:00',
-          updateTime: '2024-11-06 13:45:00',
+          hasCollect: false,
+          createTime: 1762775113000,
+          updateTime: 1762778695000,
           flowCount: 12,
           successRate: 95.2,
+          latestBuildNum: 3452,
+          permissions: {
+            "canManage": true,
+            "canDelete": true,
+            "canView": true,
+            "canEdit": true,
+            "canExecute": true,
+            "canDownload": true,
+            "canShare": true,
+            "canArchive": true
+          },
+          latestBuildEndTime: 1761723906000,
+          lastBuildMsg: "定时触发",
+          currentTimestamp: 1763968392914,
+          startType: "timerTrigger",
+          latestBuildId: "b-dfe6c98576be46e9983fc5e1d7fed112",
           lastRunTime: '2024-11-06 13:40:00',
           tags: ['后端', '监控', '告警'],
           latestBuildStageStatus: [
@@ -188,7 +361,7 @@ export async function getContentTableData(params: ContentTableParams): Promise<C
             {
               stageId: 'stage-2',
               name: '单元测试',
-              status: 'QUEUE',
+              status: 'RUNNING',
               startEpoch: 1760689426000
             }
           ],
@@ -206,21 +379,55 @@ export async function getContentTableData(params: ContentTableParams): Promise<C
           name: '数据库备份恢复',
           description: '定时备份数据库并支持快速恢复',
           status: 'stopped',
+          hasCollect: false,
           creator: '王五',
-          createTime: '2024-03-10 16:20:00',
-          updateTime: '2024-11-05 18:30:00',
+          createTime: 1762775113000,
+          updateTime: 1768697695000,
           flowCount: 6,
           enable: false,
           successRate: 99.1,
+          latestBuildNum: 45,
+          startType: "manualTrigger",
+          currentTimestamp: 1763968392914,
+          permissions: {
+            "canManage": true,
+            "canDelete": true,
+            "canView": true,
+            "canEdit": true,
+            "canExecute": true,
+            "canDownload": true,
+            "canShare": true,
+            "canArchive": true
+          },
+          latestBuildEndTime: 1761723906000,
+          latestBuildId: "b-dfe6c98576be46e9983fc5e1d7fed112",
           lastRunTime: '2024-11-05 18:25:00',
           tags: ['数据库', '备份', '恢复'],
           latestBuildStageStatus: [
             {
-              stageId: 'stage-1',
-              name: '备份检查',
-              status: 'FAILED',
-              elapsed: 45,
-              showMsg: '备份文件校验失败'
+                "stageId": "stage-1",
+                "name": "stage-1",
+                "status": "SUCCEED",
+                "elapsed": 505,
+                "showMsg": "运行成功"
+            },
+            {
+                "stageId": "stage-2",
+                "name": "stage-2",
+                "status": "SUCCEED",
+                "startEpoch": 1761127754250
+            },
+            {
+                "stageId": "stage-3",
+                "name": "stage-3",
+                "status": "SUCCEED",
+                "startEpoch": 1761127766028
+            },
+            {
+                "stageId": "stage-4",
+                "name": "stage-4",
+                "status": "FAILED",
+                "startEpoch": 1761127777353
             }
           ],
           latestBuildStartTime: 1760688008000,
@@ -234,12 +441,28 @@ export async function getContentTableData(params: ContentTableParams): Promise<C
           name: '代码质量检查',
           description: '自动化代码质量检查和报告生成',
           status: 'error',
+          hasCollect: false,
           creator: '赵六',
-          createTime: '2024-04-05 11:45:00',
-          updateTime: '2024-11-06 10:10:00',
+          createTime: 1762775113000,
+          updateTime: 1762777695000,
           flowCount: 5,
           enable: false,
           successRate: 87.3,
+          startType: "manualTrigger",
+          delete: true,
+          latestBuildEndTime: 1761723906000,
+          currentTimestamp: 1763968392914,
+          permissions: {
+            "canManage": true,
+            "canDelete": true,
+            "canView": true,
+            "canEdit": true,
+            "canExecute": true,
+            "canDownload": true,
+            "canShare": true,
+            "canArchive": true
+          },
+          latestBuildId: "b-dfe6c98576be46e9983fc5e1d7fed112",
           lastRunTime: '2024-11-06 10:05:00',
           tags: ['代码', '质量', '检查'],
           latestBuildStageStatus: [
@@ -253,11 +476,10 @@ export async function getContentTableData(params: ContentTableParams): Promise<C
           ],
           viewNames: ['质量组'],
           latestBuildStartTime: 1760687008000,
-          latestBuildStatus: 'CANCELED',
+          // latestBuildStatus: 'CANCELED',
           latestBuildUserId: 'zhaoliu',
           latestVersionStatus: 'RELEASED',
           webhookAliasName: 'quality/scan/v2',
-          webhookMessage: 'Code quality threshold exceeded',
           trigger: '手动'
         }
       ];
@@ -326,10 +548,15 @@ export async function copyContent(flowId: string, params: CopyFlowParams): Promi
         description: '定时备份数据库并支持快速恢复',
         status: 'stopped',
         creator: '王五',
-        createTime: '2024-03-10 16:20:00',
-        updateTime: '2024-11-05 18:30:00',
+        hasCollect: false,
+        createTime: 1762775113000,
+        updateTime: 1762777695000,
         flowCount: 6,
         enable: true,
+        startType: "manualTrigger",
+        latestBuildEndTime: 1761723906000,
+        currentTimestamp: 1763968392914,
+        latestBuildId: "b-dfe6c98576be46e9983fc5e1d7fed112",
         successRate: 99.1,
         lastRunTime: '2024-11-05 18:25:00',
         tags: ['数据库', '备份', '恢复'],
@@ -401,12 +628,18 @@ export async function createContent(params: CreateContentParams): Promise<Conten
         description: params.baseInfo.desc,
         status: 'stopped',
         creator: '当前用户',
-        createTime: new Date().toISOString(),
-        updateTime: new Date().toISOString(),
+        hasCollect: false,
+        createTime: 1762775113000,
+        updateTime: 1762777695000,
         flowCount: 0,
         successRate: 0,
         tags: [],
         enable: true,
+        latestBuildEndTime: 1761723906000,
+        currentTimestamp: 1763968392914,
+        startType: "manualTrigger",
+        latestBuildId: "b-dfe6c98576be46e9983fc5e1d7fed112",
+        latestBuildStartTime: 1760690426000,
         latestBuildStatus: 'SUCCEED',
         latestVersionStatus: 'DRAFT',
         trigger: '手动'
@@ -437,14 +670,20 @@ export async function importContent(params: ImportContentParams): Promise<Conten
         description: params.description || '导入的创作流',
         status: 'stopped',
         creator: '当前用户',
-        createTime: new Date().toISOString(),
-        updateTime: new Date().toISOString(),
+        hasCollect: false,
+        createTime: 1762775113000,
+        updateTime: 1762777695000,
         flowCount: 0,
         successRate: 0,
         enable: true,
         tags: ['导入'],
         latestBuildStatus: 'SUCCEED',
         latestVersionStatus: 'DRAFT',
+        latestBuildEndTime: 1761723906000,
+        currentTimestamp: 1763968392914,
+        startType: "manualTrigger",
+        latestBuildStartTime: 1760690426000,
+        latestBuildId: "b-dfe6c98576be46e9983fc5e1d7fed112",
         trigger: '手动'
       };
       resolve(mockData);
@@ -469,9 +708,14 @@ export async function getContentDetail(id: string): Promise<ContentTableItem> {
         description: '自动化构建和部署前端项目',
         status: 'running',
         creator: '张三',
-        createTime: '2024-01-15 10:30:00',
-        updateTime: '2024-11-06 14:20:00',
+        hasCollect: false,
+        createTime: 1762775113000,
+        updateTime: 1762777695000,
         flowCount: 8,
+        latestBuildEndTime: 1761723906000,
+        latestBuildId: "b-dfe6c98576be46e9983fc5e1d7fed112",
+        startType: "manualTrigger",
+        currentTimestamp: 1763968392914,
         successRate: 98.5,
         lastRunTime: '2024-11-06 14:15:00',
         tags: ['前端', '部署', '自动化'],
@@ -611,6 +855,517 @@ export async function getProjectTags(projectId: string): Promise<any[]> {
             ]
         }
     ]);
+    }, 300);
+  });
+}
+
+/**
+ * 根据flowId获取已选中的tree数据
+ */
+export async function getSelectedTreeData(flowId: string): Promise<SelectedTreeDataResponse> {
+  // TODO: 调用实际接口
+  // const response = await http.get(`/api/flow/content/${flowId}/selected-tree-data`);
+  // return response.data;
+
+  // 模拟数据
+  return new Promise((resolve) => {
+    setTimeout(() => {
+      resolve({
+        status: 0,
+        data: [
+          {
+            id: 'personal-3',
+            projectId: '后端开发组',
+            name: 'fdsafsafdsdsa',
+            projected: true,
+            createTime: 1705994742,
+            updateTime: 1705994742,
+            creator: 'v_jingdhe',
+            top: false,
+            viewType: 1,
+            pipelineCount: 0,
+            pac: false,
+          },
+          {
+            id: 'personal-4',
+            projectId: '部署流程组',
+            name: '?\u0011+33',
+            projected: true,
+            createTime: 1668502613,
+            updateTime: 1756350071,
+            creator: 'v_jingdhe',
+            top: false,
+            viewType: 2,
+            pipelineCount: 0,
+            pac: false,
+          },
+        ],
+      })
+    }, 300)
+  })
+}
+
+/**
+ * 获取创作环境列表
+ */
+export async function apiGetAuthoringEnvList(projectId: string, envType: string = 'CREATE'): Promise<AuthoringEnvItem[]> {
+  // TODO: 调用实际接口
+  // const response = await http.get(`/environment/api/user/environment/${projectId}`, { 
+  //   params: { envType } 
+  // });
+  // return response.data;
+  
+  // 模拟数据
+  return new Promise((resolve) => {
+    setTimeout(() => {
+      resolve([
+        {
+          id: 'env-1',
+          name: 'dev-env-001',
+          displayName: '开发环境001',
+          envType: 'CREATE',
+          status: 'RUNNING',
+          createTime: 1762775113000,
+          updateTime: 1762777695000,
+        },
+        {
+          id: 'env-2',
+          name: 'test-env-002',
+          displayName: '测试环境002',
+          envType: 'CREATE',
+          status: 'RUNNING',
+          createTime: 1762775113000,
+          updateTime: 1762777695000,
+        },
+        {
+          id: 'env-3',
+          name: 'prod-env-003',
+          displayName: '生产环境003',
+          envType: 'CREATE',
+          status: 'STOPPED',
+          createTime: 1762775113000,
+          updateTime: 1762777695000,
+        }
+      ]);
+    }, 300);
+  });
+}
+
+/**
+ * 获取创作节点列表
+ */
+export async function apiGetAuthoringNodeList(projectId: string, envName: string): Promise<AuthoringNodeItem[]> {
+  // TODO: 调用实际接口
+  // const response = await http.get(`/environment/api/user/environment/${projectId}/listNodesNew`, {
+  //   params: { envName }
+  // });
+  // return response.data;
+  
+  // 模拟数据
+  return new Promise((resolve) => {
+    setTimeout(() => {
+      resolve([
+        {
+          id: 'node-1',
+          name: 'ins-be4830935d0ed3db',
+          displayName: '创作节点001',
+          status: 'RUNNING',
+          ip: '192.168.1.100',
+          port: 8080,
+          createTime: 1762775113000,
+          updateTime: 1762777695000,
+        },
+        {
+          id: 'node-2',
+          name: 'ins-be4830935d0ed3dc',
+          displayName: '创作节点002',
+          status: 'RUNNING',
+          ip: '192.168.1.101',
+          port: 8080,
+          createTime: 1762775113000,
+          updateTime: 1762777695000,
+        }
+      ]);
+    }, 300);
+  });
+}
+
+/**
+ * 保存基础设置
+ */
+export async function apiSaveBaseInfo(params: SaveBaseInfoParams): Promise<void> {
+  // TODO: 调用实际接口
+  // await http.post(`/process/api/user/version/projects/${params.projectId}/base/info/create`, params);
+  
+  // 模拟数据
+  return new Promise((resolve) => {
+    setTimeout(() => {
+      console.log('保存基础设置成功:', params);
+      resolve();
+    }, 300);
+  });
+}
+
+/**
+ * 获取项目模板
+ */
+export async function apiGetProjectTemplates(projectId: string): Promise<any> {
+  // TODO: 调用实际接口
+  // await http.get(`pipeline/template/v2/${params.projectId}/allTemplates`)
+  
+  return new Promise((resolve) => {
+    setTimeout(()=>{
+      resolve({
+        count: 1,
+        page: 1,
+        pageSize: 1,
+        templates: {
+          'b0070f67b1454e818821128f5da5bcd6': {
+            name: '空白流水线',
+            templateId: 'b0070f67b1454e818821128f5da5bcd6',
+            projectId: '',
+            version: 381,
+            versionName: '空白流水线',
+            templateType: 'PUBLIC',
+            templateTypeDesc: 'public',
+            category: [],
+            logoUrl: '',
+            stages: [
+              {
+                containers: [
+                  {
+                    '@type': 'trigger',
+                    id: '0',
+                    name: 'trigger',
+                    elements: [
+                      {
+                        '@type': 'manualTrigger',
+                        name: '手动触发',
+                        id: 'T-1-1-1',
+                        canElementSkip: false,
+                        useLatestParameters: false,
+                        executeCount: 1,
+                        version: '1.*',
+                        additionalOptions: {
+                          enable: true,
+                          continueWhenFailed: false,
+                          retryWhenFailed: false,
+                          retryCount: 0,
+                          manualRetry: true,
+                          timeout: 100,
+                          pauseBeforeExec: false,
+                          subscriptionPauseUser: '',
+                          customCondition: '',
+                          enableCustomEnv: true,
+                        },
+                        classType: 'manualTrigger',
+                        atomCode: 'manualTrigger',
+                        taskAtom: '',
+                      },
+                    ],
+                    params: [],
+                    matrixGroupFlag: false,
+                    classType: 'trigger',
+                  },
+                ],
+                id: 'stage-1',
+                name: '',
+                fastKill: false,
+                finally: false,
+              },
+            ],
+            cloneTemplateSettingExist: {
+              notifySettingExist: false,
+              concurrencySettingExist: false,
+              labelSettingExist: false,
+              inheritedDialect: true,
+            },
+          },
+          '1097041009b348ea8e03cadb6c53ab53': {
+            name: '代码库模板',
+            templateId: '1097041009b348ea8e03cadb6c53ab53',
+            projectId: 'carltemplate123',
+            version: 1015610,
+            versionName: '1.0.4',
+            templateType: 'CUSTOMIZE',
+            templateTypeDesc: '',
+            category: [],
+            logoUrl: '',
+            stages: [
+              {
+                containers: [
+                  {
+                    '@type': 'trigger',
+                    name: '触发构建',
+                    elements: [
+                      {
+                        '@type': 'manualTrigger',
+                        name: '触发构建',
+                        id: 'T-1-1-1',
+                        canElementSkip: true,
+                        useLatestParameters: false,
+                        executeCount: 1,
+                        canRetry: false,
+                        version: '1.*',
+                        classType: 'manualTrigger',
+                        atomCode: 'manualTrigger',
+                        taskAtom: '',
+                      },
+                    ],
+                    params: [
+                      {
+                        id: 'test',
+                        required: true,
+                        constant: false,
+                        type: 'GIT_REF',
+                        defaultValue: '123',
+                        options: [],
+                        desc: '',
+                        repoHashId: 'Rvpk',
+                        readOnly: false,
+                        valueNotEmpty: false,
+                        removeFlag: false,
+                      },
+                    ],
+                    templateParams: [],
+                    containerHashId: 'c-6d1d3bbb35664a82a4b646f23b461d31',
+                    matrixGroupFlag: false,
+                    classType: 'trigger',
+                  },
+                ],
+                id: 'stage-1',
+                name: 'stage-1',
+                tag: ['28ee946a59f64949a74f3dee40a1bda4'],
+                fastKill: false,
+                finally: false,
+              },
+              {
+                containers: [
+                  {
+                    '@type': 'vmBuild',
+                    id: 'c029e57d08c011e99792fa163e50f2b5',
+                    name: '构建环境-Linux',
+                    elements: [
+                      {
+                        '@type': 'linuxScript',
+                        name: 'Bash',
+                        id: 'e-efa15fd135fe4570b0a86dae8617ac14',
+                        scriptType: 'SHELL',
+                        script:
+                          '# 通过./xxx.sh的方式执行脚本. 即若脚本中未指定解释器，则使用系统默认的shell\n\n# 旧的${}引用变量的方式已升级为${{}}，和bash原生引用变量的方式区分开\n\n# 通过::set-variable命令字设置/修改全局变量\n# echo "::set-variable name=<var_name>::<value>"\n# 在后续的插件表单中使用表达式${{variables.<var_name>}}引用这个变量\n# 注意：旧的通过setEnv设置变量的方式仍然保留，但存在一些历史问题，已停止迭代，不再推荐使用\n\n# 通过::set-output命令字设置当前步骤的输出(变量隔离，不会被覆盖)\n# echo "::set-output name=<output_name>::<value>"\n# 在后续的插件表单中使用表达式${{jobs.<job_id>.steps.<step_id>.outputs.<output_name>}}引用这个输出，其中job_id和step_id在对应的Job和Task上配置\n\n# 在质量红线中创建自定义指标后，通过setGateValue函数设置指标值\n# setGateValue "CodeCoverage" $myValue\n# 然后在质量红线选择相应指标和阈值。若不满足，流水线在执行时将会被卡住\n\n# cd $WORKSPACE 可进入当前工作空间目录\necho 123',
+                        continueNoneZero: false,
+                        enableArchiveFile: false,
+                        archiveFile: '',
+                        additionalOptions: {
+                          enable: true,
+                          continueWhenFailed: false,
+                          manualSkip: false,
+                          retryWhenFailed: false,
+                          retryCount: 1,
+                          manualRetry: false,
+                          timeout: 900,
+                          timeoutVar: '900',
+                          runCondition: 'PRE_TASK_SUCCESS',
+                          pauseBeforeExec: false,
+                          subscriptionPauseUser: 'carlyin',
+                          otherTask: '',
+                          customVariables: [
+                            {
+                              key: 'param1',
+                              value: '',
+                            },
+                          ],
+                          customCondition: '',
+                          enableCustomEnv: false,
+                          customEnv: [
+                            {
+                              key: 'param1',
+                              value: '',
+                            },
+                          ],
+                        },
+                        executeCount: 1,
+                        version: '1.*',
+                        classType: 'linuxScript',
+                        atomCode: 'linuxScript',
+                        taskAtom: '',
+                      },
+                      {
+                        '@type': 'marketBuild',
+                        name: 'post插件测试',
+                        id: 'e-a36bc403e3a9481a870437c6954fd06b',
+                        atomCode: 'postAtomTest',
+                        version: '1.0.8',
+                        data: {
+                          input: {
+                            desc: '哈哈',
+                          },
+                          output: {
+                            testResult: 'string',
+                          },
+                          namespace: '',
+                        },
+                        additionalOptions: {
+                          enable: true,
+                          continueWhenFailed: false,
+                          manualSkip: false,
+                          retryWhenFailed: false,
+                          retryCount: 1,
+                          manualRetry: false,
+                          timeout: 900,
+                          timeoutVar: '900',
+                          runCondition: 'PRE_TASK_SUCCESS',
+                          pauseBeforeExec: false,
+                          subscriptionPauseUser: 'carlyin',
+                          otherTask: '',
+                          customVariables: [
+                            {
+                              key: 'param1',
+                              value: '',
+                            },
+                          ],
+                          customCondition: '',
+                          enableCustomEnv: false,
+                          customEnv: [
+                            {
+                              key: 'param1',
+                              value: '',
+                            },
+                          ],
+                        },
+                        executeCount: 1,
+                        autoAtomCode: 'postAtomTest',
+                        classType: 'marketBuild',
+                        taskAtom: '',
+                      },
+                    ],
+                    baseOS: 'LINUX',
+                    vmNames: [],
+                    maxQueueMinutes: 60,
+                    maxRunningMinutes: 900,
+                    buildEnv: {},
+                    dispatchType: {
+                      buildType: 'PUBLIC_DEVCLOUD',
+                      value: 'tlinux3',
+                      performanceUid: '',
+                      persistence: false,
+                      imageType: 'BKSTORE',
+                      credentialId: '',
+                      credentialProject: '',
+                      imageCode: 'tlinux3',
+                      imageVersion: '2.*',
+                      imageName: 'tlinux3_CI镜像',
+                      dockerBuildVersion: 'tlinux3',
+                      imagePublicFlag: false,
+                      imageRDType: '',
+                      recommendFlag: true,
+                    },
+                    showBuildResource: false,
+                    enableExternal: false,
+                    containerId: 'c-3d2991b7a31c4c728554d32347ce5586',
+                    containerHashId: 'c-8b2105f995e040beb0a0e0ede6b666c9',
+                    jobControlOption: {
+                      enable: true,
+                      prepareTimeout: 10,
+                      timeout: 900,
+                      timeoutVar: '900',
+                      runCondition: 'STAGE_RUNNING',
+                      customVariables: [
+                        {
+                          key: 'param1',
+                          value: '',
+                        },
+                      ],
+                      customCondition: '',
+                      dependOnType: 'ID',
+                      dependOnId: [],
+                      dependOnName: '',
+                      continueWhenFailed: false,
+                    },
+                    jobId: 'job_1LD',
+                    matrixGroupFlag: false,
+                    nfsSwitch: false,
+                    classType: 'vmBuild',
+                  },
+                ],
+                id: 's-f07d54b883934ba09ca20a21aca14899',
+                name: 'stage-2',
+                tag: ['28ee946a59f64949a74f3dee40a1bda4'],
+                fastKill: false,
+                finally: false,
+                checkIn: {
+                  manualTrigger: false,
+                  timeout: 24,
+                  markdownContent: false,
+                  notifyType: ['RTX'],
+                },
+                checkOut: {
+                  manualTrigger: false,
+                  timeout: 24,
+                  markdownContent: false,
+                  notifyType: ['RTX'],
+                },
+              },
+            ],
+            cloneTemplateSettingExist: {
+              notifySettingExist: true,
+              concurrencySettingExist: false,
+              labelSettingExist: false,
+              inheritedDialect: true,
+            },
+            desc: '',
+          },
+          '1097041009b34rgt8e03cadb6c53ab53': {
+            name: '代码库模板1',
+            templateId: '1097041009b34rgt8e03cadb6c53ab53',
+            projectId: 'carltemplate123',
+            version: 1015610,
+            versionName: '1.0.4',
+            templateType: 'CONSTRAINT',
+            templateTypeDesc: '',
+            category: [],
+            logoUrl: '',
+            stages: [],
+            desc: '',
+          },
+        },
+      })
+    })
+  })
+}
+
+/**
+ * 获取商店模板列表
+ */
+export async function apiGetStoreTemplates(projectId: string = 'default-project'): Promise<any> {
+  // TODO: 调用实际接口
+  // const response = await http.get(`/api/template/store/${projectId}/templates`);
+  // return response.data;
+  
+  // 模拟数据
+  return new Promise((resolve) => {
+    setTimeout(() => {
+      resolve({
+        records: []
+      });
+    }, 300);
+  });
+}
+
+/**
+ * 收藏/取消收藏创作流
+ * @param flowId 创作流ID
+ * @param hasCollect 是否收藏（true: 收藏, false: 取消收藏）
+ */
+export async function toggleFlowFavorite(flowId: string, hasCollect: boolean){
+  // TODO: 调用实际接口
+  // const response = await http.post(`/pipelines/flow/${flowId}/favor?type=${hasCollect}`);
+  // return response.data;
+  
+  // 模拟数据
+  return new Promise((resolve) => {
+    setTimeout(() => {
+      resolve(true);
     }, 300);
   });
 }

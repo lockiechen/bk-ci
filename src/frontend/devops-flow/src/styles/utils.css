@@ -131,3 +131,11 @@
 .transition-slow {
   transition: all var(--transition-slow);
 }
+
+.draft-tag {
+  padding: 0 var(--spacing-xs);
+  margin: 0 var(--spacing-xs);
+  line-height: var(--spacing-lg);
+  height: var(--spacing-lg);
+  flex-shrink: 0;
+}

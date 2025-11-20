@@ -1,5 +1,5 @@
 .permissionSettings {
-  padding: 20px;
+  padding: var(--line-height-sm);
   background-color: #f5f5f5;
   border-radius: 4px;
 }

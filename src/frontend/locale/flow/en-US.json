@@ -24,7 +24,8 @@
       "allFlows": "All Flows",
       "noData": "No Data",
       "success": "Success",
-      "failed": "Failed"
+      "failed": "Failed",
+      "reset": "Clear"
     },
     "sidebar": {
       "myFlows": "My Flows",
@@ -35,6 +36,13 @@
       "group": "Flow Group",
       "recycleBin": "Recycle Bin"
     },
+    "restore": {
+      "restore": "Restore",
+      "deleter": "Deleted By",
+      "deleteTime": "Deletion Time",
+      "restoreSuc": "Restoration Successful",
+      "restoreFlowConfirm": "Confirm restore of creation flow [{0}]"
+    },
     "content": {
       "newFlow": "New Flow",
       "batchManage": "Batch Manage",
@@ -44,6 +52,9 @@
       "groupName": "Belonging Creation Flow Group",
       "lastExecution": "Last Execution",
       "executionTime": "Execution Time",
+      "lastModify": "Last Modified Time",
+      "creator": "Creator",
+      "createTime": "Creation Time",
       "actions": "Actions",
       "execute": "Execute",
       "orderByAlpha": "Order by Name A-Z",
@@ -160,7 +171,24 @@
       "editStep": "Plugin Settings",
       "loadingConfiguration": "Loading configuration...",
       "noConfigurationFound": "No Configuration Found",
-      "pleaseConfigureFirst": "Please configure first before viewing"
+      "pleaseConfigureFirst": "Please configure first before viewing",
+      "unexecute": "Not Executed",
+      "showStageProgress": "Show Stage Progress",
+      "showBuildInfo": "Show Build Information",
+      "skipStageDesc": "Skipped",
+      "toCheck": "Review",
+      "execedTimes": "Run Count",
+      "totalTime": "Elapsed Time {0}",
+      "timeMap": {
+        "days": "days",
+        "hours": "hours",
+        "minutes": "minutes",
+        "seconds": "seconds",
+        "ago": "ago"
+      },
+      "draft": "Draft",
+      "branch": "Branch",
+      "deleteAlready": "Creation flow has been deleted"
     },
     "dialog": {
       "createGroup": {
@@ -181,6 +209,17 @@
       "deleteConfirm": {
         "title": "Confirm Delete"
       },
+      "addGroup": {
+        "searchFlowGroup": "Search Creation Flow Group",
+        "personalFlowGroup": "Personal Creation Flow Group",
+        "addToGroupTitle": "Add creation flow <b>{0}</b> to the selected creation flow group below",
+        "resultPreview": "Result Preview",
+        "selectedGroup": "Will be added to",
+        "selectedGroupSuffix": "user groups",
+        "pleaseSelectGroup": "Please select a creation flow group",
+        "added": "Added",
+        "dynamicGroup": "Dynamic Group"
+      },
       "saveAsTemplate": {
         "templateName": "Template Name",
         "isCopySetting": "Apply Settings",
@@ -193,8 +232,8 @@
         "name": "Name",
         "desc": "Description",
         "labels": "Tags",
-        "dynamicPipelineGroup": "Dynamic Creation Flow Group",
-        "staticPipelineGroup": "Static Creation Flow Group",
+        "dynamicFlowGroup": "Dynamic Creation Flow Group",
+        "staticFlowGroup": "Static Creation Flow Group",
         "dynamicMatchPlaceholder": "Will automatically match based on the creation flow's name, tags, and other attributes",
         "addLabel": "Add New Tag",
         "noLabels": "No tags available in the current project"
@@ -208,6 +247,46 @@
       "permissionManage": "Flow Group Permission Management",
       "confirmDelete": "Are you sure you want to delete \"{name}\"?",
       "refresh": "Refresh"
+    },
+    "triggerRecord": {
+      "pickTimeRange": "Select Date Time Range",
+      "triggerType": "Trigger Type",
+      "eventType": "Event Type",
+      "trigger": "Triggered By",
+      "loadingTips": "Data is loading, please wait",
+      "today": "Today",
+      "yesterday": "Yesterday",
+      "last3days": "Last 3 Days",
+      "last7days": "Last 7 Days"
+    },
+    "delegation": {
+      "delegationPermission": "Delegated Permissions",
+      "tips1": "The following scenarios will use the delegate's permissions:",
+      "tips2": "1. In scenarios such as cloud desktop event triggers, scheduled triggers, and sub-creation flow triggers, the platform will verify if the delegate has {0}; if not, the trigger will fail.",
+      "tips3": "2. During pipeline execution, the delegate will be assigned to the built-in variable {0}, and some plugins will verify whether there is corresponding system/function operation permission based on this data.",
+      "tips4": "Please clarify the functions and scope of operations of the creation flow before authorizing the delegate to avoid unauthorized access.",
+      "tips5": "The default delegate is the creator of the creation flow; if you need to change it, please {0} reset it here.",
+      "newOperator": "New Responsible Person",
+      "flowExecPermission": "Creation Flow Execution Permission",
+      "proxyHolderForExecutionPermissions": "Execution Permissions Delegate",
+      "resetAuthorization": "Reset Authorization",
+      "confirmReset": "Confirm reset authorization?",
+      "yourPermission": "Your Permissions",
+      "resetAuthTips1": "After resetting, scenarios such as repository triggers, scheduled triggers, and sub-pipeline triggers will use {0} to execute the pipeline.",
+      "resetAuthTips2": "Please confirm whether authorization is possible.",
+      "reset": "Reset",
+      "cancel": "Cancel",
+      "resetSuc": "Reset Successful",
+      "authTime": "Authorization Time",
+      "expired": "Expired",
+      "expiredTips": "No execution permissions, expired",
+      "resetFailed": "Reset authorization failed",
+      "confirm": "Confirm"
+    },
+    "operator": {
+      "operator": "Operator",
+      "operateTime": "Operation Time",
+      "operateLogDesc": "Operation Description"
     }
   }
 }

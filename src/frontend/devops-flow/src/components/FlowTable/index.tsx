@@ -2,16 +2,18 @@ import { defineComponent, ref, computed, watch, h } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useRouter } from 'vue-router'
 import { FLOW_SORT_FILED } from '@/utils/flowConst.ts'
-import { Button, Table, Loading, Dropdown, Message } from 'bkui-vue'
+import { Button, Table, Loading, Dropdown, Message, Tag, Popover } from 'bkui-vue'
 import type { Column } from 'bkui-vue/lib/table/props'
 import SearchSelect from '@blueking/search-select-v3'
 import ExtMenu from '@/components/ExtMenu/index'
-import EmptyTableStatus from '@/components/EmptyTable/index'
+import EmptyTableStatus from '@/components/EmptyTable'
 import { SvgIcon } from '@/components/SvgIcon'
 import ImportFlowPopup from '@/components/ImportFlowPopup'
 import NewFlowPopup from '@/components/NewFlowPopup'
 import AddToGroupPopup from '@/components/AddToGroupPopup'
 import CopyFlowPopup from '@/components/CopyFlowPopup'
+import StatusIcon from '@/components/StatusIcon'
+import StageSteps from '@/components/StageSteps'
 import SaveAsTemplatePopup from '@/components/SaveAsTemplatePopup'
 import {
   type ContentTableItem,
@@ -19,7 +21,7 @@ import {
   type CopyFlowParams,
 } from '@/api/flowContentList'
 import { useTableHeight } from '@/hooks/useTableHeight'
-import { useFlowListData } from '@/hooks/useFlowListData'
+import { useFlowListData, type Styles } from '@/hooks/useFlowListData'
 import { useDeleteConfirm } from '@/hooks/useDeleteConfirm'
 import { ROUTE_NAMES } from '@/constants/routes'
 import styles from './FlowTable.module.css'
@@ -36,6 +38,8 @@ export const FlowTable = defineComponent({
     AddToGroupPopup,
     CopyFlowPopup,
     SaveAsTemplatePopup,
+    StatusIcon,
+    StageSteps,
   },
   props: {
     groupId: {
@@ -68,13 +72,26 @@ export const FlowTable = defineComponent({
       currentSortIconName,
       newFromTemplatePopupShow,
       importFlowPopupShow,
+      isRecycleBin,
+      latestExecIsStageProgress,
+      searchValue,
+      searchData,
+      searchPlaceHolder,
+      currentGroup,
 
+      rowMouseEnter,
+      rowMouseLeave,
+      collectHandler,
+      switchExecView,
+      handleRestore,
       updateQuery,
       changeSortType,
       closeAllDialogs,
       handleTableSortChange,
       handlePageChange,
       handleLimitChange,
+      handleSearchChange,
+      handleSearch,
       handleClearSearch,
       removeContent,
       confirmEnableAction,
@@ -85,7 +102,7 @@ export const FlowTable = defineComponent({
       setDeleteActionCallback,
       setEnableActionCallback,
       loadContentDataWithGroupId,
-    } = useFlowListData()
+    } = useFlowListData(styles as Styles)
 
     // 使用传入的 groupId 加载数据
     watch(
@@ -105,78 +122,357 @@ export const FlowTable = defineComponent({
 
     const fieldToSortTypeMap: Record<string, string> = {
       name: FLOW_SORT_FILED.flowName,
-      latestBuildStartTime: FLOW_SORT_FILED.latestBuildStartDate,
+      latestBuildStartDate: FLOW_SORT_FILED.latestBuildStartDate,
+      updateTime: FLOW_SORT_FILED.updateTime,
+      createDate: FLOW_SORT_FILED.createDate,
     }
 
-    const tableColumn = computed(
-      () =>
-        [
-          {
-            label: t('flow.content.name'),
-            field: 'name',
-            sort: {
-              value:
-                currentSortType.value === FLOW_SORT_FILED.flowName && currentCollation.value
-                  ? currentCollation.value
-                  : null,
-              sortScope: 'all',
-            },
-            render: ({ row }: any) => {
-              const item = row as ContentTableItem
-              return (
-                <span
-                  class={styles.nameLink}
-                  onClick={() => {
-                    router.push({
-                      name: ROUTE_NAMES.FLOW_DETAIL_EXECUTION_RECORD,
-                      params: {
-                        flowId: item.id,
-                      },
-                    })
-                  }}
+    const renderCollect = (row: ContentTableItem) => {
+      if (row.delete) {
+        return
+      }
+      return (
+        <Button
+          text
+          class={[styles.iconStarBtn, row.hasCollect ? styles.isCollect : '']}
+          theme={row.hasCollect ? 'warning' : ''}
+          onClick={() => collectHandler(row.hasCollect, row.id)}
+        >
+          <SvgIcon name={!row.hasCollect ? 'star-line' : 'star-shape'} size={14} />
+        </Button>
+      )
+    }
+
+    const renderFlowName = (row: ContentTableItem) => {
+      return (
+        <>
+          <span
+            class={row.delete ? 'text-disabled' : styles.nameLink}
+            v-overflow-title
+            onClick={() => {
+              if (row.delete) {
+                return
+              }
+              router.push({
+                name: ROUTE_NAMES.FLOW_DETAIL_EXECUTION_RECORD,
+                params: {
+                  flowId: row.id,
+                },
+              })
+            }}
+          >
+            {row.name}
+          </span>
+          {row.onlyDraftVersion ? (
+            <Tag theme="success" class="draft-tag">
+              {t('flow.content.draft')}
+            </Tag>
+          ) : null}
+          {row.onlyBranchVersion ? (
+            <Tag theme="success" class="draft-tag">
+              {t('flow.content.branch')}
+            </Tag>
+          ) : null}
+        </>
+      )
+    }
+
+    const renderTags = (row: ContentTableItem) => {
+      const tags = row.tags
+
+      if (row.delete) {
+        return <span class="text-disabled">{t('flow.content.deleteAlready')}</span>
+      }
+
+      if (!tags || !Array.isArray(tags) || tags.length === 0) {
+        return <span>--</span>
+      }
+
+      const maxDisplayCount = 2
+      const showMore = tags.length > 3
+
+      const displayedTags = showMore ? tags.slice(0, maxDisplayCount) : tags
+      const remainingTags = tags.slice(maxDisplayCount)
+      const remainingCount = remainingTags.length
+
+      return (
+        <div class={styles.tagList}>
+          {displayedTags.map((tag) => (
+            <Tag key={tag} class={styles.tag} v-overflow-title>
+              {tag}
+            </Tag>
+          ))}
+
+          {showMore ? (
+            <Popover theme="light" maxWidth={250} placement="bottom-end">
+              {{
+                default: () => <Tag class={styles.tag}>+{remainingCount}</Tag>,
+                content: () => (
+                  <div class={styles.popoverTagList}>
+                    {remainingTags.map((tag) => (
+                      <Tag key={tag} class={styles.tag} v-overflow-title>
+                        {tag}
+                      </Tag>
+                    ))}
+                  </div>
+                ),
+              }}
+            </Popover>
+          ) : null}
+        </div>
+      )
+    }
+
+    const DescItem = (icon?: string, content?: string) => {
+      if (!content) return null
+
+      return (
+        <span class={styles.execDesc}>
+          {icon && <SvgIcon name={icon} size={16} />}
+          <span class="text-ellipsis" v-overflow-title>
+            {content}
+          </span>
+        </span>
+      )
+    }
+
+    const toLatestBuildRoute = (row: ContentTableItem) => {
+      if (row.permissions && row.permissions.canView && row.latestBuildRoute) {
+        router.push(row.latestBuildRoute)
+      }
+    }
+
+    const renderLastExecLabel = () => {
+      return isRecycleBin.value ? (
+        t('flow.content.lastExecution')
+      ) : (
+        <div class={styles.lastExecHeader}>
+          <span>{t('flow.content.lastExecution')}</span>
+          <p onClick={switchExecView} class={styles.switchExec}>
+            <SvgIcon name="exchange-line" size={14} />
+            {!latestExecIsStageProgress.value
+              ? t('flow.content.showStageProgress')
+              : t('flow.content.showBuildInfo')}
+          </p>
+        </div>
+      )
+    }
+
+    const renderLastExec = (row: ContentTableItem) => {
+      if (row.delete) {
+        return
+      }
+      return (
+        <div class={styles.latestExecCell}>
+          <StatusIcon status={row.latestBuildStatus} size={22} />
+          <div class={styles.flowExecMsg}>
+            {row.latestBuildNum ? (
+              <>
+                <div
+                  class={[styles.flowExecMsgTitle, 'text-ellipsis']}
+                  onClick={() => toLatestBuildRoute(row)}
                 >
-                  {item.name}
-                </span>
-              )
-            },
-          },
-          { label: t('flow.content.groupName'), field: 'viewNames' },
-          { label: t('flow.content.lastExecution'), field: 'latestBuildStatus' },
-          {
-            label: t('flow.content.executionTime'),
-            field: 'latestBuildStartTime',
-            sort: {
-              value:
-                currentSortType.value === FLOW_SORT_FILED.latestBuildStartDate &&
-                currentCollation.value
-                  ? currentCollation.value
-                  : null,
-              sortScope: 'all',
-            },
-          },
-          {
-            label: t('flow.content.actions'),
-            field: 'actions',
-            render: ({ row }: any) => (
-              <div class={styles.actions}>
-                <Button
-                  text
-                  theme="primary"
-                  disabled={!row.enable}
-                  onClick={() => row.handleExecute(row)}
-                >
-                  {t('flow.content.execute')}
-                </Button>
-                <ExtMenu data={row} config={row.flowAction} />
-              </div>
-            ),
-          },
-        ] as Column[],
-    )
+                  <b class={styles.flowCellLink}>#{row.latestBuildNum}</b>
+                  <b class={[styles.flowCellLink, styles.line]}>|</b>
+                  {!latestExecIsStageProgress.value ? (
+                    <span class="lastBuildMsg">{row.lastBuildMsg}</span>
+                  ) : (
+                    <span style={{ display: 'inline-block' }}>
+                      {row.latestBuildStageStatus && row.latestBuildId ? (
+                        <StageSteps
+                          class={styles.latestStageStatus}
+                          steps={row.latestBuildStageStatus}
+                          buildId={row.latestBuildId}
+                        />
+                      ) : (
+                        <span>--</span>
+                      )}
+                    </span>
+                  )}
+                </div>
+                <p class={styles.flowExecMsgDesc}>
+                  {DescItem(row.startType, row.latestBuildUserId)}
+                  {row.webhookAliasName && DescItem('branch', row.webhookAliasName)}
+                  {row.webhookMessage && DescItem(row.startType, row.webhookMessage)}
+                </p>
+              </>
+            ) : (
+              <span class={styles.execDesc}>{t('flow.content.unexecute')}</span>
+            )}
+          </div>
+        </div>
+      )
+    }
+
+    const renderLatestBuildStartDate = (row: ContentTableItem) => {
+      if (row.delete) {
+        return
+      }
+      return (
+        <p class={styles.columnTime}>
+          <span>{row.latestBuildStartDate || ''}</span>
+          {row.progress ? (
+            <span class={styles.runningText}>{row.progress}</span>
+          ) : (
+            <span class="text-tertiary">{row.duration}</span>
+          )}
+        </p>
+      ) as any
+    }
+
+    const renderLastModify = (row: ContentTableItem) => {
+      if (row.delete) {
+        return
+      }
+      return (
+        <p class={styles.columnTime}>
+          <span>{row.updater}</span>
+          <span class="text-tertiary">{row.updateDate}</span>
+        </p>
+      )
+    }
+
+    const renderActions = (row: ContentTableItem) => {
+      if (row.delete) {
+        return
+      }
+      return (
+        <>
+          {isRecycleBin.value ? (
+            <Button text theme="primary" onClick={() => handleRestore(row)}>
+              {t('flow.restore.restore')}
+            </Button>
+          ) : (
+            <div class={styles.actions}>
+              <Button
+                text
+                theme="primary"
+                disabled={!row.enable}
+                onClick={() => row.handleExecute?.(row)}
+              >
+                {t('flow.content.execute')}
+              </Button>
+              <ExtMenu data={row} config={row.flowAction} />
+            </div>
+          )}
+        </>
+      )
+    }
+
+    const sortConfig = (field: string) => {
+      return {
+        value:
+          currentSortType.value === field && currentCollation.value
+            ? currentCollation.value
+            : null,
+        sortScope: 'all',
+      }
+    }
+
+    const tableColumn = computed(() => {
+      const column = [
+        ...(!isRecycleBin.value
+          ? [
+              {
+                fixed: 'left',
+                minWidth: 30,
+                render: ({ row }: { row: ContentTableItem }) => renderCollect(row),
+              },
+              {
+                label: t('flow.content.name'),
+                field: 'name',
+                fixed: 'left',
+                minWidth: 192,
+                sort: sortConfig(FLOW_SORT_FILED.flowName),
+                render: ({ row }: { row: ContentTableItem }) => renderFlowName(row),
+              },
+              {
+                label: t('flow.content.groupName'),
+                field: 'viewNames',
+                minWidth: 200,
+                render: ({ row }: { row: ContentTableItem }) => renderTags(row),
+              },
+              {
+                label: renderLastExecLabel(),
+                field: 'latestBuildStatus',
+                minWidth: 300,
+                render: ({ row }: { row: ContentTableItem }) => renderLastExec(row),
+              },
+              {
+                label: t('flow.content.executionTime'),
+                field: 'latestBuildStartDate',
+                minWidth: 154,
+                render: ({ row }: { row: ContentTableItem }) => renderLatestBuildStartDate(row),
+                sort: sortConfig(FLOW_SORT_FILED.latestBuildStartDate),
+              },
+              {
+                label: t('flow.content.lastModify'),
+                field: 'updateTime',
+                minWidth: 154,
+                render: ({ row }: { row: ContentTableItem }) => renderLastModify(row),
+                sort: sortConfig(FLOW_SORT_FILED.updateTime),
+              },
+              {
+                label: t('flow.content.creator'),
+                field: 'creator',
+                minWidth: 100,
+                render: ({ row }: { row: ContentTableItem }) => (
+                  <>{!row.delete ? <span>{row.creator}</span> : null}</>
+                ),
+              },
+              {
+                label: t('flow.content.createTime'),
+                field: 'createDate',
+                minWidth: 154,
+                sort: sortConfig(FLOW_SORT_FILED.createDate),
+                render: ({ row }: { row: ContentTableItem }) => (
+                  <>{!row.delete ? <span>{row.createDate}</span> : null}</>
+                ),
+              },
+            ]
+          : [
+              {
+                label: t('flow.content.name'),
+                field: 'name',
+                fixed: 'left',
+                minWidth: 192,
+                sort: sortConfig(FLOW_SORT_FILED.flowName),
+              },
+              {
+                label: t('flow.content.createTime'),
+                field: 'createDate',
+                minWidth: 154,
+                sort: sortConfig(FLOW_SORT_FILED.createDate),
+              },
+              {
+                label: t('flow.restore.deleter'),
+                field: 'lastModifyUser',
+                minWidth: 100,
+              },
+              {
+                label: t('flow.restore.deleteTime'),
+                field: 'updateTime',
+                minWidth: 154,
+                sort: sortConfig(FLOW_SORT_FILED.updateTime),
+                render: ({ row }: { row: ContentTableItem }) => (
+                  <>{!row.delete ? <span>{row.updateDate}</span> : null}</>
+                ),
+              },
+            ]),
+        {
+          label: t('flow.content.actions'),
+          field: 'actions',
+          fixed: 'right',
+          width: 100,
+          render: ({ row }: { row: ContentTableItem }) => renderActions(row),
+        },
+      ] as Column[]
+      return column
+    })
 
     function handleSort({ column, type }: any) {
       const sortType = fieldToSortTypeMap[column.field] || ''
-      const collation = type || ''
+      const collation = type
       handleTableSortChange({ sortType, collation })
     }
 
@@ -209,7 +505,6 @@ export const FlowTable = defineComponent({
       const isEnable = data?.enable
       const objectName = data?.name || data?.id
       showDeleteConfirm({
-        title: t('flow.content.enableOrDisable'),
         message: () => [
           `${isEnable ? t('flow.content.confirmDisableFlow') : t('flow.content.confirmEnableFlow')}\n${t('flow.content.operationObject')}: `,
           h('strong', { style: 'font-weight: 700; color: var(--color-text-primary);' }, objectName),
@@ -226,52 +521,6 @@ export const FlowTable = defineComponent({
     setDeleteActionCallback(handleDeleteAction)
     // 设置启用/禁用操作回调
     setEnableActionCallback(handleEnableAction)
-
-    // 搜索选择器的值
-    const searchValue = ref<
-      Array<{ id: string; name: string; values?: Array<{ id: string; name: string }> }>
-    >([])
-
-    // 搜索选择器的数据配置
-    const searchData = computed(() => [
-      {
-        id: 'name',
-        name: t('flow.content.name'),
-      },
-      {
-        id: 'viewNames',
-        name: t('flow.content.searchFieldGroupName'),
-      },
-      {
-        id: 'latestBuildStatus',
-        name: t('flow.content.searchFieldExecutionStatus'),
-        children: [
-          { id: 'success', name: t('flow.common.success') },
-          { id: 'failed', name: t('flow.common.failed') },
-          { id: 'running', name: t('flow.content.executionStatusRunning') },
-          { id: 'pending', name: t('flow.content.executionStatusPending') },
-        ],
-      },
-    ])
-
-    const searchPlaceHolder = computed(() => {
-      return searchData.value.map((item) => item.name).join('/')
-    })
-
-    // 处理搜索选择器变化
-    const handleSearchChange = (
-      value: Array<{ id: string; name: string; values?: Array<{ id: string; name: string }> }>,
-    ) => {
-      searchValue.value = value
-      // TODO: 实现搜索逻辑
-      console.log('Search changed:', value)
-    }
-
-    // 处理搜索按钮点击
-    const handleSearch = () => {
-      // TODO: 触发搜索，重新加载数据
-      console.log('Search triggered:', searchValue.value)
-    }
 
     const handleAddTo = async (flowId: string, groupId: string) => {
       confirmLoading.value = true
@@ -323,7 +572,7 @@ export const FlowTable = defineComponent({
     return () => (
       <div class={styles.content}>
         <div class={styles.toolbar}>
-          <h2 class={styles.title}>{t('flow.common.allFlows')}</h2>
+          <h2 class={styles.title}>{currentGroup.value?.name}</h2>
         </div>
         <div class={styles.tableContainer}>
           <div class={styles.toolbar}>
@@ -355,45 +604,52 @@ export const FlowTable = defineComponent({
                 ),
               }}
             </Dropdown>
-            <Button>{t('flow.content.batchManage')}</Button>
+            {/* <Button>{t('flow.content.batchManage')}</Button> */}
             <div class={styles.searchBox}>
               <SearchSelect
                 modelValue={searchValue.value}
                 data={searchData.value}
                 placeholder={searchPlaceHolder.value}
                 class={styles.searchInput}
+                uniqueSelect
                 onUpdate:modelValue={handleSearchChange}
                 onSearch={handleSearch}
               />
-              <Dropdown
-                trigger="click"
-                is-show={sortShow.value}
-                popover-options={{
-                  clickContentAutoHide: true,
-                }}
-              >
-                {{
-                  default: () => (
-                    <div class={styles.iconSortButton}>
-                      <SvgIcon name={currentSortIconName.value} class={styles.sortIcon} size={10} />
-                    </div>
-                  ),
-                  content: () => (
-                    <Dropdown.DropdownMenu>
-                      {sortList.value.map((item) => (
-                        <Dropdown.DropdownItem
-                          key={item.id}
-                          class={`${styles.sortItem} ${item.active ? styles.active : ''}`}
-                          onClick={() => changeSortType(item.id)}
-                        >
-                          {item.name}
-                          <SvgIcon name={item.sortIcon} class={styles.sortItemIcon} size={10} />
-                        </Dropdown.DropdownItem>
-                      ))}
-                    </Dropdown.DropdownMenu>
-                  ),
-                }}
-              </Dropdown>
+              {!isRecycleBin.value ? (
+                <Dropdown
+                  trigger="click"
+                  is-show={sortShow.value}
+                  popover-options={{
+                    clickContentAutoHide: true,
+                  }}
+                >
+                  {{
+                    default: () => (
+                      <div class={styles.iconSortButton}>
+                        <SvgIcon
+                          name={currentSortIconName.value}
+                          class={styles.sortIcon}
+                          size={10}
+                        />
+                      </div>
+                    ),
+                    content: () => (
+                      <Dropdown.DropdownMenu>
+                        {sortList.value.map((item) => (
+                          <Dropdown.DropdownItem
+                            key={item.id}
+                            class={`${styles.sortItem} ${item.active ? styles.active : ''}`}
+                            onClick={() => changeSortType(item.id)}
+                          >
+                            {item.name}
+                            <SvgIcon name={item.sortIcon} class={styles.sortItemIcon} size={10} />
+                          </Dropdown.DropdownItem>
+                        ))}
+                      </Dropdown.DropdownMenu>
+                    ),
+                  }}
+                </Dropdown>
+              ) : null}
             </div>
           </div>
           <div class={styles.flowTable} ref={tableContainerRef}>
@@ -404,56 +660,74 @@ export const FlowTable = defineComponent({
                 max-height={maxHeight.value}
                 border={['row', 'outer']}
                 pagination={pagination.value}
+                remote-pagination
                 onColumnSort={handleSort}
                 onPageValueChange={pageChange}
                 onPageLimitChange={limitChange}
+                onRowMouseEnter={rowMouseEnter}
+                onRowMouseLeave={rowMouseLeave}
               >
                 {{
-                  empty: () => <EmptyTableStatus type="empty" onClear={handleClearSearch} />,
+                  empty: () => (
+                    <EmptyTableStatus
+                      type={searchValue.value.length > 0 ? 'search-empty' : 'empty'}
+                      onClear={handleClearSearch}
+                    />
+                  ),
                 }}
               </Table>
             </Loading>
           </div>
         </div>
 
-        <NewFlowPopup
-          isShow={newFromTemplatePopupShow.value}
-          onUpdate:isShow={(val: boolean) => {
-            newFromTemplatePopupShow.value = val
-          }}
-        />
+        {newFromTemplatePopupShow.value && (
+          <NewFlowPopup
+            isShow={newFromTemplatePopupShow.value}
+            onUpdate:isShow={(val: boolean) => {
+              newFromTemplatePopupShow.value = val
+            }}
+          />
+        )}
 
-        <ImportFlowPopup
-          isShow={importFlowPopupShow.value}
-          onUpdate:isShow={(val: boolean) => {
-            importFlowPopupShow.value = val
-          }}
-          onConfirm={importNewContent}
-        />
+        {importFlowPopupShow.value && (
+          <ImportFlowPopup
+            isShow={importFlowPopupShow.value}
+            onUpdate:isShow={(val: boolean) => {
+              importFlowPopupShow.value = val
+            }}
+            onConfirm={importNewContent}
+          />
+        )}
 
-        <AddToGroupPopup
-          isShow={isShowAddToDialog.value}
-          data={currentActionData.value}
-          loading={confirmLoading.value}
-          onUpdate:isShow={closeAllDialogs}
-          onConfirm={handleAddTo}
-        />
+        {isShowAddToDialog.value && (
+          <AddToGroupPopup
+            isShow={isShowAddToDialog.value}
+            data={currentActionData.value}
+            loading={confirmLoading.value}
+            onUpdate:isShow={closeAllDialogs}
+            onConfirm={handleAddTo}
+          />
+        )}
 
-        <CopyFlowPopup
-          isShow={isShowCopyDialog.value}
-          data={currentActionData.value}
-          loading={confirmLoading.value}
-          onUpdate:isShow={closeAllDialogs}
-          onConfirm={handleCopyFlow}
-        />
+        {isShowCopyDialog.value && (
+          <CopyFlowPopup
+            isShow={isShowCopyDialog.value}
+            data={currentActionData.value}
+            loading={confirmLoading.value}
+            onUpdate:isShow={closeAllDialogs}
+            onConfirm={handleCopyFlow}
+          />
+        )}
 
-        <SaveAsTemplatePopup
-          isShow={isShowSaveAsTemplateDialog.value}
-          data={currentActionData.value}
-          loading={confirmLoading.value}
-          onUpdate:isShow={closeAllDialogs}
-          onConfirm={handleSaveAsTemplate}
-        />
+        {isShowSaveAsTemplateDialog.value && (
+          <SaveAsTemplatePopup
+            isShow={isShowSaveAsTemplateDialog.value}
+            data={currentActionData.value}
+            loading={confirmLoading.value}
+            onUpdate:isShow={closeAllDialogs}
+            onConfirm={handleSaveAsTemplate}
+          />
+        )}
       </div>
     )
   },

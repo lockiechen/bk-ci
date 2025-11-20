@@ -1,26 +1,87 @@
-import { defineComponent, ref, watch } from 'vue';
-import { useI18n } from 'vue-i18n';
-import { useRouter } from 'vue-router';
-import { Message } from 'bkui-vue';
-import styles from "./ChangeLog.module.css";
+import { computed, defineComponent, ref, onMounted } from 'vue'
+import { useI18n } from 'vue-i18n'
+import { Select, Table, Loading } from 'bkui-vue'
+import EmptyTableStatus from '@/components/EmptyTable'
+import type { Column } from 'bkui-vue/lib/table/props'
+import { useTableHeight } from '@/hooks/useTableHeight'
+import { convertTime } from '@/utils/util'
+import { useChangeLog } from '@/hooks/useChangeLog'
+import styles from './ChangeLog.module.css'
 
 export default defineComponent({
   name: 'ChangeLog',
-  props: {
-    
-  },
-  emits: [''],
-  setup(props, { emit }) {
-    const { t } = useI18n();
-    const router = useRouter();
+  setup() {
+    const { t } = useI18n()
+    const tableContainerRef = ref<HTMLDivElement>()
+    const { maxHeight } = useTableHeight(tableContainerRef)
+    const {
+      operatorOptions,
+      changeLogList,
+      loading,
+      pagination,
+      searchValue,
+      handleSelectChange,
+      handlePageChange,
+      handleLimitChange,
+      init,
+    } = useChangeLog()
+
+    const tableColumn = computed(
+      () =>
+        [
+          {
+            field: 'operator',
+            label: t('flow.operator.operator'),
+          },
+          {
+            field: 'operateTime',
+            label: t('flow.operator.operateTime'),
+            formatter: (row: any) => {
+              return convertTime(row.operateTime)
+            },
+          },
+          {
+            field: 'operationLogStr',
+            label: t('flow.operator.operateLogDesc'),
+          },
+        ] as Column[],
+    )
+
+    onMounted(() => {
+      init()
+    })
 
     return () => (
-      <>
-        <div class={styles.changeLog}>
-          <h3>变更日志</h3>
-          <p>ChangeLog组件内容</p>
+      <div class={styles.changeLog}>
+        <Select
+          v-model={searchValue.value}
+          class={styles.searchInput}
+          placeholder={t('flow.operator.operator')}
+          onChange={handleSelectChange}
+        >
+          {operatorOptions.value.map((i) => (
+            <Select.Option id={i.value} name={i.name} key={i.value}></Select.Option>
+          ))}
+        </Select>
+        <div ref={tableContainerRef} class={styles.changeLogContainer}>
+          <Loading loading={loading.value} mode="spin" theme="primary" size="small">
+            <Table
+              data={changeLogList.value}
+              columns={tableColumn.value}
+              max-height={maxHeight.value}
+              border={['row', 'outer']}
+              remote-pagination
+              pagination={pagination.value}
+              onPageValueChange={handlePageChange}
+              onPageLimitChange={handleLimitChange}
+            >
+              {{
+                empty: () => <EmptyTableStatus type="empty" />,
+              }}
+            </Table>
+          </Loading>
         </div>
-      </>
-    );
+      </div>
+    )
   },
-});
+})

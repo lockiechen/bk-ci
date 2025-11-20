@@ -1,4 +1,4 @@
-import { defineComponent } from 'vue'
+import { defineComponent, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { Dialog, Button, Steps, Message } from 'bkui-vue'
 import styles from './Index.module.css'
@@ -23,14 +23,15 @@ export default defineComponent({
       formData,
       isLoading,
       baseInfoRef,
+      resetForm,
+      clearFormValidation,
       handleStepChange,
       handleNextStep,
       handlePrevStep,
-      handleUpdateBaseInfo,
-      handleUpdateTemplateInfo,
+      updateBaseInfo,
+      updateTemplateInfo,
       handleConfirm,
-      handleClose,
-    } = useNewFlow(props)
+    } = useNewFlow()
 
     // 步骤配置
     const steps = [
@@ -47,18 +48,17 @@ export default defineComponent({
     ]
 
     /**
-     * 步骤切换前验证
+     * 监听弹窗显示状态变化
      */
-    async function handleBerforeChangeStep(index: number) {
-      return true
-    }
-
-    /**
-     * 步骤点击切换
-     */
-    async function stepChanged(index: number) {
-      await handleStepChange(index)
-    }
+    watch(
+      () => props.isShow,
+      (newVal) => {
+        if (newVal) {
+          resetForm()
+          clearFormValidation()
+        }
+      },
+    )
 
     /**
      * 切换步骤按钮
@@ -90,7 +90,7 @@ export default defineComponent({
      * 关闭弹窗
      */
     function onClose() {
-      handleClose()
+      resetForm()
       emit('update:isShow', false)
     }
 
@@ -113,8 +113,7 @@ export default defineComponent({
                   controllable={true}
                   cur-step={currentStep.value}
                   steps={steps}
-                  onClick={stepChanged}
-                  before-change={handleBerforeChangeStep}
+                  onClick={handleStepChange}
                 ></Steps>
               </div>
             </div>
@@ -125,12 +124,12 @@ export default defineComponent({
                 <BaseInfo
                   ref={baseInfoRef}
                   modelValue={formData.value.baseInfo}
-                  onUpdate:modelValue={handleUpdateBaseInfo}
+                  onUpdate:modelValue={updateBaseInfo}
                 />
               ) : (
                 <SelectTemplate
                   modelValue={formData.value.templateInfo}
-                  onUpdate:modelValue={handleUpdateTemplateInfo}
+                  onUpdate:modelValue={updateTemplateInfo}
                 />
               )}
             </div>

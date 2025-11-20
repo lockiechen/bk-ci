@@ -9,6 +9,8 @@ export default defineComponent({
     setup() {
         const flowInfo = ref<FlowInfo>({
             name: 'stream-ci-demo',
+            id: 'content-1',
+            hasCollect: false,
             versions: [
                 { value: 'v5-p2-t3-3', label: 'V5 (P2.T3.3)', isLatest: true },
                 { value: 'v5-p2-t3-2', label: 'V5 (P2.T3.2)' },
