@@ -22,7 +22,7 @@ export default defineComponent({
   setup(props) {
     const { t } = useI18n()
     const getRunningCls = (statusCls: string) => {
-      return statusCls === 'RUNNING' ? styles.spinIcon : ''
+      return statusCls === 'RUNNING' ? 'spinIcon' : ''
     }
     // TODO RUNNING时的tooltips
 

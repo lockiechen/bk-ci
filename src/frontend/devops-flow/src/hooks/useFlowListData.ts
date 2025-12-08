@@ -1,4 +1,4 @@
-import { computed, onMounted, ref } from 'vue'
+import { computed, ref } from 'vue'
 import { storeToRefs } from 'pinia'
 import { useRoute, useRouter } from 'vue-router'
 import { useI18n } from 'vue-i18n'
@@ -142,10 +142,6 @@ export function useFlowListData(styles?: Styles) {
       active: isActiveSort(sort.id),
       sortIcon: getSortIconName(sort.id),
     }))
-  })
-
-  onMounted(() => {
-    updateQuery()
   })
 
   /**

@@ -2,6 +2,7 @@ import { useI18n } from 'vue-i18n'
 import { computed, ref } from 'vue'
 import { defineStore } from 'pinia'
 import { statusAlias } from '@/utils/flowStatus'
+import { ROUTE_NAMES } from '@/constants/routes'
 import {
   getContentTableData,
   createContent,
@@ -93,11 +94,11 @@ export const useFlowHomeContentStore = defineStore('flowContentList', () => {
     return {
       ...content,
       latestBuildRoute: {
-        name: 'pipelinesDetail',
+        name: ROUTE_NAMES.FLOW_DETAIL_EXECUTION_DETAIL,
         params: {
           type: 'executeDetail',
           projectId: content.id,
-          pipelineId: content.id,
+          flowId: content.id,
           buildNo: content.latestBuildId,
         },
       },

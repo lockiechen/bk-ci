@@ -78,3 +78,28 @@ export function convertTime(ms: number) {
 
   return `${time.getFullYear()}-${prezero(time.getMonth() + 1)}-${prezero(time.getDate())} ${prezero(time.getHours())}:${prezero(time.getMinutes())}:${prezero(time.getSeconds())}`
 }
+
+interface MaterialIconMap {
+  CODE_SVN: string
+  CODE_GIT: string
+  CODE_GITLAB: string
+  GITHUB: string
+  CODE_TGIT: string
+  CODE_P4: string
+  CODE_REMOTE: string
+  CODE_SERVICE: string
+}
+
+export function getMaterialIconByType(type: string) {
+  const materialIconMap: MaterialIconMap = {
+    CODE_SVN: 'CODE_SVN',
+    CODE_GIT: 'CODE_GIT',
+    CODE_GITLAB: 'CODE_GITLAB',
+    GITHUB: 'codeGithubWebHookTrigger',
+    CODE_TGIT: 'CODE_GIT',
+    CODE_P4: 'CODE_P4',
+    CODE_REMOTE: 'remoteTrigger',
+    CODE_SERVICE: 'openApi',
+  }
+  return materialIconMap[type as keyof MaterialIconMap] ?? 'CODE_GIT'
+}

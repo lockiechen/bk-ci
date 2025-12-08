@@ -33,4 +33,13 @@ export default defineConfigWithVueTs(
   },
   ...(pluginOxlint.configs['flat/recommended'] as any),
   skipFormatting,
+
+    // 自定义规则
+  {
+    name: 'app/custom-rules',
+    rules: {
+      // 允许使用 any 类型
+      '@typescript-eslint/no-explicit-any': 'off',
+    },
+  },
 )

@@ -256,7 +256,7 @@ export async function getContentTableData(params: ContentTableParams): Promise<C
           permissions: {
             "canManage": true,
             "canDelete": true,
-            "canView": false,
+            "canView": true,
             "canEdit": true,
             "canExecute": true,
             "canDownload": true,

@@ -1,4 +1,4 @@
-import { defineComponent, ref, computed, watch, h } from 'vue'
+import { defineComponent, ref, computed, watch, h, onMounted } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useRouter } from 'vue-router'
 import { FLOW_SORT_FILED } from '@/utils/flowConst.ts'
@@ -103,6 +103,10 @@ export const FlowTable = defineComponent({
       setEnableActionCallback,
       loadContentDataWithGroupId,
     } = useFlowListData(styles as Styles)
+
+    onMounted(() => {
+      updateQuery()
+    })
 
     // 使用传入的 groupId 加载数据
     watch(
@@ -362,9 +366,7 @@ export const FlowTable = defineComponent({
     const sortConfig = (field: string) => {
       return {
         value:
-          currentSortType.value === field && currentCollation.value
-            ? currentCollation.value
-            : null,
+          currentSortType.value === field && currentCollation.value ? currentCollation.value : null,
         sortScope: 'all',
       }
     }

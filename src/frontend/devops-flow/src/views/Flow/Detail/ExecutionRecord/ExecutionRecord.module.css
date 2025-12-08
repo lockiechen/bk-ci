@@ -53,3 +53,8 @@
   margin-bottom: var(--spacing-xl);
   background-color: var(--bg-primary);
 }
+
+.buildNumber {
+  color: var(--color-primary);
+  cursor: pointer;
+}

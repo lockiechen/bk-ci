@@ -80,16 +80,3 @@
   display: inline-block;
   fill: #c3cdd7;
 }
-
-.spinIcon {
-  animation: loading 0.8s linear infinite;
-}
-
-@keyframes loading {
-  from {
-    transform: rotate(0);
-  }
-  to {
-    transform: rotate(360deg);
-  }
-}

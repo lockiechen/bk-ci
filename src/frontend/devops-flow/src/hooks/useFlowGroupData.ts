@@ -1,4 +1,4 @@
-import { computed, onMounted } from 'vue';
+import { computed } from 'vue';
 import { storeToRefs } from 'pinia';
 import { useFlowGroupStore } from '../stores/flowGroup';
 import { FLOW_GROUP_TYPES } from '../constants/flowGroup';
@@ -63,15 +63,6 @@ export function useFlowGroupData() {
     ];
   });
   
-  /**
-   * 组件挂载时加载数据
-   */
-  onMounted(() => {
-    if (flowGroups.value.length === 0 && !loading.value) {
-      store.loadAllData();
-    }
-  });
-  
     return {
       // 原始数据（使用 storeToRefs 确保响应式）
       counts,
@@ -91,5 +82,6 @@ export function useFlowGroupData() {
       removeFlowGroup: store.removeFlowGroup,
       renameFlowGroup: store.renameFlowGroup,
       pinFlowGroup: store.pinFlowGroup,
+      loadAllData: store.loadAllData,
     };
   }

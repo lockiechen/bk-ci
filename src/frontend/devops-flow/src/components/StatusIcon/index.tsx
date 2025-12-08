@@ -36,7 +36,7 @@ export default defineComponent({
       <span
         class={[
           styles.statusIcon,
-          isRunning.value ? styles.spinIcon : '',
+          isRunning.value ? 'spinIcon' : '',
           isEnqueue.value ? styles.hourglassQueue : '',
         ]}
         style={{color: statusColorMap[props.status || statusAlias.UNEXEC]}}

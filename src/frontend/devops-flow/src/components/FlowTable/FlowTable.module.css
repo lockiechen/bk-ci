@@ -200,9 +200,12 @@
 
 .execDesc {
   color: var(--color-text-tertiary);
-  svg {
-    vertical-align: middle;
-  }
+  display: inline-block;
+}
+
+.execDesc svg {
+  vertical-align: middle;
+  flex-shrink: 0;
 }
 
 .flowExecMsg {
