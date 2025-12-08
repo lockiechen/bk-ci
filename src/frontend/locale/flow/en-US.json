@@ -359,7 +359,6 @@
       "addVariable": "Add Variable",
       "envKeyPlaceholder": "Variable Name",
       "envValuePlaceholder": "Variable Value",
-      "processControlOptions": "Process Control Options",
       "enableAtom": "Enable this plugin",
       "whenAtomFailed": "When this plugin fails to run:",
       "continueWhenFailed": "Continue on failure",
