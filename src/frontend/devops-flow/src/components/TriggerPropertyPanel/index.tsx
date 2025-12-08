@@ -18,7 +18,7 @@ import type { Element } from '@/api/flowModel'
 import { createDefaultElement } from '@/utils/flowDefaults'
 import { SvgIcon } from '@/components/SvgIcon'
 import { useAtomStore } from '@/stores/atom'
-import AtomForm from '@/components/WorkflowOrchestration/AtomForm/AtomForm'
+import AtomForm from '@/components/AtomForm/AtomForm'
 import styles from './TriggerPropertyPanel.module.css'
 
 interface StartParam {

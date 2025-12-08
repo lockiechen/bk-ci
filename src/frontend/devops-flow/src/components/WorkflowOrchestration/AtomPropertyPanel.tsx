@@ -11,10 +11,10 @@ import { useAtomStore } from '@/stores/atom'
 import { useAtomVersion } from '@/hooks/useAtomVersion'
 import styles from './AtomPropertyPanel.module.css'
 import sharedStyles from './shared.module.css'
-import AtomForm from './AtomForm/AtomForm'
-import KeyValueMap from './AtomForm/components/KeyValueMap'
-import AtomCheckbox from './AtomForm/components/AtomCheckbox'
-import AtomCheckboxList from './AtomForm/components/AtomCheckboxList'
+import AtomForm from '@/components/AtomForm/AtomForm'
+import KeyValueMap from '@/components/AtomForm/KeyValueMap'
+import AtomCheckbox from '@/components/AtomForm/AtomCheckbox'
+import AtomCheckboxList from '@/components/AtomForm/AtomCheckboxList'
 import { SvgIcon } from '@/components/SvgIcon'
 import { getAtomFailControlList, getAtomRunConditionList } from '@/constants/flowOptionConfig'
 import { AtomRunCondition } from '@/utils/flowDefaults'
@@ -582,7 +582,7 @@ export default defineComponent({
                                 {{
                                   default: () => (
                                     <div class={sharedStyles.collapseHeader}>
-                                      <span>{t('flow.orchestration.processControlOptions')}</span>
+                                      <span>{t('flow.orchestration.flowControlOptions')}</span>
                                     </div>
                                   ),
                                   content: () => (

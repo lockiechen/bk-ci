@@ -1,6 +1,7 @@
-import { defineComponent, PropType } from 'vue'
+import { defineComponent, type PropType } from 'vue'
 import { Radio } from 'bkui-vue'
 const { Group: RadioGroup } = Radio
+import styles from './EnumInput.module.css'
 
 export default defineComponent({
   name: 'EnumInput',
@@ -37,7 +38,12 @@ export default defineComponent({
     }
 
     return () => (
-      <RadioGroup modelValue={props.value} disabled={props.disabled} onChange={handleChange}>
+      <RadioGroup
+        class={styles.radioGroup}
+        modelValue={props.value}
+        disabled={props.disabled}
+        onChange={handleChange}
+      >
         {props.list.map((item) => {
           if (item.hidden) return null
           return (

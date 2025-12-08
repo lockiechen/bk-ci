@@ -12,6 +12,20 @@ export default defineConfig({
       '@': fileURLToPath(new URL('./src', import.meta.url)),
     },
   },
+  server: {
+    host: 'local.devops.woa.com',
+    https: {
+      cert: './local.devops.woa.com+3.pem',
+      key: './local.devops.woa.com+3-key.pem',
+    }, // 启用 HTTPS，证书由 basicSsl 插件自动生成
+    proxy: {
+      '/ms': {
+        target: 'https://dev.devops.woa.com',
+        changeOrigin: true,
+      },
+    },
+  },
+
   optimizeDeps: {
     exclude: ['bkui-pipeline'],
   },

@@ -13,7 +13,7 @@ import {
   Switcher,
 } from 'bkui-vue'
 import { SvgIcon } from '@/components/SvgIcon'
-import KeyValueMap from './AtomForm/components/KeyValueMap'
+import KeyValueMap from '@/components/AtomForm/KeyValueMap'
 import styles from './JobPropertyPanel.module.css'
 import sharedStyles from './shared.module.css'
 import { getJobRunConditionList, getJobDependOnOptions } from '@/constants/flowOptionConfig'
