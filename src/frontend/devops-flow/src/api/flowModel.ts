@@ -2,17 +2,19 @@
  * 创作流模型相关 API
  */
 
+import type { PluginOutputVariable } from '@/types/variable'
+
 /**
- * Pipeline 模型数据结构
+ * Flow 模型数据结构
  */
-export interface PipelineModel {
+export interface FlowModel {
   '@type': string
   name: string
   desc: string
   stages: Stage[]
   labels: string[]
   instanceFromTemplate: boolean
-  pipelineCreator: string
+  creator: string
   events: Record<string, string>
   staticViews: string[]
   latestVersion: number
@@ -37,6 +39,7 @@ export interface Stage {
  * Container 容器数据结构
  */
 export interface Container {
+  jobId?: string
   '@type': string
   id: string
   name: string
@@ -54,7 +57,8 @@ export interface Container {
   showBuildResource?: boolean
   enableExternal?: boolean
   jobControlOption?: JobControlOption
-  jobId?: string
+  matrixControlOption?: MatrixControlOption
+  mutexGroup?: MutexGroup
   nfsSwitch?: boolean
   params?: Record<string, string>[]
 }
@@ -63,7 +67,7 @@ export interface Container {
  * Element 元素数据结构
  */
 export interface Element {
-  '@type': string
+  '@type'?: string
   name: string
   id: string
   stepId?: string
@@ -73,13 +77,18 @@ export interface Element {
   enableArchiveFile?: boolean
   archiveFile?: string
   additionalOptions?: AdditionalOptions
-  executeCount: number
-  version: string
-  classType: string
-  atomCode: string
-  taskAtom: string
+  customEnv?: CustomVariable[] // 自定义环境变量
+  executeCount?: number
+  version?: string
+  classType?: string
+  atomCode?: string
+  taskAtom?: string
   canElementSkip?: boolean
   useLatestParameters?: boolean
+  data: {
+    input: Record<string, unknown>
+    output: PluginOutputVariable[]
+  }
 }
 
 /**
@@ -107,7 +116,7 @@ export interface DispatchType {
  */
 export interface JobControlOption {
   enable: boolean
-  prepareTimeout: number
+  prepareTimeout?: number
   timeout: number
   timeoutVar: string
   runCondition: string
@@ -117,6 +126,28 @@ export interface JobControlOption {
   dependOnId: string[]
   dependOnName: string
   continueWhenFailed: boolean
+}
+
+/**
+ * 矩阵 Job 控制选项
+ */
+export interface MatrixControlOption {
+  strategyStr: string
+  includeCaseStr: string
+  excludeCaseStr: string
+  fastKill: boolean
+  maxConcurrency: number
+}
+
+/**
+ * 互斥组配置
+ */
+export interface MutexGroup {
+  enable: boolean
+  mutexGroupName: string
+  queueEnable: boolean
+  timeoutVar: string
+  queue: number
 }
 
 /**
@@ -161,6 +192,7 @@ export interface AdditionalOptions {
   customVariables: CustomVariable[]
   customCondition: string
   enableCustomEnv: boolean
+  failControl?: string[] // 失败控制选项数组
 }
 
 /**
@@ -172,11 +204,11 @@ export interface CustomVariable {
 }
 
 /**
- * 获取 Pipeline 模型数据
+ * 获取 Flow 模型数据
  * @param flowId 创作流 ID
  * @param version 版本号（可选）
  */
-export async function getPipelineModel(flowId: string, version?: string): Promise<PipelineModel> {
+export async function getFlowModel(flowId: string, version?: string): Promise<FlowModel> {
   // TODO: 调用实际接口
   // const response = await http.get(`/api/flow/${flowId}/model`, { params: { version } });
   // return response.data;
@@ -184,39 +216,61 @@ export async function getPipelineModel(flowId: string, version?: string): Promis
   // Mock 数据
   return new Promise((resolve) => {
     setTimeout(() => {
-      resolve(getMockPipelineModel())
+      resolve(getMockFlowModel())
     }, 500)
   })
 }
 
 /**
- * 保存 Pipeline 模型数据
- * @param flowId 创作流 ID
- * @param model Pipeline 模型数据
+ * 保存 Flow 模型数据的请求参数
  */
-export async function savePipelineModel(flowId: string, model: PipelineModel): Promise<void> {
-  // TODO: 调用实际接口
-  // await http.put(`/api/flow/${flowId}/model`, model);
-
-  // Mock 数据
-  return new Promise((resolve) => {
-    setTimeout(() => {
-      console.log('Pipeline model saved:', model)
-      resolve()
-    }, 2000)
-  })
+export interface SaveFlowModelParams {
+  projectId: string
+  flowId?: string
+  baseVersion?: string
+  storageType?: 'MODEL' | 'YAML'
+  modelAndSetting?: {
+    model: FlowModel
+    setting?: Record<string, unknown>
+  }
+  yaml?: string
 }
 
 /**
- * 将 Pipeline 模型转换为 YAML 格式
- * @param model Pipeline 模型数据
+ * 保存 Flow 模型数据的响应
  */
-export function pipelineModelToYaml(model: PipelineModel): string {
+export interface SaveFlowModelResponse {
+  version: string
+  versionName: string
+  flowId: string
+}
+
+/**
+ * 保存 Flow 模型数据
+ * @param params 保存参数
+ */
+export async function saveFlowModel(params: SaveFlowModelParams): Promise<SaveFlowModelResponse> {
+  const { post } = await import('@/utils/http')
+  const { projectId, ...restParams } = params
+
+  const response = await post<SaveFlowModelResponse>(
+    `/process/api/user/version/projects/${projectId}/saveDraft`,
+    restParams,
+  )
+
+  return response
+}
+
+/**
+ * 将 Flow 模型转换为 YAML 格式
+ * @param model Flow 模型数据
+ */
+export function flowModelToYaml(model: FlowModel): string {
   // TODO: 实现实际的转换逻辑
   // 这里简单返回 JSON 字符串作为示例
   return `version: v3.0
-name: ${model.name || 'Sample Pipeline'}
-desc: ${model.desc || 'Pipeline with authoring environment configuration'}
+name: ${model.name || 'Sample Flow'}
+desc: ${model.desc || 'Flow with authoring environment configuration'}
 
 # Authoring Environment Configuration
 authoring-env:
@@ -259,7 +313,7 @@ variables:
       options: []
       payload:
         type: remote
-        url: https://prod-bcs-api.open.woa.com/bcsapi/v4/helmmanager/v1/projects/wegamebasetech2019/repos/wegamebasetech2019/charts/account-safety-keeper/versions
+        url: xxx.com
         dataPath: data.data
         paramId: version
         paramName: version
@@ -484,7 +538,7 @@ notices:
   - wework-message
   receivers:
   - "$\{\{ci.actor\}\}"
-  content: "【$\{\{ci.project_name\}\}】- 【$\{\{ci.pipeline_name\}\}】#$\{\{ci.build_num\}\} 执行失败，耗时$\{\{ci.pipeline_execute_time\}\}, 触发人: $\{\{ci.actor\}\}。"
+  content: "【$\{\{ci.project_name\}\}】- 【$\{\{ci.flow_name\}\}】#$\{\{ci.build_num\}\} 执行失败，耗时$\{\{ci.flow_execute_time\}\}, 触发人: $\{\{ci.actor\}\}。"
 concurrency:
   queue-timeout-minutes: 10
 syntax-dialect: INHERIT
@@ -492,10 +546,10 @@ syntax-dialect: INHERIT
 }
 
 /**
- * 将 YAML 格式转换为 Pipeline 模型
+ * 将 YAML 格式转换为 Flow 模型
  * @param yaml YAML 字符串
  */
-export function yamlToPipelineModel(yaml: string): PipelineModel {
+export function yamlToFlowModel(yaml: string): FlowModel {
   // TODO: 实现实际的转换逻辑
   // 这里简单解析 JSON 字符串作为示例
   try {
@@ -507,13 +561,13 @@ export function yamlToPipelineModel(yaml: string): PipelineModel {
 }
 
 /**
- * 获取 Mock Pipeline 数据
+ * 获取 Mock Flow 数据
  */
-export function getMockPipelineModel(): PipelineModel {
+export function getMockFlowModel(): FlowModel {
   return {
     '@type': 'Model',
-    name: 'Sample Pipeline',
-    desc: 'This is a sample pipeline for demonstration',
+    name: 'Sample Flow',
+    desc: 'This is a sample flow for demonstration',
     stages: [
       {
         containers: [
@@ -533,6 +587,10 @@ export function getMockPipelineModel(): PipelineModel {
                 classType: 'manualTrigger',
                 atomCode: 'manualTrigger',
                 taskAtom: '',
+                data: {
+                  input: {},
+                  output: [{ id: 'TRIGGER_TIME', name: 'Trigger Time' }],
+                },
               },
             ],
             params: [],
@@ -548,174 +606,10 @@ export function getMockPipelineModel(): PipelineModel {
         fastKill: false,
         finally: false,
       },
-      {
-        containers: [
-          {
-            '@type': 'vmBuild',
-            id: '1',
-            name: 'Build Environment - Linux',
-            elements: [
-              {
-                '@type': 'linuxScript',
-                name: 'Build Script',
-                id: 'e-79398191d99a4fc78d6c133d2d80fad4',
-                scriptType: 'SHELL',
-                script: "echo 'Starting build...'\nnpm install\nnpm run build\necho 'Build completed'",
-                continueNoneZero: false,
-                enableArchiveFile: false,
-                archiveFile: '',
-                additionalOptions: {
-                  enable: true,
-                  continueWhenFailed: false,
-                  manualSkip: false,
-                  retryWhenFailed: false,
-                  retryCount: 1,
-                  manualRetry: false,
-                  timeout: 900,
-                  timeoutVar: '900',
-                  runCondition: 'PRE_TASK_SUCCESS',
-                  pauseBeforeExec: false,
-                  subscriptionPauseUser: 'admin',
-                  otherTask: '',
-                  customVariables: [
-                    {
-                      key: 'NODE_ENV',
-                      value: 'production',
-                    },
-                  ],
-                  customCondition: '',
-                  enableCustomEnv: true,
-                },
-                executeCount: 1,
-                version: '1.*',
-                classType: 'linuxScript',
-                atomCode: 'linuxScript',
-                taskAtom: '',
-              },
-              {
-                '@type': 'linuxScript',
-                name: 'Test Script',
-                id: 'e-715f3f3bf7744bba835e82bcfb1b6d20',
-                stepId: 'TEST',
-                scriptType: 'SHELL',
-                script: "echo 'Running tests...'\nnpm run test\necho 'Tests completed'",
-                continueNoneZero: false,
-                enableArchiveFile: false,
-                archiveFile: '',
-                additionalOptions: {
-                  enable: true,
-                  continueWhenFailed: false,
-                  manualSkip: false,
-                  retryWhenFailed: false,
-                  retryCount: 1,
-                  manualRetry: false,
-                  timeout: 900,
-                  timeoutVar: '900',
-                  runCondition: 'PRE_TASK_SUCCESS',
-                  pauseBeforeExec: false,
-                  subscriptionPauseUser: 'admin',
-                  otherTask: '',
-                  customVariables: [
-                    {
-                      key: 'TEST_ENV',
-                      value: 'ci',
-                    },
-                  ],
-                  customCondition: '',
-                  enableCustomEnv: true,
-                },
-                executeCount: 1,
-                version: '1.*',
-                classType: 'linuxScript',
-                atomCode: 'linuxScript',
-                taskAtom: '',
-              },
-            ],
-            baseOS: 'LINUX',
-            vmNames: [],
-            maxQueueMinutes: 60,
-            maxRunningMinutes: 900,
-            buildEnv: {},
-            dispatchType: {
-              buildType: 'PUBLIC_DEVCLOUD',
-              value: 'tlinux3_ci',
-              performanceUid: '',
-              persistence: false,
-              imageType: 'BKSTORE',
-              credentialId: '',
-              credentialProject: '',
-              imageCode: 'tlinux3_ci',
-              imageVersion: '2.*',
-              imageName: 'tlinux3-CI Image',
-              dockerBuildVersion: 'tlinux3_ci',
-              imagePublicFlag: false,
-              imageRDType: '',
-              recommendFlag: true,
-            },
-            showBuildResource: false,
-            enableExternal: false,
-            containerId: '1',
-            containerHashId: 'c-97875d3e2cbc44a2b4244cbf76485df1',
-            jobControlOption: {
-              enable: true,
-              prepareTimeout: 10,
-              timeout: 900,
-              timeoutVar: '900',
-              runCondition: 'STAGE_RUNNING',
-              customVariables: [
-                {
-                  key: 'BUILD_ENV',
-                  value: 'production',
-                },
-              ],
-              customCondition: '',
-              dependOnType: 'ID',
-              dependOnId: [],
-              dependOnName: '',
-              continueWhenFailed: false,
-            },
-            jobId: 'job_build',
-            matrixGroupFlag: false,
-            nfsSwitch: false,
-            classType: 'vmBuild',
-          },
-        ],
-        id: 'stage-2',
-        name: 'Build Stage',
-        tag: ['28ee946a59f64949a74f3dee40a1bda4'],
-        fastKill: false,
-        finally: false,
-        stageControlOption: {
-          enable: true,
-          runCondition: 'AFTER_LAST_FINISHED',
-          customVariables: [
-            {
-              key: 'STAGE_ENV',
-              value: 'build',
-            },
-          ],
-          customCondition: '',
-          manualTrigger: false,
-          triggerUsers: [],
-          timeout: 24,
-        },
-        checkIn: {
-          manualTrigger: false,
-          timeout: 24,
-          markdownContent: false,
-          notifyType: ['RTX'],
-        },
-        checkOut: {
-          manualTrigger: false,
-          timeout: 24,
-          markdownContent: false,
-          notifyType: ['RTX'],
-        },
-      },
     ],
     labels: [],
     instanceFromTemplate: false,
-    pipelineCreator: 'admin',
+    creator: 'admin',
     events: {},
     staticViews: [],
     latestVersion: 1,

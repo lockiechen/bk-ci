@@ -43,11 +43,11 @@ export default defineComponent({
             class={styles.navTabs}
             onChange={handleTabChange}
           >
-            <Tab.TabPanel name={ROUTE_NAMES.FLOW_LIST} label={t('flow.tabs.flow')}></Tab.TabPanel>
-            <Tab.TabPanel
+            <Tab.TabPanel name={ROUTE_NAMES.FLOW_LIST} label={t('flow.title')}></Tab.TabPanel>
+            {/* <Tab.TabPanel
               name={ROUTE_NAMES.TEMPLATE}
               label={t('flow.tabs.template')}
-            ></Tab.TabPanel>
+            ></Tab.TabPanel> */}
           </Tab>
         </div>
         <div class={layoutStyles.content}>

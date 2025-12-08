@@ -145,3 +145,61 @@ img {
   line-clamp: 3;
   -webkit-box-orient: vertical;
 }
+
+/* Property Panel 样式 - 用于 StagePropertyPanel, JobPropertyPanel, AtomPropertyPanel */
+/* 侧边栏容器：从header下方开始，贴着底部 */
+/* .bkci-property-panel {
+  position: fixed !important;
+  top: 52px !important;
+  bottom: 0 !important;
+  z-index: 2016 !important;
+} */
+
+/* 遮罩层：从header下方开始，贴着底部 */
+.bkci-property-panel .bk-sideslider-mask,
+.bkci-property-panel .bk-modal-mask {
+  top: 52px !important;
+  bottom: 0 !important;
+  height: calc(100vh - 52px) !important;
+}
+
+/* 实际控制侧边栏位置的元素 */
+.bkci-property-panel .bk-sideslider-wrapper,
+.bkci-property-panel .bk-modal-wrapper {
+  top: 52px !important;
+  bottom: 0 !important;
+  right: 0;
+  transition: right 0.3s ease;
+}
+
+/* 侧边栏内容区域：使用flex布局，内容区域可滚动，footer跟随内容 */
+.bkci-property-panel .bk-modal-body {
+  height: 100% !important;
+  display: flex !important;
+  flex-direction: column !important;
+  overflow: hidden !important;
+}
+
+/* Header 不收缩 */
+.bkci-property-panel .bk-modal-header {
+  flex-shrink: 0 !important;
+}
+
+
+
+/* 确保内容区域可以自然增长 */
+.bkci-property-panel .stagePanelContent,
+.bkci-property-panel .jobPanelContent {
+  min-height: 0 !important;
+}
+
+/* Footer 不收缩，自然跟随在内容后面 */
+.bkci-property-panel .bk-modal-footer {
+  flex-shrink: 0 !important;
+}
+
+/* 变量面板打开时，侧边栏右侧留出空间 */
+.bkci-property-panel.with-variable-open .bk-sideslider-wrapper,
+.bkci-property-panel.with-variable-open .bk-modal-wrapper {
+  right: 480px;
+}

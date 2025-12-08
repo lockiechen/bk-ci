@@ -1,7 +1,9 @@
+import { type AxiosRequestConfig, type AxiosResponse } from 'axios'
 export interface HttpResponseEnvelope<T = unknown> {
-  code: number
+  status: number
   message: string
   data: T
+  code?: number // 兼容旧格式
 }
 
 export interface RequestMeta {
@@ -19,13 +21,12 @@ export interface RequestMeta {
   skipAuth?: boolean
 }
 
-export interface HttpRequestConfig<TData = any>
-  extends import('axios').AxiosRequestConfig<TData> {
+export interface HttpRequestConfig<TData = unknown>
+  extends AxiosRequestConfig<TData> {
   meta?: RequestMeta
 }
 
-export interface HttpResponse<T = unknown>
-  extends import('axios').AxiosResponse<T> {}
+export type HttpResponse<T = unknown> = AxiosResponse<T>
 
 export type HttpMethod = 'GET' | 'POST' | 'PUT' | 'DELETE' | 'PATCH'
 

@@ -87,7 +87,9 @@ app.use(bkui, {
   locale: bkUiLocaleAliasMap[cookiesObj.blueking_language ?? 'zh-CN'] || bkuiZhCn,
 })
 app.use(i18n)
-app.use(VueDraggable)
+
+// 注册全局组件
+app.component('VueDraggable', VueDraggable)
 
 // 注册指令
 app.directive('clickoutside', clickoutside)

@@ -41,7 +41,7 @@ export function useAuthoringEnv(options: UseAuthoringEnvOptions = {}) {
   const {
     yamlContent: fullYamlContent,
     loading,
-    pipelineModel,
+    flowModel,
   } = useFlowModel({
     flowId,
     autoLoad: options.autoLoad,
@@ -69,8 +69,11 @@ export function useAuthoringEnv(options: UseAuthoringEnvOptions = {}) {
 
     // Find the authoring-env section
     for (let i = 0; i < lines.length; i++) {
-      const line = lines[i].trim()
-      if (line.startsWith('# Authoring Environment Configuration') || line.startsWith('authoring-env:')) {
+      const line = lines[i]?.trim()
+      if (
+        line?.startsWith('# Authoring Environment Configuration') ||
+        line?.startsWith('authoring-env:')
+      ) {
         startLine = i + 1 // Monaco Editor uses 1-based line numbers
         break
       }
@@ -79,12 +82,12 @@ export function useAuthoringEnv(options: UseAuthoringEnvOptions = {}) {
     if (startLine > 0) {
       // Find the end of authoring-env section (next major section or empty line)
       for (let i = startLine; i < lines.length; i++) {
-        const line = lines[i].trim()
-        if (line === '' && lines[i + 1]?.trim().match(/^[a-zA-Z]/)) {
+        const line = lines[i]?.trim()
+        if (line === '' && lines[i + 1]?.trim()?.match(/^[a-zA-Z]/)) {
           endLine = i
           break
         }
-        if (line.match(/^(on|variables|stages|notices|concurrency|syntax-dialect):/)) {
+        if (line?.match(/^(on|variables|stages|notices|concurrency|syntax-dialect):/)) {
           endLine = i
           break
         }
@@ -95,8 +98,8 @@ export function useAuthoringEnv(options: UseAuthoringEnvOptions = {}) {
       return [
         {
           startMark: { line: startLine, column: 1 },
-          endMark: { line: endLine, column: 1 }
-        }
+          endMark: { line: endLine, column: 1 },
+        },
       ]
     }
 
@@ -104,10 +107,10 @@ export function useAuthoringEnv(options: UseAuthoringEnvOptions = {}) {
   })
 
   /**
-   * Extract authoring environment data from pipeline model
+   * Extract authoring environment data from flow model
    */
   const extractAuthoringEnv = () => {
-    // Extract authoring environment info from the YAML or pipeline model
+    // Extract authoring environment info from the YAML or flow model
     // This is a mock implementation
     authoringEnv.value = {
       id: 'env-001',
@@ -116,21 +119,21 @@ export function useAuthoringEnv(options: UseAuthoringEnvOptions = {}) {
         {
           id: 'ins-be4830935d0ed3db',
           name: 'Node-1',
-          status: 'online'
+          status: 'online',
         },
         {
           id: 'ins-be4830935d0ed3db',
           name: 'Node-2',
-          status: 'online'
+          status: 'online',
         },
         {
           id: 'ins-be4830935d0ed3db',
           name: 'Node-3',
-          status: 'online'
-        }
+          status: 'online',
+        },
       ],
       workspace: '默认为<Agent安装目录>/workspace/<创作流ID>/',
-      description: 'Default authoring environment for development'
+      description: 'Default authoring environment for development',
     }
   }
 
@@ -146,9 +149,8 @@ export function useAuthoringEnv(options: UseAuthoringEnvOptions = {}) {
   /**
    * Check if environment is empty
    */
-  const isEmpty = computed(() => !pipelineModel.value)
+  const isEmpty = computed(() => !flowModel.value)
 
-  // Extract authoring env when pipeline model is loaded
   if (options.autoLoad) {
     extractAuthoringEnv()
   }
@@ -159,6 +161,6 @@ export function useAuthoringEnv(options: UseAuthoringEnvOptions = {}) {
     yamlContent,
     authoringEnvHighlight,
     isEmpty,
-    fetchAuthoringEnv
+    fetchAuthoringEnv,
   }
 }

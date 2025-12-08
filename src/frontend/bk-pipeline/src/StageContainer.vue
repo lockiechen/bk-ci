@@ -9,7 +9,7 @@
         }"
     >
         <Logo
-            v-if="reactiveData.editable && !isTriggerStage"
+            v-if="showLeftCruveLine"
             size="12"
             name="right-shape"
             class="container-connect-triangle"
@@ -115,7 +115,7 @@
     })
 
     const showLeftCruveLine = computed(() => {
-        return (reactiveData.editable && !props.isTriggerStage) || props.stageIndex > 0
+        return props.stageIndex > 0
     })
 
     const jobComponentName = computed(() => {

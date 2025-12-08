@@ -106,7 +106,7 @@ export const FlowHeader = defineComponent({
               </div>
 
               {/* 创作流文本 */}
-              <span class={styles.flowLabel}>{t('flow.content.flowLabel')}</span>
+              <span class={styles.flowLabel}>{t('flow.title')}</span>
             </RouterLink>
             <SvgIcon name="angle-down" class={styles.separatorIcon} size={18} />
             {/* 工作流名称 */}

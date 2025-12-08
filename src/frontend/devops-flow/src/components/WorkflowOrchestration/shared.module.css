@@ -1,0 +1,126 @@
+/* 共享的 Property Panel 样式 */
+/* 用于 StagePropertyPanel, JobPropertyPanel, AtomPropertyPanel */
+
+.propertyPanelHeader {
+  font-size: var(--font-size-sm);
+  font-weight: normal;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  height: var(--footer-height);
+  width: calc(100% - var(--spacing-xxxl));
+}
+
+.nameEdit,
+.atomNameEdit {
+  display: flex;
+  align-items: center;
+  height: var(--line-height-xl);
+  line-height: var(--line-height-xl);
+  gap: var(--spacing-md);
+}
+
+.nameText,
+.atomNameText {
+  max-width: 450px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  margin: 0;
+  color: var(--color-text-primary);
+}
+
+.nameInput {
+  width: 420px;
+}
+
+.editIcon {
+  display: flex;
+  cursor: pointer;
+  color: var(--color-text-tertiary);
+  flex-shrink: 0;
+  transition: color var(--transition-normal);
+
+  &:hover {
+    color: var(--color-primary);
+  }
+}
+
+.infoIcon {
+  color: var(--color-text-tertiary);
+  cursor: help;
+  display: inline-flex;
+  align-items: center;
+  margin-left: var(--spacing-xs);
+  transition: color var(--transition-normal);
+
+  &:hover {
+    color: var(--color-primary);
+  }
+}
+
+.collapseHeader {
+  display: inline-flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  font-weight: 500;
+  color: var(--color-text-primary);
+  cursor: pointer;
+}
+
+.collapseHeaderLeft {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-md);
+}
+
+.collapseContent {
+  padding: var(--spacing-lg);
+  border: 1px solid var(--border-color);
+
+  :global {
+    .bk-form-item {
+      margin-bottom: var(--spacing-lg);
+
+      &:last-child {
+        margin-bottom: 0;
+      }
+    }
+  }
+}
+
+.flowControlSection {
+  margin-top: var(--spacing-lg);
+  margin-bottom: var(--spacing-lg);
+
+  :global {
+    .bk-collapse-item {
+      border: 1px solid var(--border-color);
+      border-radius: var(--border-radius);
+      background: var(--bg-tertiary);
+    }
+
+    .bk-collapse-header {
+      padding: 0 !important;
+      background: transparent !important;
+    }
+
+    .bk-collapse-content {
+      padding: 0 var(--spacing-lg) var(--spacing-lg) var(--spacing-lg) !important;
+      background: var(--bg-primary);
+    }
+  }
+}
+
+.docLink {
+  font-size: var(--font-size-xs);
+  color: var(--color-primary);
+  text-decoration: none;
+  white-space: nowrap;
+  transition: color var(--transition-normal);
+
+  &:hover {
+    color: var(--color-primary-hover);
+  }
+}

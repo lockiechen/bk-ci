@@ -12,6 +12,13 @@ export const ROUTE_NAMES = {
   FLOW_DETAIL: 'flowDetail',
   FLOW_DETAIL_EDIT: 'flowDetailEdit',
 
+  // Flow Edit 子路由
+  FLOW_EDIT_WORKFLOW_ORCHESTRATION: 'editWorkflowOrchestration',
+  FLOW_EDIT_WORKFLOW_ENVIRONMENT: 'editWorkflowEnvironment',
+  FLOW_EDIT_TRIGGER_EVENTS: 'editTriggerEvents',
+  FLOW_EDIT_NOTIFICATION_CONFIG: 'editNotificationConfig',
+  FLOW_EDIT_BASIC_SETTINGS: 'editBasicSettings',
+
   // Flow Detail 子路由
   FLOW_DETAIL_EXECUTION_RECORD: 'executionRecord',
   FLOW_DETAIL_TRIGGER_RECORD: 'triggerRecord',
@@ -23,6 +30,18 @@ export const ROUTE_NAMES = {
   FLOW_DETAIL_PERMISSION_SETTINGS: 'permissionSettings',
   FLOW_DETAIL_PERMISSION_DELEGATION: 'permissionDelegation',
   FLOW_DETAIL_OPERATION_LOG: 'operationLog',
+} as const
+
+/**
+ * Flow Edit Tab 常量
+ * 编辑页面的 tab 值，与详情页面的创作流配置分类保持一致
+ */
+export const FLOW_EDIT_TABS = {
+  WORKFLOW_ORCHESTRATION: ROUTE_NAMES.FLOW_EDIT_WORKFLOW_ORCHESTRATION,
+  WORKFLOW_ENVIRONMENT: ROUTE_NAMES.FLOW_EDIT_WORKFLOW_ENVIRONMENT,
+  TRIGGER_EVENTS: ROUTE_NAMES.FLOW_EDIT_TRIGGER_EVENTS,
+  NOTIFICATION_CONFIG: ROUTE_NAMES.FLOW_EDIT_NOTIFICATION_CONFIG,
+  BASIC_SETTINGS: ROUTE_NAMES.FLOW_EDIT_BASIC_SETTINGS,
 } as const
 
 /**
@@ -45,16 +64,24 @@ export const FLOW_DETAIL_TABS = {
 /**
  * 默认 tab
  */
+export const DEFAULT_FLOW_EDIT_TAB = FLOW_EDIT_TABS.WORKFLOW_ORCHESTRATION
 export const DEFAULT_FLOW_DETAIL_TAB = FLOW_DETAIL_TABS.EXECUTION_RECORD
 
 /**
  * 所有合法的 tab 值数组
  */
+export const VALID_FLOW_EDIT_TABS = Object.values(FLOW_EDIT_TABS)
 export const VALID_FLOW_DETAIL_TABS = Object.values(FLOW_DETAIL_TABS)
 
 /**
  * 检查 tab 是否合法
  */
+export function isValidFlowEditTab(
+  tab: string,
+): tab is (typeof FLOW_EDIT_TABS)[keyof typeof FLOW_EDIT_TABS] {
+  return VALID_FLOW_EDIT_TABS.includes(tab as typeof FLOW_EDIT_TABS[keyof typeof FLOW_EDIT_TABS])
+}
+
 export function isValidFlowDetailTab(
   tab: string,
 ): tab is (typeof FLOW_DETAIL_TABS)[keyof typeof FLOW_DETAIL_TABS] {

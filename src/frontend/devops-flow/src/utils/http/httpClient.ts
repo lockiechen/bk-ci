@@ -1,10 +1,11 @@
 import axios from 'axios'
-import type { AxiosError, AxiosInstance } from 'axios'
+import type { AxiosError, AxiosInstance, AxiosRequestHeaders, InternalAxiosRequestConfig } from 'axios'
 import { API_BASE_URL, HTTP_TIMEOUT } from './config'
 import type {
   HttpRequestConfig,
   HttpResponse,
   HttpResponseEnvelope,
+  RequestMeta,
 } from './types'
 import { retryRequest } from './retry'
 import { handleHttpError, HttpError } from './error'
@@ -17,34 +18,34 @@ const httpInstance: AxiosInstance = axios.create({
   withCredentials: true,
 })
 
+interface ExtendedAxiosRequestConfig extends InternalAxiosRequestConfig {
+  __startTime?: number
+  meta?: RequestMeta
+}
+
 httpInstance.interceptors.request.use(
-  (config: HttpRequestConfig) => {
+  (config: InternalAxiosRequestConfig): InternalAxiosRequestConfig => {
     const authStore = useAuthStore()
     const token = authStore.token
+    const extendConfig = config as ExtendedAxiosRequestConfig
 
-    if (!config.headers) config.headers = {}
-
-    config.headers['Accept'] = 'application/json'
-    if (!config.headers['Content-Type']) {
-      config.headers['Content-Type'] = 'application/json;charset=UTF-8'
+    extendConfig.headers.set('Accept', 'application/json')
+    extendConfig.headers.set('X-DEVOPS-CHANNEL', 'CREATIVE_STREAM')
+    if (!extendConfig.headers.get('Content-Type')) {
+      extendConfig.headers.set('Content-Type', 'application/json;charset=UTF-8')
     }
 
-    if (!config.meta?.skipAuth && token) {
-      config.headers['Authorization'] = `Bearer ${token}`
-    }
-
-    ;(config as any).__startTime = Date.now()
+    extendConfig.__startTime = Date.now()
 
     return config
   },
   (error) => Promise.reject(error),
 )
-
 httpInstance.interceptors.response.use(
-  (response: HttpResponse<HttpResponseEnvelope<any>>) => {
+  (response: HttpResponse<HttpResponseEnvelope<unknown>>): any => {
     const httpLogStore = useHttpLogStore()
-    const config = response.config as HttpRequestConfig
-    const duration = Date.now() - ((config as any).__startTime || Date.now())
+    const config = response.config as ExtendedAxiosRequestConfig
+    const duration = Date.now() - (config.__startTime || Date.now())
 
     httpLogStore.addLog({
       url: config.url || '',
@@ -56,21 +57,24 @@ httpInstance.interceptors.response.use(
 
     const envelope = response.data
 
+    // 统一处理 {status: number, data: any, message: string} 格式的响应
     if (
       typeof envelope === 'object' &&
       envelope &&
-      'code' in envelope &&
+      'status' in envelope &&
       'data' in envelope
     ) {
-      if (envelope.code === 0) {
+      // status === 0 表示成功，直接返回 data
+      if (envelope.status === 0) {
         return envelope.data
       }
 
+      // status !== 0 表示业务错误
       const businessError = new HttpError({
         type: 'business',
         message: envelope.message || 'Business error',
         business: {
-          code: envelope.code,
+          code: envelope.status,
           message: envelope.message,
         },
       })
@@ -82,10 +86,39 @@ httpInstance.interceptors.response.use(
       return Promise.reject(businessError)
     }
 
-    return response.data as any
+    // 兼容旧的 code 字段格式
+    if (
+      typeof envelope === 'object' &&
+      envelope &&
+      'code' in envelope &&
+      'data' in envelope
+    ) {
+      const legacyEnvelope = envelope as { code: number; data: unknown; message?: string }
+
+      if (legacyEnvelope.code === 0) {
+        return legacyEnvelope.data
+      }
+
+      const businessError = new HttpError({
+        type: 'business',
+        message: legacyEnvelope.message || 'Business error',
+        business: {
+          code: legacyEnvelope.code,
+          message: legacyEnvelope.message || '',
+        },
+      })
+
+      if (!config.meta?.silent && config.meta?.showBusinessError !== false) {
+        handleHttpError(businessError)
+      }
+
+      return Promise.reject(businessError)
+    }
+
+    return response.data
   },
   async (error: AxiosError) => {
-    const config = error.config as HttpRequestConfig | undefined
+    const config = error.config as ExtendedAxiosRequestConfig
 
     if (error.code === 'ECONNABORTED' || error.message.includes('timeout')) {
       if (config?.meta?.retry || config?.meta?.retry === 0) {

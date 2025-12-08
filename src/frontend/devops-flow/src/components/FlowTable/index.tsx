@@ -369,8 +369,7 @@ export const FlowTable = defineComponent({
           <div>
             <p>{t('flow.content.selectGroupToAdd')}</p>
             <p>
-              {t('flow.content.flowLabel')}:{' '}
-              {currentActionData.value?.name || currentActionData.value?.id}
+              {t('flow.title')}: {currentActionData.value?.name || currentActionData.value?.id}
             </p>
             {/* TODO: 添加组选择器 */}
           </div>
@@ -413,8 +412,7 @@ export const FlowTable = defineComponent({
           <div>
             <p>{t('flow.content.inputTemplateName')}</p>
             <p>
-              {t('flow.content.flowLabel')}:{' '}
-              {currentActionData.value?.name || currentActionData.value?.id}
+              {t('flow.title')}: {currentActionData.value?.name || currentActionData.value?.id}
             </p>
             {/* TODO: 添加模板名称输入框 */}
           </div>

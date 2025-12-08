@@ -6,7 +6,7 @@ import {
   createThrottledPromise,
 } from './requestControl'
 
-export async function request<T = any>(
+export async function request<T = unknown>(
   method: HttpMethod,
   url: string,
   config: HttpRequestConfig = {},
@@ -32,7 +32,8 @@ export async function request<T = any>(
   }
 
   const executor = async () => {
-    const result = await httpInstance.request<T>(finalConfig)
+    // httpInstance 的响应拦截器已经提取了 data，所以这里直接返回 T 类型
+    const result = await httpInstance.request<T>(finalConfig) as unknown as T
 
     if (meta.enableCache) {
       setCache(cacheKey, result, meta.cacheTTL)
@@ -52,30 +53,30 @@ export async function request<T = any>(
   return executor()
 }
 
-export function get<T = any>(
+export function get<T = unknown>(
   url: string,
   config?: HttpRequestConfig,
 ): Promise<T> {
   return request<T>('GET', url, config)
 }
 
-export function post<T = any>(
+export function post<T = unknown>(
   url: string,
-  data?: any,
+  data?: unknown,
   config?: HttpRequestConfig,
 ): Promise<T> {
   return request<T>('POST', url, { ...config, data })
 }
 
-export function put<T = any>(
+export function put<T = unknown>(
   url: string,
-  data?: any,
+  data?: unknown,
   config?: HttpRequestConfig,
 ): Promise<T> {
   return request<T>('PUT', url, { ...config, data })
 }
 
-export function del<T = any>(
+export function del<T>(
   url: string,
   config?: HttpRequestConfig,
 ): Promise<T> {

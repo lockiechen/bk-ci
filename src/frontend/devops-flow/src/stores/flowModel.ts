@@ -1,19 +1,20 @@
 import { ref, computed } from 'vue'
 import { defineStore } from 'pinia'
 import {
-  getPipelineModel,
-  savePipelineModel,
-  pipelineModelToYaml,
-  yamlToPipelineModel,
-  type PipelineModel,
+  getFlowModel,
+  saveFlowModel,
+  flowModelToYaml,
+  yamlToFlowModel,
+  type FlowModel,
+  type SaveFlowModelParams,
 } from '@/api/flowModel'
 
 /**
  * 创作流模型状态管理
  */
 export const useFlowModelStore = defineStore('flowModel', () => {
-  // Pipeline 模型数据
-  const pipelineModel = ref<PipelineModel | null>(null)
+  // Flow 模型数据
+  const flowModel = ref<FlowModel | null>(null)
 
   // YAML 格式的代码内容
   const yamlContent = ref<string>('')
@@ -31,29 +32,29 @@ export const useFlowModelStore = defineStore('flowModel', () => {
   const hasUnsavedChanges = ref(false)
 
   /**
-   * 计算属性：Pipeline 是否为空
+   * 计算属性：Flow 是否为空
    */
-  const isPipelineEmpty = computed(() => {
-    return !pipelineModel.value || pipelineModel.value.stages.length === 0
+  const isFlowEmpty = computed(() => {
+    return !flowModel.value || flowModel.value.stages.length === 0
   })
 
   /**
-   * 加载 Pipeline 模型数据
+   * 加载 Flow 模型数据
    * @param flowId 创作流 ID
    * @param version 版本号（可选）
    */
-  async function loadPipelineModel(flowId: string, version?: string) {
+  async function loadFlowModel(flowId: string, version?: string) {
     loading.value = true
     hasError.value = false
     currentFlowId.value = flowId
 
     try {
-      const model = await getPipelineModel(flowId, version)
-      pipelineModel.value = model
-      yamlContent.value = pipelineModelToYaml(model)
+      const model = await getFlowModel(flowId, version)
+      flowModel.value = model
+      yamlContent.value = flowModelToYaml(model)
       hasUnsavedChanges.value = false
     } catch (error) {
-      console.error('Failed to load pipeline model:', error)
+      console.error('Failed to load flow model:', error)
       hasError.value = true
       throw error
     } finally {
@@ -62,12 +63,12 @@ export const useFlowModelStore = defineStore('flowModel', () => {
   }
 
   /**
-   * 更新 Pipeline 模型数据
-   * @param model 新的 Pipeline 模型
+   * 更新 Flow 模型数据
+   * @param model 新的 Flow 模型
    */
-  function updatePipelineModel(model: PipelineModel) {
-    pipelineModel.value = model
-    yamlContent.value = pipelineModelToYaml(model)
+  function updateFlowModel(model: FlowModel) {
+    flowModel.value = model
+    yamlContent.value = flowModelToYaml(model)
     hasUnsavedChanges.value = true
   }
 
@@ -80,8 +81,8 @@ export const useFlowModelStore = defineStore('flowModel', () => {
     hasUnsavedChanges.value = true
 
     try {
-      const model = yamlToPipelineModel(yaml)
-      pipelineModel.value = model
+      const model = yamlToFlowModel(yaml)
+      flowModel.value = model
       hasError.value = false
     } catch (error) {
       console.error('Failed to parse YAML:', error)
@@ -90,20 +91,31 @@ export const useFlowModelStore = defineStore('flowModel', () => {
   }
 
   /**
-   * 保存 Pipeline 模型
+   * 保存 Flow 模型
+   * @param params 保存参数（包含projectId等）
    */
-  async function savePipeline() {
-    if (!pipelineModel.value || !currentFlowId.value) {
-      throw new Error('No pipeline model or flow ID')
+  async function saveFlow(params: SaveFlowModelParams) {
+    if (!flowModel.value) {
+      throw new Error('No flow model')
     }
 
     loading.value = true
 
     try {
-      await savePipelineModel(currentFlowId.value, pipelineModel.value)
+      const saveParams: SaveFlowModelParams = {
+        ...params,
+        modelAndSetting: {
+          model: flowModel.value,
+          ...(params.modelAndSetting?.setting && { setting: params.modelAndSetting.setting }),
+        },
+        storageType: params.storageType || 'MODEL',
+      }
+
+      const response = await saveFlowModel(saveParams)
       hasUnsavedChanges.value = false
+      return response
     } catch (error) {
-      console.error('Failed to save pipeline model:', error)
+      console.error('Failed to save flow model:', error)
       throw error
     } finally {
       loading.value = false
@@ -114,7 +126,7 @@ export const useFlowModelStore = defineStore('flowModel', () => {
    * 重置状态
    */
   function reset() {
-    pipelineModel.value = null
+    flowModel.value = null
     yamlContent.value = ''
     loading.value = false
     hasError.value = false
@@ -132,7 +144,7 @@ export const useFlowModelStore = defineStore('flowModel', () => {
 
   return {
     // 状态
-    pipelineModel,
+    flowModel,
     yamlContent,
     loading,
     hasError,
@@ -140,13 +152,13 @@ export const useFlowModelStore = defineStore('flowModel', () => {
     hasUnsavedChanges,
 
     // 计算属性
-    isPipelineEmpty,
+    isFlowEmpty,
 
     // 方法
-    loadPipelineModel,
-    updatePipelineModel,
+    loadFlowModel,
+    updateFlowModel,
     updateYamlContent,
-    savePipeline,
+    saveFlow,
     reset,
     setHasError,
   }

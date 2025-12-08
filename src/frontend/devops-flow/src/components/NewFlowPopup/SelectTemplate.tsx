@@ -10,7 +10,12 @@ import NoticeTab from '@/views/Flow/Detail/Notice'
 import SettingTab from '@/views/Flow/Detail/BasicSetting'
 
 import styles from './Index.module.css'
-type FlowTabTypeEnum = typeof FlowModel | typeof AuthoringEnv | typeof TriggerTab | typeof NoticeTab | typeof SettingTab
+type FlowTabTypeEnum =
+  | typeof FlowModel
+  | typeof AuthoringEnv
+  | typeof TriggerTab
+  | typeof NoticeTab
+  | typeof SettingTab
 
 export default defineComponent({
   name: 'SelectTemplate',
