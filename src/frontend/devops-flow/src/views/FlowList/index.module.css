@@ -35,6 +35,7 @@
     }
     :global(.bk-tab-header) {
         border: 0;
+        line-height: 47px !important;
     }
     :global(.bk-tab-header--active) {
         background-color: var(--bg-active);

@@ -13,11 +13,16 @@
     "common": {
       "confirm": "確定",
       "cancel": "キャンセル",
+      "save": "保存",
+      "remark": "備考",
       "close": "閉じる",
       "allFlows": "すべてのフロー",
       "noData": "データなし",
       "success": "成功",
-      "failed": "失敗"
+      "failed": "失敗",
+      "updateSuc": "更新成功",
+      "updateFail": "更新失敗",
+      "reset": "クリア"
     },
     "sidebar": {
       "myFlows": "マイフロー",
@@ -28,6 +33,13 @@
       "group": "フローグループ",
       "recycleBin": "ゴミ箱"
     },
+    "restore": {
+      "restore": "復元",
+      "deleter": "削除者",
+      "deleteTime": "削除時間",
+      "restoreSuc": "復元成功",
+      "restoreFlowConfirm": "作成フロー【{0}】を復元してよろしいですか"
+    },
     "content": {
       "newFlow": "新しいフロー",
       "batchManage": "一括管理",
@@ -36,6 +48,9 @@
       "groupName": "グループ名",
       "lastExecution": "最近の実行",
       "executionTime": "実行時間",
+      "lastModify": "最終更新時間",
+      "creator": "作成者",
+      "createTime": "作成時間",
       "actions": "操作",
       "execute": "実行",
       "orderByAlpha": "名前順 A-Z",
@@ -156,6 +171,23 @@
       "loadingConfiguration": "設定を読み込み中...",
       "noConfigurationFound": "設定が見つかりません",
       "pleaseConfigureFirst": "まず設定を行ってからご覧ください",
+      "unexecute": "未実行",
+      "showStageProgress": "ステージ進捗を表示",
+      "showBuildInfo": "ビルド情報を表示",
+      "skipStageDesc": "スキップ済み",
+      "toCheck": "レビュー",
+      "execedTimes": "実行回数",
+      "totalTime": "経過時間 {0}",
+      "timeMap": {
+        "days": "日",
+        "hours": "時間",
+        "minutes": "分",
+        "seconds": "秒",
+        "ago": "前"
+      },
+      "draft": "下書き",
+      "branch": "ブランチ",
+      "deleteAlready": "作成フローは削除されました",
       "workflowName": "創作流名称",
       "workflowNamePlaceholder": "作成フロー名を入力してください",
       "descriptionPlaceholder": "入力してください",
@@ -293,6 +325,38 @@
         "groupName": "創作流グループ名",
         "groupNamePlaceholder": "創作流グループ名を入力してください",
         "groupNameRequired": "創作流グループ名は空にできません"
+      },
+      "deleteConfirm": {
+        "title": "削除確認"
+      },
+      "addGroup": {
+        "searchFlowGroup": "作成フローグループを検索",
+        "personalFlowGroup": "個人作成フローグループ",
+        "addToGroupTitle": "作成フロー <b>{0}</b> を下の選択した作成フローグループに追加",
+        "resultPreview": "結果プレビュー",
+        "selectedGroup": "に追加される予定",
+        "selectedGroupSuffix": "ユーザーグループ",
+        "pleaseSelectGroup": "作成フローグループを選択してください",
+        "added": "追加済み",
+        "dynamicGroup": "動的グループ"
+      },
+      "saveAsTemplate": {
+        "templateName": "テンプレート名",
+        "isCopySetting": "設定を適用",
+        "templateNamePlaceholder": "テンプレート名を入力してください、30文字以内",
+        "settingTooltip": "「はい」を選択すると、作成フロー設定がコピーされたテンプレートに適用されます",
+        "true": "はい",
+        "false": "いいえ"
+      },
+      "copyCreation": {
+        "name": "名称",
+        "desc": "説明",
+        "labels": "タグ",
+        "dynamicFlowGroup": "動的作成フローグループ",
+        "staticFlowGroup": "静的作成フローグループ",
+        "dynamicMatchPlaceholder": "作成フローの名前やタグなどの属性に基づいて自動的に一致します",
+        "addLabel": "新しいタグを追加",
+        "noLabels": "現在のプロジェクトには利用可能なタグがありません"
       }
     },
     "orchestration": {
@@ -405,7 +469,106 @@
       "unpin": "固定解除",
       "delete": "削除",
       "permissionManage": "創作流グループ権限管理",
-      "confirmDelete": "\"{name}\"を削除してもよろしいですか？"
+      "confirmDelete": "\"{name}\"を削除してもよろしいですか？",
+      "refresh": "更新"
+    },
+    "triggerRecord": {
+      "pickTimeRange": "日付時間範囲を選択",
+      "triggerType": "トリガータイプ",
+      "eventType": "イベントタイプ",
+      "trigger": "トリガーした人",
+      "loadingTips": "データを読み込み中です。しばらくお待ちください。",
+      "today": "今日",
+      "yesterday": "昨日",
+      "last3days": "過去3日間",
+      "last7days": "過去7日間"
+    },
+    "delegation": {
+      "delegationPermission": "権限の委譲",
+      "tips1": "次のシナリオでは、委譲者の権限が使用されます：",
+      "tips2": "1. クラウドデスクトップのイベントトリガー、スケジュールトリガー、サブ作成フロートリガーなどのシナリオで、プラットフォームは委譲者が{0}を持っているか確認します。持っていない場合、トリガーは失敗します。",
+      "tips3": "2. パイプライン実行中、委譲者は組み込み変数{0}に割り当てられ、一部のプラグインはこのデータに基づいて対応するシステム/機能の操作権限を確認します。",
+      "tips4": "越権を避けるために、委譲者を承認する前に、作成フローの機能と操作範囲を明確にしてください。",
+      "tips5": "デフォルトの委譲者は作成フローの作成者です。変更が必要な場合は、ここで{0}リセットしてください。",
+      "newOperator": "新しい責任者",
+      "flowExecPermission": "作成フロー実行権限",
+      "proxyHolderForExecutionPermissions": "実行権限の委譲者",
+      "resetAuthorization": "認可のリセット",
+      "confirmReset": "認可のリセットを確認しますか？",
+      "yourPermission": "あなたの権限",
+      "resetAuthTips1": "リセット後、リポジトリトリガー、スケジュールトリガー、サブパイプライントリガーなどのシナリオでは{0}を使用してパイプラインを実行します。",
+      "resetAuthTips2": "認可可能か確認してください。",
+      "reset": "リセット",
+      "cancel": "キャンセル",
+      "resetSuc": "リセット成功",
+      "authTime": "認可時間",
+      "expired": "期限切れ",
+      "expiredTips": "実行権限がなく、期限切れです",
+      "resetFailed": "認可のリセットに失敗しました",
+      "confirm": "確認"
+    },
+    "operator": {
+      "operator": "オペレーター",
+      "operateTime": "操作時間",
+      "operateLogDesc": "操作説明"
+    },
+    "execute": {
+      "executeDetail": "実行の詳細",
+      "reBuild": "再ビルド",
+      "exec": "実行",
+      "executorInfo": "{0} {1} が{2}にトリガーしました",
+      "canceller": "キャンセラー",
+      "executor": "実行者",
+      "triggerRepo": "トリガー材料",
+      "material": "ソース材料",
+      "addRemarkForBuild": "このビルドに備考を追加する",
+      "artifactQuality": "アーティファクトの品質",
+      "versionDesc": "()",
+      "versionNum": "バージョン番号",
+      "constraintModeDesc": "制約モード、テンプレートで制御されています",
+      "pipelineVersion": "パイプラインバージョン",
+      "templateName": "テンプレート",
+      "templateVersion": "テンプレートバージョン",
+      "stopSuc": "ビルド終了要求が正常に送信されました。しばらくお待ちください...",
+      "stopFail": "終了に失敗しました",
+      "rePlay": "イベントをリプレイ",
+      "reBuildTips1": "再構築時、同じトリガーパラメータで再実行され、以下のようになります:",
+      "reBuildTips2": "- BK_CI_BUILD_IDは変更されません",
+      "reBuildTips3": "- 使用されるパイプラインバージョンは最初のトリガーに基づきます",
+      "rePlayTips1": "リプレイ後、同じトリガーパラメータで新しいビルドが開始されます：",
+      "rePlayTips2": "- 新しいBK_CI_BUILD_IDが生成されます",
+      "rePlayTips3": "- 最新のパイプラインバージョンを使用して実行します",
+      "reBuildConfirmTips": "再構築を開始してもよろしいですか？",
+      "rePlayConfirmTips": "このパイプラインのイベントをリプレイしてもよろしいですか？",
+      "rePlayInfo1": "1. リプレイ時、同じトリガーパラメーターと最新のパイプライン編成で新しいビルドを開始します。",
+      "rePlayInfo2": "2. リプレイ時、トリガー検出をスキップし、最新バージョンのトリガー条件を満たさない可能性があります。",
+      "reBuildInfo1": "1. 再構築は、前のビルドの基礎で再実行されます。",
+      "reBuildInfo2": "2. パイプライン編成バージョン、BK_CI_BUILD_ID、および最初のトリガーは一致しています。"    
+    },
+    "statusMap": {
+      "PAUSE": "一時停止",
+      "RUNNING": "実行中",
+      "PREPARE_ENV": "ビルド環境を準備中",
+      "CANCELED": "ユーザーがキャンセルしました",
+      "FAILED": "実行に失敗しました",
+      "SUCCEED": "実行に成功しました",
+      "REVIEW_ABORT": "レビュー拒否",
+      "HEARTBEAT_TIMEOUT": "ハートビートタイムアウト",
+      "QUALITY_CHECK_FAIL": "実行に失敗しました",
+      "QUEUE": "キュー",
+      "QUEUE_TIMEOUT": "キュータイムアウト",
+      "EXEC_TIMEOUT": "実行タイムアウト",
+      "TERMINATE": "終了",
+      "REVIEWING": "レビュー中",
+      "REVIEW_PROCESSED": "レビュー承認済み",
+      "UNEXEC": "未実行",
+      "SKIP": "スキップ",
+      "LOOP_WAITING": "ループ待機",
+      "CALL_WAITING": "コールバック待機",
+      "TRY_FINALLY": "補償タスク",
+      "QUEUE_CACHE": "キュー待ち",
+      "UNKNOWN": "不明な状態",
+      "STAGE_SUCCESS": "ステージ成功"
     }
   }
 }

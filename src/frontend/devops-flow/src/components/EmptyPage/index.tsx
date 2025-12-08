@@ -1,10 +1,10 @@
-import { defineComponent } from 'vue';
-import { useI18n } from 'vue-i18n';
-import { Exception } from 'bkui-vue';
-import styles from "./EmptyPage.module.css";
+import { defineComponent } from 'vue'
+import { useI18n } from 'vue-i18n'
+import { Exception } from 'bkui-vue'
+import styles from './EmptyPage.module.css'
 
 export default defineComponent({
-  name: 'EmptyTableStatus',
+  name: 'EmptyPage',
   props: {
     title: {
       type: String,
@@ -16,18 +16,12 @@ export default defineComponent({
     },
   },
   setup(props, { emit }) {
-    const { t } = useI18n();
+    const { t } = useI18n()
     return () => (
       <Exception type="empty" class={styles.exceptionCont}>
-        <div class={styles.exception}>
-          {
-            props.title ? props.title : t('flow.common.noData')
-          }
-        </div>
-        {
-          props.desc ? <p class={styles.desc}>{props.desc}</p> : null
-        }
+        <div class={styles.exception}>{props.title ? props.title : t('flow.common.noData')}</div>
+        {props.desc ? <p class={styles.desc}>{props.desc}</p> : null}
       </Exception>
-    );
+    )
   },
-});
+})

@@ -1,10 +1,10 @@
-import { defineComponent} from 'vue';
-import { useI18n } from 'vue-i18n';
-import { Dialog, Button, Steps, Message } from 'bkui-vue';
-import styles from "./Index.module.css";
-import BaseInfo from './BaseInfo';
-import SelectTemplate from './SelectTemplate';
-import { useNewFlow } from '@/hooks/useNewFlow';
+import { defineComponent, watch } from 'vue'
+import { useI18n } from 'vue-i18n'
+import { Dialog, Button, Steps, Message } from 'bkui-vue'
+import styles from './Index.module.css'
+import BaseInfo from './BaseInfo'
+import SelectTemplate from './SelectTemplate'
+import { useNewFlow } from '@/hooks/useNewFlow'
 
 export default defineComponent({
   name: 'NewFlowPopup',
@@ -12,54 +12,62 @@ export default defineComponent({
     isShow: {
       type: Boolean,
       default: false,
-    }
+    },
   },
   emits: ['update:isShow', 'confirm'],
   setup(props, { emit }) {
-    const { t } = useI18n();
+    const { t } = useI18n()
 
     const {
       currentStep,
       formData,
       isLoading,
       baseInfoRef,
+      resetForm,
+      clearFormValidation,
       handleStepChange,
       handleNextStep,
       handlePrevStep,
-      handleUpdateBaseInfo,
-      handleUpdateTemplateInfo,
+      updateBaseInfo,
+      updateTemplateInfo,
       handleConfirm,
-      handleClose
-    } = useNewFlow(props);
+    } = useNewFlow()
 
     // 步骤配置
     const steps = [
-      { title: t('flow.content.basicSettings'), icon: 1, description: t('flow.content.chooseEnvironment') },
-      { title: t('flow.content.selectTemplate'), icon: 2, description: t('flow.content.startFromBlankOrTemplate') }
-    ];
+      {
+        title: t('flow.content.basicSettings'),
+        icon: 1,
+        description: t('flow.content.chooseEnvironment'),
+      },
+      {
+        title: t('flow.content.selectTemplate'),
+        icon: 2,
+        description: t('flow.content.startFromBlankOrTemplate'),
+      },
+    ]
 
     /**
-     * 步骤切换前验证
+     * 监听弹窗显示状态变化
      */
-    async function handleBerforeChangeStep(index: number) {
-      return true;
-    }
-
-    /**
-     * 步骤点击切换
-     */
-    async function stepChanged(index: number) {
-      await handleStepChange(index);
-    }
+    watch(
+      () => props.isShow,
+      (newVal) => {
+        if (newVal) {
+          resetForm()
+          clearFormValidation()
+        }
+      },
+    )
 
     /**
      * 切换步骤按钮
      */
     async function handleChangeStep() {
       if (currentStep.value === 1) {
-        await handleNextStep();
+        await handleNextStep()
       } else {
-        handlePrevStep();
+        handlePrevStep()
       }
     }
 
@@ -68,13 +76,13 @@ export default defineComponent({
      */
     async function onConfirm() {
       try {
-        await handleConfirm();
-        onClose();
+        await handleConfirm()
+        onClose()
       } catch (error) {
         Message({
           message: t('flow.content.createFailed'),
-          theme: 'error'
-        });
+          theme: 'error',
+        })
       }
     }
 
@@ -82,8 +90,8 @@ export default defineComponent({
      * 关闭弹窗
      */
     function onClose() {
-      handleClose();
-      emit('update:isShow', false);
+      resetForm()
+      emit('update:isShow', false)
     }
 
     return () => (
@@ -105,28 +113,25 @@ export default defineComponent({
                   controllable={true}
                   cur-step={currentStep.value}
                   steps={steps}
-                  onClick={stepChanged}
-                  before-change={handleBerforeChangeStep}
+                  onClick={handleStepChange}
                 ></Steps>
               </div>
             </div>
           ),
           default: () => (
             <div class={styles.content}>
-              {
-                currentStep.value === 1 ? (
-                  <BaseInfo
-                    ref={baseInfoRef}
-                    modelValue={formData.value.baseInfo}
-                    onUpdate:modelValue={handleUpdateBaseInfo}
-                  />
-                ) : (
-                  <SelectTemplate
-                    modelValue={formData.value.templateInfo}
-                    onUpdate:modelValue={handleUpdateTemplateInfo}
-                  />
-                )
-              }
+              {currentStep.value === 1 ? (
+                <BaseInfo
+                  ref={baseInfoRef}
+                  modelValue={formData.value.baseInfo}
+                  onUpdate:modelValue={updateBaseInfo}
+                />
+              ) : (
+                <SelectTemplate
+                  modelValue={formData.value.templateInfo}
+                  onUpdate:modelValue={updateTemplateInfo}
+                />
+              )}
             </div>
           ),
           footer: () => (
@@ -137,31 +142,27 @@ export default defineComponent({
                 theme="primary"
                 onClick={handleChangeStep}
               >
-                {currentStep.value === 1 ? t('flow.content.nextStep') : t('flow.content.previousStep')}
+                {currentStep.value === 1
+                  ? t('flow.content.nextStep')
+                  : t('flow.content.previousStep')}
               </Button>
-              {
-                currentStep.value === 2 ? (
-                  <Button
-                    class={styles.btn}
-                    loading={isLoading.value}
-                    theme="primary"
-                    onClick={onConfirm}
-                  >
-                    {t('flow.content.createAndStartOrchestrating')}
-                  </Button>
-                ) : null
-              }
-              <Button
-                class={styles.btn}
-                loading={isLoading.value}
-                onClick={onClose}
-              >
+              {currentStep.value === 2 ? (
+                <Button
+                  class={styles.btn}
+                  loading={isLoading.value}
+                  theme="primary"
+                  onClick={onConfirm}
+                >
+                  {t('flow.content.createAndStartOrchestrating')}
+                </Button>
+              ) : null}
+              <Button class={styles.btn} loading={isLoading.value} onClick={onClose}>
                 {t('flow.common.cancel')}
               </Button>
             </>
           ),
         }}
       </Dialog>
-    );
+    )
   },
-});
+})

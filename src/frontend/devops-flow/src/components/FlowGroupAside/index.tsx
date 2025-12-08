@@ -1,4 +1,4 @@
-import { computed, defineComponent, ref } from 'vue'
+import { computed, defineComponent, ref, onMounted } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useRouter, useRoute } from 'vue-router'
 import { Loading, Tag, Message } from 'bkui-vue'
@@ -53,6 +53,15 @@ export const FlowGroupAside = defineComponent({
 
     // 删除确认 hook
     const { showDeleteConfirm } = useDeleteConfirm()
+
+    /**
+     * 组件挂载时加载数据
+     */
+    onMounted(() => {
+      if (flowGroupData.flowGroups.value.length === 0 && !flowGroupData.loading.value) {
+        flowGroupData.loadAllData();
+      }
+    });
 
     const handleItemClick = (key: string) => {
       router.push({

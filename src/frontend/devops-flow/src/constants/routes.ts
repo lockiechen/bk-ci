@@ -30,6 +30,8 @@ export const ROUTE_NAMES = {
   FLOW_DETAIL_PERMISSION_SETTINGS: 'permissionSettings',
   FLOW_DETAIL_PERMISSION_DELEGATION: 'permissionDelegation',
   FLOW_DETAIL_OPERATION_LOG: 'operationLog',
+
+  FLOW_DETAIL_EXECUTION_DETAIL: 'flowExecutionDetail'
 } as const
 
 /**

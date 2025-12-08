@@ -11,7 +11,7 @@ import { getCookies } from './utils/cookie'
 import ZhCN from '../../locale/flow/zh-CN.json'
 import EnUS from '../../locale/flow/en-US.json'
 import JaJP from '../../locale/flow/ja-JP.json'
-import { bkTooltips } from 'bkui-vue/lib/directives'
+import { bkTooltips, overflowTitle, bkLoading } from 'bkui-vue/lib/directives'
 import { VueDraggable } from 'vue-draggable-plus'
 
 // 导入全局样式
@@ -81,6 +81,8 @@ const app = createApp({
 })
 
 app.directive('bk-tooltips', bkTooltips)
+app.directive('bk-loading', bkLoading)
+app.directive('overflow-title', overflowTitle)
 app.use(createPinia())
 app.use(router)
 app.use(bkui, {

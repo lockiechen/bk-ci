@@ -1,6 +1,6 @@
 import { defineComponent, ref, onMounted, onUnmounted, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
-import { Select, Tag } from 'bkui-vue'
+import { Select, Tag, Loading } from 'bkui-vue'
 import { SvgIcon } from '@/components/SvgIcon'
 import styles from './AuthoringEnv.module.css'
 
@@ -21,6 +21,18 @@ export default defineComponent({
     envList: {
       type: Array,
       default: () => [],
+    },
+    nodeList: {
+      type: Array,
+      default: () => [],
+    },
+    envLoading: {
+      type: Boolean,
+      default: false,
+    },
+    nodeLoading: {
+      type: Boolean,
+      default: false,
     },
   },
   emits: ['update:modelValue'],
@@ -93,6 +105,7 @@ export default defineComponent({
               ref={selectRef}
               v-model={authoringEnv.value}
               filterable
+              loading={props.envLoading}
               trigger={trigger.value}
               searchPlaceholder={t('flow.content.searchEnvironment')}
               popoverMinWidth={240}
@@ -108,7 +121,7 @@ export default defineComponent({
           )}
         </p>
         {authoringEnv.value ? (
-          <div class="p-lg">
+          <Loading loading={props.nodeLoading} size="small" class="p-lg">
             <div class={styles.envItem}>
               <p class={styles.envItemTit}>
                 {t('flow.content.creationNode')}
@@ -119,15 +132,16 @@ export default defineComponent({
                 ) : null}
               </p>
               <div class={styles.nodeTag}>
-                <Tag>ins-be4830935d0ed3db</Tag>
-                <Tag>ins-be4830935d0ed3db</Tag>
+                {props.nodeList.length > 0
+                  ? props.nodeList.map((node: any) => <Tag key={node.id}>{node.displayName}</Tag>)
+                  : null}
               </div>
             </div>
             <div class={styles.envItem}>
               <p class={styles.envItemTit}>{t('flow.content.workspace')}</p>
               <div>{t('flow.content.workSpaceDesc')}</div>
             </div>
-          </div>
+          </Loading>
         ) : (
           <p class={styles.noData}>{t('flow.content.previewDetailsAfterEnvironmentSelection')}</p>
         )}

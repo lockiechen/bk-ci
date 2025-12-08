@@ -1,4 +1,6 @@
-export const statusIconMap = {
+import { type StatusType } from "@/api/flowContentList";
+
+export const statusIconMap: Record<StatusType, string> = {
   SUCCEED: 'check-circle', // 0 成功（最终态）
   FAILED: 'close-circle', // 1 失败（最终态）
   CANCELED: 'abort', // 2 取消（最终态）
@@ -21,7 +23,7 @@ export const statusIconMap = {
   EXEC_TIMEOUT: 'abort', // 18 执行超时（最终态）
   RETRY: 'retry', // 20 重试（中间状态）
   PAUSE: 'play-circle-shape', // 21 暂停执行，等待事件 （Stage/Job/Task中间态）
-  STAGE_SUCCESS: 'flag', // 22 当Stage人工审核取消运行时，成功（Stage/Flow最终态）
+  STAGE_SUCCESS: 'flag', // 22 当Stage人工审核取消运行时，成功（Stage/Pipeline最终态）
   QUOTA_FAILED: 'close-circle', // 23 失败 (未使用）
   DEPENDENT_WAITING: 'circle-2-1', // 24 依赖等待 等待依赖的job完成才会进入准备环境（Job中间态）
   QUALITY_CHECK_PASS: 'circle-2-1', // 25 质量红线检查通过
@@ -29,7 +31,7 @@ export const statusIconMap = {
   UNKNOWN: 'placeholder', // 99
 }
 
-export const statusAlias = {
+export const statusAlias: Record<StatusType, string> = {
   SUCCEED: 'SUCCEED', // 0 成功（最终态）
   FAILED: 'FAILED', // 1 失败（最终态）
   CANCELED: 'CANCELED', // 2 取消（最终态）
@@ -52,7 +54,7 @@ export const statusAlias = {
   QUEUE_CACHE: 'QUEUE_CACHE', // 19 队列待处理，瞬态。只在启动和取消过程中存在（中间状态）
   RETRY: 'RETRY', // 20 重试（中间状态）
   PAUSE: 'PAUSE', // 21 暂停执行，等待事件 （Stage/Job/Task中间态）
-  STAGE_SUCCESS: 'STAGE_SUCCESS', // 22 当Stage人工审核取消运行时，成功（Stage/Flow最终态）
+  STAGE_SUCCESS: 'STAGE_SUCCESS', // 22 当Stage人工审核取消运行时，成功（Stage/Pipeline最终态）
   QUOTA_FAILED: 'QUOTA_FAILED', // 23 失败 (未使用）
   DEPENDENT_WAITING: 'DEPENDENT_WAITING', // 24 依赖等待 等待依赖的job完成才会进入准备环境（Job中间态）
   QUALITY_CHECK_PASS: 'QUALITY_CHECK_PASS', // 25 质量红线检查通过
@@ -60,7 +62,7 @@ export const statusAlias = {
   UNKNOWN: 'UNKNOWN', // 99
 }
 
-export const statusColorMap = {
+export const statusColorMap: Record<StatusType, string> = {
   SUCCEED: '#2DCB56', // 0 成功（最终态）
   FAILED: '#EA3636', // 1 失败（最终态）
   CANCELED: '#FF9C01', // 2 取消（最终态）
@@ -83,7 +85,7 @@ export const statusColorMap = {
   EXEC_TIMEOUT: '#FF9C01', // 18 执行超时（最终态）
   RETRY: '#EA3636', // 20 重试（中间状态）
   PAUSE: '#FF9C01', // 21 暂停执行，等待事件 （Stage/Job/Task中间态）
-  STAGE_SUCCESS: '#2DCB56', // 22 当Stage人工审核取消运行时，成功（Stage/Flow最终态）
+  STAGE_SUCCESS: '#2DCB56', // 22 当Stage人工审核取消运行时，成功（Stage/Pipeline最终态）
   QUOTA_FAILED: '#EA3636', // 23 失败 (未使用）
   DEPENDENT_WAITING: '#699DF4', // 24 依赖等待 等待依赖的job完成才会进入准备环境（Job中间态）
   QUALITY_CHECK_PASS: '#699DF4', // 25 质量红线检查通过
@@ -91,7 +93,7 @@ export const statusColorMap = {
   UNKNOWN: '#699DF4', // 99
 }
 
-export function mapThemeOfStatus(status) {
+export function mapThemeOfStatus(status: StatusType) {
   switch (status) {
     case 'CANCELED':
     case 'REVIEW_ABORT':

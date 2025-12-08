@@ -1,0 +1,88 @@
+import { defineComponent, type PropType } from 'vue'
+import { useI18n } from 'vue-i18n'
+import { RouterLink } from 'vue-router'
+import { SvgIcon } from '../SvgIcon'
+import { FLOW_GROUP_TYPES } from '@/constants/flowGroup'
+import styles from './CommonHeader.module.css'
+
+export interface CommonHeaderProps {
+  workflowName: string
+  onWorkflowNameClick?: () => void
+}
+
+export const CommonHeader = defineComponent({
+  name: 'CommonHeader',
+  props: {
+    workflowName: {
+      type: String,
+      required: true,
+    },
+    onWorkflowNameClick: {
+      type: Function as PropType<() => void>,
+    },
+  },
+  setup(props, { slots }) {
+    const { t } = useI18n()
+    
+    const flowList = {
+      name: 'flowList',
+      params: {
+        groupId: FLOW_GROUP_TYPES.ALL_FLOWS,
+      },
+    }
+
+    const handleWorkflowNameClick = () => {
+      props.onWorkflowNameClick?.()
+    }
+
+    return () => (
+      <header class={styles.header}>
+        <div class={styles.headerLeft}>
+          {/* Logo/图标 */}
+          <RouterLink to={flowList} class={styles.logoLink}>
+            <div class={styles.logo}>
+              <img src="/devops-flow-logo.svg" alt="flow" class={styles.logoIcon} />
+            </div>
+            {/* 创作流文本 */}
+            <span class={styles.flowLabel}>{t('flow.content.flowLabel')}</span>
+          </RouterLink>
+          
+          <SvgIcon name="angle-down" class={styles.separatorIcon} size={18} />
+          
+          {/* 工作流名称 */}
+          <span 
+            class={[styles.workflowName, props.onWorkflowNameClick && styles.clickable]}
+            onClick={handleWorkflowNameClick}
+          >
+            {props.workflowName}
+          </span>
+
+          <SvgIcon name="exchange-line" class={styles.exchangeIcon} />
+
+          {/* 版本选择器插槽 */}
+          {slots['version-selector']?.()}
+
+          {/* 执行详情插槽 */}
+          {slots['execution-detail'] && (
+            <>
+              <SvgIcon name="angle-down" class={styles.separatorIcon} size={18} />
+              {slots['execution-detail']?.()}
+            </>
+          )}
+        </div>
+
+        {/* 中间区域插槽 (如 ModeSwitch) */}
+        {slots.center && (
+          <div class={styles.headerCenter}>
+            {slots.center?.()}
+          </div>
+        )}
+
+        {/* 右侧操作按钮插槽 */}
+        <div class={styles.headerRight}>
+          {slots.actions?.()}
+        </div>
+      </header>
+    )
+  },
+})

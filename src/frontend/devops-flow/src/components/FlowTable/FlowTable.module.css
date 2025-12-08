@@ -72,6 +72,10 @@
   flex: 1;
 }
 
+.searchInput :global(.bk-search-select-container .search-container) {
+  position: inherit;
+}
+
 /* 修复 search-select 组件获得焦点时的抖动问题 */
 .searchInput :global(.bk-search-select-container) {
   /* 预留滚动条空间，避免滚动条出现时导致布局抖动 */
@@ -84,6 +88,7 @@
     border-color var(--transition-fast),
     box-shadow var(--transition-fast),
     height var(--transition-normal) !important;
+  background-color: var(--bg-primary);
 }
 
 /* 排序按钮 */
@@ -144,4 +149,147 @@
   height: calc(100% - 56px);
   color: var(--color-text-tertiary);
   font-size: var(--font-size-sm);
+}
+
+/* 表格创作流组 */
+.tagList,
+.popoverTagList {
+  display: flex;
+  flex-wrap: wrap;
+}
+
+.tag {
+  margin: 2px 0;
+  &:not(:last-child) {
+    margin-right: 5px;
+  }
+}
+
+.tagList .tag {
+  max-width: 280px;
+}
+
+.popoverTagList .tag {
+  max-width: 228px;
+}
+
+/* 表格最近执行 */
+.lastExecHeader {
+  display: flex;
+  align-items: center;
+}
+
+.switchExec {
+  margin-left: 10px;
+  line-height: var(--spacing-md);
+  color: var(--color-primary);
+  border-left: 1px solid var(--color-text-disabled);
+}
+
+.switchExec svg {
+  vertical-align: middle;
+  margin: 0 10px;
+}
+
+.latestExecCell {
+  display: flex;
+  align-items: center;
+  margin: 9px 0;
+  width: 100%;
+}
+
+.execDesc {
+  color: var(--color-text-tertiary);
+  display: inline-block;
+}
+
+.execDesc svg {
+  vertical-align: middle;
+  flex-shrink: 0;
+}
+
+.flowExecMsg {
+  display: flex;
+  flex-direction: column;
+  font-size: var(--font-size-xs);
+  line-height: var(--line-height-sm);
+  margin-left: var(--spacing-md);
+  overflow: hidden;
+}
+
+.flowExecMsgTitle {
+  flex: 1;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  vertical-align: middle;
+  line-height: normal;
+}
+
+.flowCellLink {
+  color: var(--color-primary);
+  cursor: pointer;
+  &:hover {
+    color: var(--color-primary-hover);
+  }
+  &[disabled] {
+    cursor: not-allowed;
+    color: #7b7d8a;
+  }
+}
+
+.line {
+  width: 10px;
+  text-align: center;
+  line-height: 1;
+  height: var(--line-height-xs);
+}
+
+.lastBuildMsg {
+  color: var(--color-text-secondary);
+  &:hover {
+    color: var(--color-primary);
+  }
+}
+
+.latestStageStatus {
+  line-height: 1;
+}
+
+.flowExecMsgDesc {
+  display: grid;
+  column-gap: var(--spacing-lg);
+  grid-template-columns: auto auto auto;
+  > span {
+    display: flex;
+    align-items: center;
+    overflow: hidden;
+    > span {
+      min-width: 0;
+      margin-left: 6px;
+    }
+  }
+}
+
+.columnTime {
+  display: flex;
+  flex-direction: column;
+  span {
+    line-height: 1.5;
+  }
+}
+
+.runningText {
+  color: var(--color-primary);
+}
+
+.iconStarBtn {
+  position: relative;
+  font-size: var(--font-size-sm) !important;
+  z-index: 999;
+  display: none;
+}
+
+.isCollect {
+  display: block
 }

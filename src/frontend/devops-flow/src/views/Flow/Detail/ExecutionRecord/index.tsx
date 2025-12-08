@@ -2,16 +2,18 @@ import { defineComponent, ref, computed, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { Table, DatePicker, Checkbox } from 'bkui-vue'
 import SearchSelect from '@blueking/search-select-v3'
-import { useRoute } from 'vue-router'
+import { useRoute, useRouter } from 'vue-router'
 import { useExecutionRecordData } from '@/hooks/useExecutionRecordData'
 import type { ExecutionRecord } from '@/api/executionRecord'
-import styles from './executionRecord.module.css'
+import { ROUTE_NAMES } from '@/constants/routes'
+import styles from './ExecutionRecord.module.css'
 
 export default defineComponent({
   name: 'ExecutionRecord',
   setup() {
     const { t } = useI18n()
     const route = useRoute()
+    const router = useRouter()
     const flowId = route.params.flowId as string
 
     // 使用 hook 管理执行记录数据
@@ -210,7 +212,22 @@ export default defineComponent({
       {
         label: t('flow.content.buildNumber'),
         field: 'buildNumber',
-        render: ({ row }: any) => `#${(row as ExecutionRecord).buildNumber}`,
+        render: ({ row }: any) => (
+          <span
+            class={styles.buildNumber}
+            onClick={() => {
+              router.push({
+                name: ROUTE_NAMES.FLOW_DETAIL_EXECUTION_DETAIL,
+                params: {
+                  flowId,
+                  buildNo: (row as ExecutionRecord).buildNumber,
+                },
+              })
+            }}
+          >
+            #{(row as ExecutionRecord).buildNumber}
+          </span>
+        ),
       },
       {
         label: t('flow.content.stageStatus'),

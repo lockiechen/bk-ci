@@ -1,88 +1,27 @@
-.header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: var(--spacing-sm) var(--spacing-xl);
-  border-bottom: 1px solid var(--border-color);
-  background: var(--bg-primary);
-  flex-shrink: 0;
-  box-shadow: var(--shadow-sm);
-}
-
-.headerLeft {
+.versionSelector {
   display: flex;
   align-items: center;
   gap: var(--spacing-xs);
-  .logoLink {
-    display: flex;
-    align-items: center;
-    gap: var(--spacing-md);
-    text-decoration: none;
-    color: var(--color-text-primary);
-    &:hover {
-      color: var(--color-primary);
-    }
-    .logo {
-      display: flex;
-      align-items: center;
-      justify-content: center;
-    }
-    
-    .logoIcon {
-      width: 24px;
-      height: 24px;
-    }
-  }
-  .flowLabel {
-    font-size: var(--font-size-md);
-    color: var(--color-primary);
-    font-weight: 500;
-  }
-  
-  .workflowName {
-    font-size: var(--font-size-md);
-    color: var(--color-text-primary);
-    font-weight: 500;
-    max-width: 222px;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-    display: inline-block;
-  }
-  
-  .separatorIcon {
-    color: var(--color-text-tertiary);
-    transform: rotate(-90deg);
-  }
-  
-  
-  .versionSelector {
-    display: flex;
-    align-items: center;
-    gap: var(--spacing-xs);
-    border-left: 1px solid var(--border-color);
-    padding-left: var(--spacing-sm);
-    .versionTrigger {
-      display: flex;
-      align-items: center;
-      gap: var(--spacing-xs);
-      font-size: var(--font-size-xs);
-      background-color: var(--bg-hover);
-      line-height: var(--line-height-md);
-      padding: 0 var(--spacing-sm);
-      min-width: 200px;
-      .versionSelectToggleIcon {
-        margin-left: auto;
-        justify-self: flex-end;
-        transition: transform 0.3s ease-in-out;
-        transform: rotate(-90deg);
-      }
-    }
-  }
+  border-left: 1px solid var(--border-color);
+  padding-left: var(--spacing-sm);
+}
 
-  :global(.popover-show) .versionSelectToggleIcon{ 
-    transform: rotate(0) !important;
-  }
+.versionTrigger {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-xs);
+  font-size: var(--font-size-xs);
+  background-color: var(--bg-hover);
+  line-height: var(--line-height-md);
+  padding: 0 var(--spacing-sm);
+  min-width: 200px;
+}
+
+.versionSelectToggleIcon {
+  margin-left: auto;
+  justify-self: flex-end;
+  transition: transform 0.3s ease-in-out;
+  transform: rotate(-90deg);
 }
 
 .checkIcon {
@@ -92,26 +31,18 @@
 }
 
 .versionOption {
-  &:active {
-    background-color: var(--bg-hover-active);
-    }
   display: flex;
   align-items: center;
   gap: var(--spacing-xs);
 }
 
+.versionOption:active {
+  background-color: var(--bg-hover-active);
+}
+
 .versionTag {
   margin: 0;
   font-size: var(--font-size-xs);
-}
-
-
-
-
-.headerRight {
-  display: flex;
-  align-items: center;
-  gap: var(--spacing-md);
 }
 
 .moreButton {
@@ -130,4 +61,3 @@
   background: var(--bg-hover);
   color: var(--color-text-primary);
 }
-

@@ -54,7 +54,7 @@ export default defineComponent({
                     <CodeEditor
                       modelValue={yamlContent.value}
                       readOnly={true}
-                      height="calc(100vh - 160px)"
+                      height="calc(100% - 16px)"
                       highlightRanges={sectionHighlight.value}
                     />
                   ) : (
