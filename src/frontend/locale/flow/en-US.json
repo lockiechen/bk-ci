@@ -295,6 +295,8 @@
       "whenToRunStage": "When to run this Stage",
       "afterPrevStageSuccess": "Run when previous Stage succeeds",
       "customConditionMatch": "Run when custom conditions are met",
+      "customVariableMatch": "Run when custom variable conditions are met",
+      "customVariableNotMatch": "Run when custom variable conditions are not met",
       "add": "Add",
       "stageNameRequired": "Stage name is required",
       "addJob": "Add Creation Job",

@@ -20,35 +20,35 @@ export default defineComponent({
     const { t } = useI18n()
     const route = useRoute()
     const flowId = route.params.flowId as string
-    const flowModel = useFlowModel({ flowId })
+    const { flowSetting } = useFlowModel({ flowId })
 
     // 表单数据
-    const formData = ref({
+    const formData = ref<Record<string, unknown>>({
       name: '',
       desc: '',
-      runLockType: runLockTypeMap.MULTIPLE, // MULTIPLE: 可并发运行, GROUP_LOCK: 分组
+      runLockType: runLockTypeMap.MULTIPLE,
       maxConRunningQueueSize: 40,
       waitQueueTimeMinute: 20,
-      concurrencyGroup: '${{ci.flow_id}}', // 分组名称，默认使用流水线ID
-      concurrencyCancelInProgress: false, // 是否在新任务到来时取消正在运行的构建
-      maxQueueSize: 0, // 最大排队数量
+      concurrencyGroup: '${{ci.flow_id}}',
+      concurrencyCancelInProgress: false,
     })
 
-    // 从flowModel中初始化数据
-    const initFormData = () => {
-      if (flowModel.flowModel.value) {
-        formData.value.name = flowModel.flowModel.value.name || ''
-        formData.value.desc = flowModel.flowModel.value.desc || ''
-        // TODO: 从flowSetting中获取并发设置
-        // 这里暂时使用默认值，后续需要从API获取实际的flowSetting
-      }
+    function initFormData(setting: Record<string, unknown>) {
+      formData.value.name = setting?.name || ''
+      formData.value.desc = setting?.desc || ''
+      formData.value.runLockType = setting?.runLockType || runLockTypeMap.MULTIPLE
+      formData.value.maxConRunningQueueSize = setting?.maxConRunningQueueSize || 40
+      formData.value.waitQueueTimeMinute = setting?.waitQueueTimeMinute || 20
+      formData.value.concurrencyGroup = setting?.concurrencyGroup || '${{ci.flow_id}}'
+      formData.value.concurrencyCancelInProgress = setting?.concurrencyCancelInProgress || false
     }
 
-    // 监听flowModel变化
     watch(
-      () => flowModel.flowModel.value,
-      () => {
-        initFormData()
+      flowSetting,
+      (newVal) => {
+        if (newVal) {
+          initFormData(newVal)
+        }
       },
       { immediate: true },
     )
@@ -147,7 +147,7 @@ export default defineComponent({
                         />
                       </FormItem>
                       <FormItem property="concurrencyCancelInProgress" class={styles.subFormItem}>
-                        <Checkbox checked={formData.value.concurrencyCancelInProgress}>
+                        <Checkbox v-model={formData.value.concurrencyCancelInProgress}>
                           {t('flow.content.stopWhenNewCome')}
                         </Checkbox>
                       </FormItem>

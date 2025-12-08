@@ -54,7 +54,12 @@ export default defineComponent({
     watch(
       () => flowModel.isEditingPlugin.value,
       (val) => {
-        if (val) isAtomPanelVisible.value = true
+        if (val) {
+          isAtomPanelVisible.value = true
+          if (!flowModel.editingElement.value?.atomCode) {
+            handleChooseAtom()
+          }
+        }
       },
     )
 

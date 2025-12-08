@@ -278,12 +278,12 @@ export default defineComponent({
             </FormItem>
           )}
 
-          <FormItem label={t('flow.variable.description')}>
+          <FormItem label={t('flow.content.description')}>
             <Input
               v-model={formData.value.desc}
               type="textarea"
               rows={2}
-              placeholder={t('flow.variable.descriptionPlaceholder')}
+              placeholder={t('flow.content.descriptionPlaceholder')}
               disabled={!props.editable}
             />
           </FormItem>

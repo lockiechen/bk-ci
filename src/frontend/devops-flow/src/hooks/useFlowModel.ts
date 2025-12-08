@@ -41,6 +41,7 @@ export function useFlowModel(options: UseFlowModelOptions = {}) {
     currentFlowId,
     hasUnsavedChanges,
     isFlowEmpty,
+    flowSetting,
   } = storeToRefs(store)
 
   // 统一的位置/索引管理
@@ -144,8 +145,7 @@ export function useFlowModel(options: UseFlowModelOptions = {}) {
     if (!stage) return
 
     if (!stage.containers) stage.containers = []
-    const newContainer = createDefaultContainer(containerIndex!)
-
+    const newContainer = tempEditingObject.value as Container
     stage.containers = [
       ...stage.containers.slice(0, containerIndex!),
       newContainer,
@@ -475,7 +475,7 @@ export function useFlowModel(options: UseFlowModelOptions = {}) {
     currentFlowId,
     hasUnsavedChanges,
     isFlowEmpty,
-
+    flowSetting,
     // Editing State
     realEditingPos,
     isEditingStage,

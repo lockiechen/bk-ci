@@ -98,9 +98,27 @@ export default defineComponent({
       return props || {}
     })
 
+    // 判断是否是新模板版本
+    const isNewTemplate = computed(() => {
+      const modal = atomModal.value
+      if (!modal) return false
+      const { htmlTemplateVersion } = modal
+      return htmlTemplateVersion && htmlTemplateVersion !== '1.0'
+    })
+
     const atomValue = computed(() => {
       const element = props.currentElement
-      return element?.data?.input || {}
+      if (!element) return {}
+
+      // 新版本模板：从 element.data.input 获取
+      if (isNewTemplate.value) {
+        // 确保 data 和 data.input 存在，如果不存在则返回空对象
+        // 注意：这里不直接修改 element，而是在 handleConfigChange 中处理初始化
+        return element.data?.input || {}
+      }
+
+      // 旧版本模板：直接使用 element
+      return element
     })
 
     const customEnv = computed(() => {
@@ -227,14 +245,20 @@ export default defineComponent({
       if (!props.currentElement) return
 
       const element = { ...props.currentElement }
-      if (!element.data) {
-        element.data = { input: {}, output: [] }
-      }
-      if (!element.data.input) {
-        element.data.input = {}
-      }
 
-      element.data.input[key] = value
+      // 新版本模板：更新 element.data.input[key]
+      if (isNewTemplate.value) {
+        if (!element.data) {
+          element.data = { input: {}, output: [] }
+        }
+        if (!element.data.input) {
+          element.data.input = {}
+        }
+        element.data.input[key] = value
+      } else {
+        // 旧版本模板：直接更新 element[key]
+        element[key] = value
+      }
 
       emit('updateAtom', element)
     }

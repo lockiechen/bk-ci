@@ -15,6 +15,7 @@ import {
 export const useFlowModelStore = defineStore('flowModel', () => {
   // Flow 模型数据
   const flowModel = ref<FlowModel | null>(null)
+  const flowSetting = ref<Record<string, unknown> | null>(null)
 
   // YAML 格式的代码内容
   const yamlContent = ref<string>('')
@@ -50,8 +51,9 @@ export const useFlowModelStore = defineStore('flowModel', () => {
 
     try {
       const model = await getFlowModel(flowId, version)
-      flowModel.value = model
-      yamlContent.value = flowModelToYaml(model)
+      flowModel.value = model.modelAndSetting.model
+      flowSetting.value = model.modelAndSetting.setting
+      yamlContent.value = model.yamlPreview.yaml
       hasUnsavedChanges.value = false
     } catch (error) {
       console.error('Failed to load flow model:', error)
@@ -145,6 +147,7 @@ export const useFlowModelStore = defineStore('flowModel', () => {
   return {
     // 状态
     flowModel,
+    flowSetting,
     yamlContent,
     loading,
     hasError,

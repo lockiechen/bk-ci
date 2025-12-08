@@ -13,7 +13,8 @@ export const EditHeader = defineComponent({
     const route = useRoute()
     const router = useRouter()
     const flowId = route.params.flowId as string
-    const projectId = (route.params.projectId as string) || route.query.projectId as string || ''
+    const projectId =
+      (route.params.projectId as string) || (route.query.projectId as string) || 'lockie'
 
     const flowModel = useFlowModel({ flowId })
     const isSaving = ref(false)
@@ -47,7 +48,7 @@ export const EditHeader = defineComponent({
       try {
         await flowModel.saveFlow({
           projectId,
-          pipelineId: flowId,
+          flowId,
           storageType: 'MODEL',
         })
 

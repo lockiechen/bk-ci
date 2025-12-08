@@ -20,6 +20,27 @@ export interface FlowModel {
   latestVersion: number
 }
 
+export interface FlowModelAndSetting {
+  version: number
+  versionName: string
+  baseVersion: number
+  baseVersionName: string
+  modelAndSetting: {
+    model: FlowModel
+    setting: Record<string, unknown>
+  }
+  yamlPreview: YamlPreview
+  canDebug: boolean
+  yamlSupported: boolean
+  updater: string
+  updateTime: number
+}
+
+export interface YamlPreview {
+  yaml: string
+  [key: string]: any
+}
+
 /**
  * Stage 阶段数据结构
  */
@@ -60,7 +81,39 @@ export interface Container {
   matrixControlOption?: MatrixControlOption
   mutexGroup?: MutexGroup
   nfsSwitch?: boolean
-  params?: Record<string, string>[]
+  params?: Param[]
+}
+
+export interface Param {
+  id: string
+  name: string
+  required: boolean
+  constant: boolean
+  type: string
+  defaultValue: unknown
+  options?: unknown[]
+  desc?: string
+  category?: string
+  displayCondition?: Record<string, string>
+  readOnly?: boolean
+  valueNotEmpty?: boolean
+  repoHashId?: string
+  scmType?: string
+  enableVersionControl?: boolean
+  randomStringInPath?: string
+  latestRandomStringInPath?: string
+  fileMetadata?: string
+  glob?: string
+  payload?: unknown
+  cascadeProps?: {
+    parentId: string
+    childId: string
+  }
+}
+
+export interface CustomVariable {
+  key: string
+  value: string
 }
 
 /**
@@ -85,10 +138,11 @@ export interface Element {
   taskAtom?: string
   canElementSkip?: boolean
   useLatestParameters?: boolean
-  data: {
+  data?: {
     input: Record<string, unknown>
     output: PluginOutputVariable[]
   }
+  [key: string]: any
 }
 
 /**
@@ -208,7 +262,7 @@ export interface CustomVariable {
  * @param flowId 创作流 ID
  * @param version 版本号（可选）
  */
-export async function getFlowModel(flowId: string, version?: string): Promise<FlowModel> {
+export async function getFlowModel(flowId: string, version?: string): Promise<FlowModelAndSetting> {
   // TODO: 调用实际接口
   // const response = await http.get(`/api/flow/${flowId}/model`, { params: { version } });
   // return response.data;
@@ -563,55 +617,562 @@ export function yamlToFlowModel(yaml: string): FlowModel {
 /**
  * 获取 Mock Flow 数据
  */
-export function getMockFlowModel(): FlowModel {
+export function getMockFlowModel(): FlowModelAndSetting {
   return {
-    '@type': 'Model',
-    name: 'Sample Flow',
-    desc: 'This is a sample flow for demonstration',
-    stages: [
-      {
-        containers: [
+    version: 8,
+    versionName: '',
+    baseVersion: 7,
+    baseVersionName: 'V7(P7.T1.14)',
+    modelAndSetting: {
+      model: {
+        '@type': 'Model',
+        name: 'parameters',
+        desc: '',
+        stages: [
           {
-            '@type': 'trigger',
-            id: '0',
-            name: 'trigger',
-            elements: [
+            containers: [
               {
-                '@type': 'manualTrigger',
-                name: 'Manual Trigger',
-                id: 'T-1-1-1',
-                canElementSkip: false,
-                useLatestParameters: false,
-                executeCount: 1,
-                version: '1.*',
-                classType: 'manualTrigger',
-                atomCode: 'manualTrigger',
-                taskAtom: '',
-                data: {
-                  input: {},
-                  output: [{ id: 'TRIGGER_TIME', name: 'Trigger Time' }],
-                },
+                '@type': 'trigger',
+                id: '0',
+                name: 'trigger',
+                elements: [
+                  {
+                    '@type': 'manualTrigger',
+                    name: '手动触发',
+                    id: 'T-1-1-1',
+                    canElementSkip: false,
+                    useLatestParameters: false,
+                    executeCount: 1,
+                    version: '1.*',
+                    classType: 'manualTrigger',
+                    atomCode: 'manualTrigger',
+                    taskAtom: '',
+                  },
+                ],
+                params: [
+                  {
+                    id: 'URL',
+                    name: '',
+                    required: true,
+                    constant: false,
+                    type: 'ENUM',
+                    defaultValue: 'dream_code',
+                    options: [],
+                    desc: '',
+                    category: '',
+                    readOnly: false,
+                    valueNotEmpty: false,
+                    payload: {
+                      paramId: 'package_name',
+                      paramName: 'package_name_desc',
+                      type: 'remote',
+                      url: 'https://api.wuji.qq.com/x/api/wuji_cache/object?appid=game_block_test&schemaid=yuanmeng_offline_package&schemakey=43847b782cb14eb9ae3651a0915ca387',
+                    },
+                  },
+                  {
+                    id: 'hello',
+                    name: '',
+                    required: true,
+                    constant: false,
+                    type: 'REPO_REF',
+                    defaultValue: {
+                      branch: 'master',
+                      'repo-name': 'lockiechen/awesome-proj',
+                    },
+                    category: '',
+                    readOnly: false,
+                    valueNotEmpty: false,
+                  },
+                  {
+                    id: 'a',
+                    name: '',
+                    required: true,
+                    constant: false,
+                    type: 'CONTAINER_TYPE',
+                    defaultValue: 'BUILD_mqngglvp_9.77.80.88',
+                    options: [],
+                    desc: '',
+                    category: '',
+                    readOnly: false,
+                    valueNotEmpty: false,
+                  },
+                  {
+                    id: 'sssd',
+                    name: '',
+                    required: true,
+                    constant: false,
+                    type: 'ENUM',
+                    defaultValue: '',
+                    options: [
+                      {
+                        key: 'ab',
+                        value: 'ab',
+                      },
+                      {
+                        key: 'c',
+                        value: 'c',
+                      },
+                      {
+                        key: 'd',
+                        value: 'd',
+                      },
+                      {
+                        key: 'e',
+                        value: 'e',
+                      },
+                      {
+                        key: 'wf',
+                        value: 'wf',
+                      },
+                      {
+                        key: 's',
+                        value: 's',
+                      },
+                    ],
+                    desc: '',
+                    category: '',
+                    readOnly: false,
+                    valueNotEmpty: false,
+                  },
+                  {
+                    id: 'git',
+                    name: '',
+                    required: true,
+                    constant: false,
+                    type: 'GIT_REF',
+                    defaultValue: 'abc',
+                    options: [],
+                    desc: '',
+                    category: '',
+                    repoHashId: 'yzygX',
+                    readOnly: false,
+                    valueNotEmpty: false,
+                  },
+                  {
+                    id: 'codelib',
+                    name: '',
+                    required: true,
+                    constant: false,
+                    type: 'CODE_LIB',
+                    defaultValue: 'bkdevops/bkci_app_sign',
+                    options: [],
+                    desc: '',
+                    category: '',
+                    scmType: 'CODE_GIT',
+                    readOnly: false,
+                    valueNotEmpty: false,
+                  },
+                  {
+                    id: 'bool',
+                    name: '',
+                    required: true,
+                    constant: false,
+                    type: 'BOOLEAN',
+                    defaultValue: true,
+                    desc: '',
+                    category: '',
+                    displayCondition: {},
+                    readOnly: false,
+                    valueNotEmpty: false,
+                  },
+                  {
+                    id: 'relky',
+                    name: '',
+                    required: true,
+                    constant: false,
+                    type: 'STRING',
+                    defaultValue: '',
+                    desc: '',
+                    category: '',
+                    displayCondition: {
+                      bool: 'true',
+                      sssd: 'ab',
+                    },
+                    readOnly: false,
+                    valueNotEmpty: false,
+                  },
+                  {
+                    id: 'file',
+                    name: '',
+                    required: true,
+                    constant: false,
+                    type: 'CUSTOM_FILE',
+                    defaultValue: '',
+                    desc: '',
+                    category: '',
+                    displayCondition: {},
+                    enableVersionControl: false,
+                    readOnly: false,
+                    valueNotEmpty: false,
+                  },
+                ],
+                containerId: '0',
+                containerHashId: 'c-4b479f010d284408a923ad87621af684',
+                matrixGroupFlag: false,
+                classType: 'trigger',
               },
             ],
-            params: [],
-            containerId: '0',
-            containerHashId: 'c-12c5598910ac44aab13b88ac52da8c6d',
-            matrixGroupFlag: false,
-            classType: 'trigger',
+            id: 'stage-1',
+            name: 'stage-1',
+            tag: ['28ee946a59f64949a74f3dee40a1bda4'],
+            fastKill: false,
+            finally: false,
+          },
+          {
+            containers: [
+              {
+                '@type': 'vmBuild',
+                id: '1',
+                name: '构建环境-Linux',
+                elements: [
+                  {
+                    '@type': 'linuxScript',
+                    name: 'Bash',
+                    id: 'e-b5aa9d78367f4ab9b8211e898a998fc0',
+                    stepId: 'x_k',
+                    scriptType: 'SHELL',
+                    script: 'setEnv "abc" 123',
+                    continueNoneZero: false,
+                    enableArchiveFile: false,
+                    archiveFile: '',
+                    additionalOptions: {
+                      enable: true,
+                      continueWhenFailed: false,
+                      manualSkip: false,
+                      retryWhenFailed: false,
+                      retryCount: 1,
+                      manualRetry: false,
+                      timeout: 900,
+                      timeoutVar: '900',
+                      runCondition: 'PRE_TASK_SUCCESS',
+                      pauseBeforeExec: false,
+                      subscriptionPauseUser: 'lockiechen',
+                      otherTask: '',
+                      customVariables: [
+                        {
+                          key: 'param1',
+                          value: '',
+                        },
+                      ],
+                      customCondition: '',
+                      enableCustomEnv: true,
+                    },
+                    executeCount: 1,
+                    version: '1.*',
+                    classType: 'linuxScript',
+                    atomCode: 'linuxScript',
+                    taskAtom: '',
+                  },
+                  {
+                    '@type': 'linuxScript',
+                    name: 'Bash',
+                    id: 'e-9920c0ce733b44da9fb1dda157a1ce93',
+                    stepId: 'xa5',
+                    scriptType: 'SHELL',
+                    script: 'setEnv "abc" 123',
+                    continueNoneZero: false,
+                    enableArchiveFile: false,
+                    archiveFile: '',
+                    additionalOptions: {
+                      enable: true,
+                      continueWhenFailed: false,
+                      manualSkip: false,
+                      retryWhenFailed: false,
+                      retryCount: 1,
+                      manualRetry: false,
+                      timeout: 900,
+                      timeoutVar: '900',
+                      runCondition: 'PRE_TASK_SUCCESS',
+                      pauseBeforeExec: false,
+                      subscriptionPauseUser: 'lockiechen',
+                      otherTask: '',
+                      customVariables: [
+                        {
+                          key: 'param1',
+                          value: '',
+                        },
+                      ],
+                      customCondition: '',
+                      enableCustomEnv: true,
+                    },
+                    executeCount: 1,
+                    version: '1.*',
+                    classType: 'linuxScript',
+                    atomCode: 'linuxScript',
+                    taskAtom: '',
+                  },
+                  {
+                    '@type': 'linuxScript',
+                    name: 'Bash',
+                    id: 'e-37a7768ab185416db9a4b255a6cb0749',
+                    stepId: 'tdS',
+                    scriptType: 'SHELL',
+                    script: 'setEnv "abc" 123',
+                    continueNoneZero: false,
+                    enableArchiveFile: false,
+                    archiveFile: '',
+                    additionalOptions: {
+                      enable: true,
+                      continueWhenFailed: false,
+                      manualSkip: false,
+                      retryWhenFailed: false,
+                      retryCount: 1,
+                      manualRetry: false,
+                      timeout: 900,
+                      timeoutVar: '900',
+                      runCondition: 'PRE_TASK_SUCCESS',
+                      pauseBeforeExec: false,
+                      subscriptionPauseUser: 'lockiechen',
+                      otherTask: '',
+                      customVariables: [
+                        {
+                          key: 'param1',
+                          value: '',
+                        },
+                      ],
+                      customCondition: '',
+                      enableCustomEnv: true,
+                    },
+                    executeCount: 1,
+                    version: '1.*',
+                    classType: 'linuxScript',
+                    atomCode: 'linuxScript',
+                    taskAtom: '',
+                  },
+                ],
+                baseOS: 'LINUX',
+                vmNames: [],
+                maxQueueMinutes: 60,
+                maxRunningMinutes: 900,
+                buildEnv: {},
+                dispatchType: {
+                  buildType: 'PUBLIC_DEVCLOUD',
+                  value: 'tlinux3_ci',
+                  performanceUid: '',
+                  persistence: false,
+                  imageType: 'BKSTORE',
+                  credentialId: '',
+                  credentialProject: '',
+                  imageCode: 'tlinux3_ci',
+                  imageVersion: '2.*',
+                  imageName: 'tlinux3-CI镜像',
+                  dockerBuildVersion: 'tlinux3_ci',
+                  imagePublicFlag: false,
+                  imageRDType: '',
+                  recommendFlag: true,
+                },
+                showBuildResource: false,
+                enableExternal: false,
+                containerId: '1',
+                containerHashId: 'c-e01c0da8e8fd455585c0e29ab416d2a0',
+                jobControlOption: {
+                  enable: true,
+                  prepareTimeout: 10,
+                  timeout: 900,
+                  timeoutVar: '900',
+                  runCondition: 'STAGE_RUNNING',
+                  customVariables: [
+                    {
+                      key: 'param1',
+                      value: '',
+                    },
+                  ],
+                  customCondition: '',
+                  dependOnType: 'ID',
+                  dependOnId: [],
+                  dependOnName: '',
+                  continueWhenFailed: false,
+                },
+                jobId: 'job_hHM',
+                matrixGroupFlag: false,
+                nfsSwitch: false,
+                classType: 'vmBuild',
+              },
+            ],
+            id: 'stage-2',
+            name: 'stage-1',
+            tag: ['28ee946a59f64949a74f3dee40a1bda4'],
+            fastKill: false,
+            finally: false,
+            stageControlOption: {
+              enable: true,
+              runCondition: 'AFTER_LAST_FINISHED',
+              customVariables: [
+                {
+                  key: 'param1',
+                  value: '',
+                },
+              ],
+              customCondition: '',
+              manualTrigger: false,
+              triggerUsers: [],
+              timeout: 24,
+            },
+            checkIn: {
+              manualTrigger: false,
+              timeout: 24,
+              markdownContent: false,
+              notifyType: ['RTX'],
+            },
+            checkOut: {
+              manualTrigger: false,
+              timeout: 24,
+              markdownContent: false,
+              notifyType: ['RTX'],
+            },
           },
         ],
-        id: 'stage-1',
-        name: 'Trigger Stage',
-        tag: ['28ee946a59f64949a74f3dee40a1bda4'],
-        fastKill: false,
-        finally: false,
+        labels: [],
+        instanceFromTemplate: false,
+        creator: 'lockiechen',
+        events: {},
+        staticViews: [],
+        latestVersion: 7,
       },
-    ],
-    labels: [],
-    instanceFromTemplate: false,
-    creator: 'admin',
-    events: {},
-    staticViews: [],
-    latestVersion: 1,
+      setting: {
+        projectId: 'devops2release2',
+        pipelineId: 'p-5229008d0784437a841d3b653956c096',
+        name: 'parameters',
+        version: 15,
+        desc: '',
+        labels: [],
+        labelNames: [],
+        successSubscription: {
+          types: [],
+          groups: [],
+          users: '',
+          wechatGroupFlag: false,
+          wechatGroup: '',
+          wechatGroupMarkdownFlag: false,
+          detailFlag: false,
+          content: '',
+        },
+        failSubscription: {
+          types: ['EMAIL', 'RTX'],
+          groups: [],
+          users: '${{ci.actor}}',
+          wechatGroupFlag: false,
+          wechatGroup: '',
+          wechatGroupMarkdownFlag: false,
+          detailFlag: false,
+          content:
+            '【${{ci.project_name}}】- 【${{ci.pipeline_name}}】#${{ci.build_num}} 执行失败，耗时${{ci.pipeline_execute_time}}, 触发人: ${{ci.actor}}。',
+        },
+        successSubscriptionList: [
+          {
+            types: [],
+            groups: [],
+            users: '',
+            wechatGroupFlag: false,
+            wechatGroup: '',
+            wechatGroupMarkdownFlag: false,
+            detailFlag: false,
+            content: '',
+          },
+        ],
+        failSubscriptionList: [
+          {
+            types: ['EMAIL', 'RTX'],
+            groups: [],
+            users: '${{ci.actor}}',
+            wechatGroupFlag: false,
+            wechatGroup: '',
+            wechatGroupMarkdownFlag: false,
+            detailFlag: false,
+            content:
+              '【${{ci.project_name}}】- 【${{ci.pipeline_name}}】#${{ci.build_num}} 执行失败，耗时${{ci.pipeline_execute_time}}, 触发人: ${{ci.actor}}。',
+          },
+        ],
+        runLockType: 'GROUP_LOCK',
+        waitQueueTimeMinute: 10,
+        maxQueueSize: 10,
+        concurrencyGroup: '${{ci.pipeline_id}}',
+        concurrencyCancelInProgress: false,
+        failIfVariableInvalid: false,
+        buildCancelPolicy: 'EXECUTE_PERMISSION',
+        maxPipelineResNum: 50,
+        cleanVariablesWhenRetry: false,
+        pipelineAsCodeSettings: {
+          enable: false,
+          projectDialect: 'CLASSIC',
+          inheritedDialect: true,
+        },
+      },
+    },
+    yamlPreview: {
+      yaml: 'version: v3.0\nname: parameters\non:\n  manual: enabled\nvariables:\n  URL:\n    value: dream_code\n    props:\n      type: selector\n      options: []\n      payload:\n        paramId: package_name\n        paramName: package_name_desc\n        type: remote\n        url: https://api.wuji.qq.com/x/api/wuji_cache/object?appid=game_block_test&schemaid=yuanmeng_offline_package&schemakey=43847b782cb14eb9ae3651a0915ca387\n  hello:\n    value:\n      branch: master\n      repo-name: lockiechen/awesome-proj\n    props:\n      type: repo-ref\n  a:\n    value: BUILD_mqngglvp_9.77.80.88\n    props:\n      type: container-type\n  sssd:\n    value: ""\n    props:\n      type: selector\n      options:\n      - id: ab\n        label: ab\n      - id: c\n        label: c\n      - id: d\n        label: d\n      - id: e\n        label: e\n      - id: wf\n        label: wf\n      - id: s\n        label: s\n  git:\n    value: abc\n    props:\n      type: git-ref\n      repo-id: yzygX\n  codelib:\n    value: bkdevops/bkci_app_sign\n    props:\n      type: code-lib\n      scm-type: git\n  bool:\n    value: "true"\n    props:\n      type: boolean\n  relky:\n    value: ""\n    if:\n      bool: "true"\n      sssd: ab\n  file:\n    value: ""\n    props:\n      type: custom-file\nstages:\n- name: stage-1\n  label:\n  - Build\n  jobs:\n    job_hHM:\n      name: 构建环境-Linux\n      steps:\n      - name: Bash\n        id: x_k\n        uses: linuxScript@1.*\n        with:\n          script: setEnv "abc" 123\n      - name: Bash\n        id: xa5\n        uses: linuxScript@1.*\n        with:\n          script: setEnv "abc" 123\n      - name: Bash\n        id: tdS\n        uses: linuxScript@1.*\n        with:\n          script: setEnv "abc" 123\nnotices:\n- if: FAILURE\n  type:\n  - email\n  - wework-message\n  receivers:\n  - "${{ci.actor}}"\n  content: "【${{ci.project_name}}】- 【${{ci.pipeline_name}}】#${{ci.build_num}} 执行失败，耗时${{ci.pipeline_execute_time}}, 触发人: ${{ci.actor}}。"\nconcurrency:\n  group: "${{ci.pipeline_id}}"\n  queue-timeout-minutes: 10\nsyntax-dialect: INHERIT\n',
+      pipeline: [
+        {
+          startMark: {
+            line: 66,
+            column: 0,
+          },
+          endMark: {
+            line: 88,
+            column: 0,
+          },
+        },
+      ],
+      trigger: [
+        {
+          startMark: {
+            line: 3,
+            column: 2,
+          },
+          endMark: {
+            line: 4,
+            column: 0,
+          },
+        },
+      ],
+      notice: [
+        {
+          startMark: {
+            line: 89,
+            column: 0,
+          },
+          endMark: {
+            line: 96,
+            column: 0,
+          },
+        },
+      ],
+      setting: [
+        {
+          startMark: {
+            line: 0,
+            column: 9,
+          },
+          endMark: {
+            line: 0,
+            column: 13,
+          },
+        },
+        {
+          startMark: {
+            line: 1,
+            column: 6,
+          },
+          endMark: {
+            line: 1,
+            column: 16,
+          },
+        },
+        {
+          startMark: {
+            line: 97,
+            column: 2,
+          },
+          endMark: {
+            line: 99,
+            column: 0,
+          },
+        },
+      ],
+    },
+    canDebug: true,
+    yamlSupported: true,
+    updater: 'lockiechen',
+    updateTime: 1765184414000,
   }
 }
