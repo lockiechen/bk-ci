@@ -10,7 +10,6 @@ import TriggerTab from '@/views/Flow/Detail/TriggerEvent'
 import NoticeTab from '@/views/Flow/Detail/Notice'
 import SettingTab from '@/views/Flow/Detail/BasicSetting'
 import styles from './Index.module.css'
-
 type FlowTabTypeEnum =
   | typeof FlowModel
   | typeof AuthoringEnv

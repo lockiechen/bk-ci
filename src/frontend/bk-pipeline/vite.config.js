@@ -81,10 +81,10 @@ export default defineConfig({
                 comments: false
             }
         },
-        // 输出目录
-        outDir: 'dist',
-        // 清空输出目录
-        emptyOutDir: true,
+        // 输出目录（Vue 3+ 版本使用根 dist 目录）
+        outDir: 'dist/vue3',
+        // 保留可能存在的其他构建产物
+        emptyOutDir: false,
         // 生成 sourcemap
         sourcemap: false
     },

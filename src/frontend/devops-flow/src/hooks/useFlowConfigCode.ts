@@ -31,7 +31,7 @@ export function useFlowConfigCode(options: UseFlowConfigCodeOptions) {
   const {
     yamlContent: fullYamlContent,
     loading,
-    pipelineModel,
+    flowModel,
   } = useFlowModel({
     flowId,
     autoLoad,
@@ -50,39 +50,22 @@ export function useFlowConfigCode(options: UseFlowConfigCodeOptions) {
 
     // Define section patterns
     const sectionPatterns: Record<FlowConfigSection, string[]> = {
-      'authoring-env': [
-        '# Authoring Environment Configuration',
-        'authoring-env:'
-      ],
-      'basic-setting': [
-        'name:',
-        'desc:',
-        'version:'
-      ],
-      'notice': [
-        'notices:'
-      ],
-      'trigger-event': [
-        'on:'
-      ],
-      'permission-settings': [
-        'permissions:',
-        'access-control:'
-      ],
-      'permission-delegation': [
-        'delegation:',
-        'delegates:'
-      ]
+      'authoring-env': ['# Authoring Environment Configuration', 'authoring-env:'],
+      'basic-setting': ['name:', 'desc:', 'version:'],
+      notice: ['notices:'],
+      'trigger-event': ['on:'],
+      'permission-settings': ['permissions:', 'access-control:'],
+      'permission-delegation': ['delegation:', 'delegates:'],
     }
 
     const patterns = sectionPatterns[section] || []
 
     // Find the section start
     for (let i = 0; i < lines.length; i++) {
-      const line = lines[i].trim()
+      const line = lines[i]?.trim()
 
       for (const pattern of patterns) {
-        if (line.startsWith(pattern)) {
+        if (line?.startsWith(pattern)) {
           startLine = i + 1 // Monaco Editor uses 1-based line numbers
           break
         }
@@ -96,12 +79,12 @@ export function useFlowConfigCode(options: UseFlowConfigCodeOptions) {
       if (section === 'authoring-env') {
         // For authoring-env, find next major section
         for (let i = startLine; i < lines.length; i++) {
-          const line = lines[i].trim()
-          if (line === '' && lines[i + 1]?.trim().match(/^[a-zA-Z]/)) {
+          const line = lines[i]?.trim()
+          if (line === '' && lines[i + 1]?.trim()?.match(/^[a-zA-Z]/)) {
             endLine = i
             break
           }
-          if (line.match(/^(on|variables|stages|notices|concurrency|syntax-dialect):/)) {
+          if (line?.match(/^(on|variables|stages|notices|concurrency|syntax-dialect):/)) {
             endLine = i
             break
           }
@@ -112,8 +95,8 @@ export function useFlowConfigCode(options: UseFlowConfigCodeOptions) {
       } else if (section === 'notice') {
         // For notices, find end of notices section
         for (let i = startLine; i < lines.length; i++) {
-          const line = lines[i].trim()
-          if (line.match(/^(concurrency|syntax-dialect):/)) {
+          const line = lines[i]?.trim()
+          if (line?.match(/^(concurrency|syntax-dialect):/)) {
             endLine = i
             break
           }
@@ -122,8 +105,8 @@ export function useFlowConfigCode(options: UseFlowConfigCodeOptions) {
       } else if (section === 'trigger-event') {
         // For trigger events, find end of on section
         for (let i = startLine; i < lines.length; i++) {
-          const line = lines[i].trim()
-          if (line.match(/^(variables|stages):/)) {
+          const line = lines[i]?.trim()
+          if (line?.match(/^(variables|stages):/)) {
             endLine = i
             break
           }
@@ -139,8 +122,8 @@ export function useFlowConfigCode(options: UseFlowConfigCodeOptions) {
       return [
         {
           startMark: { line: startLine, column: 1 },
-          endMark: { line: endLine, column: 1 }
-        }
+          endMark: { line: endLine, column: 1 },
+        },
       ]
     }
 
@@ -150,7 +133,7 @@ export function useFlowConfigCode(options: UseFlowConfigCodeOptions) {
   /**
    * Check if configuration is empty
    */
-  const isEmpty = computed(() => !pipelineModel.value)
+  const isEmpty = computed(() => !flowModel.value)
 
   return {
     loading,

@@ -109,9 +109,60 @@ const router = createRouter({
         },
         {
           path: 'edit',
-          component: () => import('../views/Flow/Edit'),
-          name: ROUTE_NAMES.FLOW_DETAIL_EDIT,
-          props: true,
+          component: () => import('../views/Flow/Edit/index'),
+          children: [
+            {
+              path: '',
+              redirect: (to) => ({
+                name: ROUTE_NAMES.FLOW_EDIT_WORKFLOW_ORCHESTRATION,
+                params: {
+                  flowId: to.params.flowId,
+                },
+              }),
+            },
+            {
+              path: 'workflow-orchestration',
+              component: () => import('../views/Flow/Edit/WorkflowOrchestration'),
+              name: ROUTE_NAMES.FLOW_EDIT_WORKFLOW_ORCHESTRATION,
+              props: true,
+            },
+            {
+              path: 'workflow-environment',
+              component: () => import('../views/Flow/Edit/WorkflowEnvironment'),
+              name: ROUTE_NAMES.FLOW_EDIT_WORKFLOW_ENVIRONMENT,
+              props: true,
+            },
+            {
+              path: 'trigger-events',
+              component: () => import('../views/Flow/Edit/TriggerEvents'),
+              name: ROUTE_NAMES.FLOW_EDIT_TRIGGER_EVENTS,
+              props: true,
+            },
+            {
+              path: 'notification-config',
+              component: () => import('../views/Flow/Edit/NotificationConfig'),
+              name: ROUTE_NAMES.FLOW_EDIT_NOTIFICATION_CONFIG,
+              props: true,
+            },
+            {
+              path: 'basic-settings',
+              component: () => import('../views/Flow/Edit/BasicSettings'),
+              name: ROUTE_NAMES.FLOW_EDIT_BASIC_SETTINGS,
+              props: true,
+            },
+            // 兜底路由：处理非法的 tab
+            {
+              path: ':invalidTab',
+              redirect: (to) => {
+                return {
+                  name: ROUTE_NAMES.FLOW_EDIT_WORKFLOW_ORCHESTRATION,
+                  params: {
+                    flowId: to.params.flowId,
+                  },
+                }
+              },
+            },
+          ],
         },
       ],
     },
