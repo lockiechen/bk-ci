@@ -39,7 +39,7 @@ export default defineComponent({
     const { t } = useI18n()
     const route = useRoute()
     const atomStore = useAtomStore()
-    const projectCode = (route.params.projectId as string) || 'lockie'
+    const projectCode = route.params.projectId as string
     const atomVersion = useAtomVersion({ projectCode })
     const uiStore = useUIStore()
     const { isVariablePanelOpen } = storeToRefs(uiStore)

@@ -151,6 +151,7 @@
       "artifactQuality": "成果物品質",
       "buildNumber": "ビルド番号",
       "stageStatus": "ステージ状態",
+      "workflowNode": "ワークフローノード",
       "triggerMethodAndUser": "トリガー方法/ユーザー",
       "triggerTime": "トリガー時間",
       "executionStartTime": "実行開始時間",

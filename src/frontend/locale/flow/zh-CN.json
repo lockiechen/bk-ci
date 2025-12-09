@@ -149,6 +149,7 @@
       "artifactQuality": "制品质量",
       "buildNumber": "构建号",
       "stageStatus": "Stage 状态",
+      "workflowNode": "工作流节点",
       "triggerMethodAndUser": "触发方式/触发人",
       "triggerTime": "触发时间",
       "executionStartTime": "执行开始时间",

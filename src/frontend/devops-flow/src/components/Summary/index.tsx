@@ -5,7 +5,7 @@ import { Button, Input, Popover, Message } from 'bkui-vue'
 import { SvgIcon } from '@/components/SvgIcon'
 import MaterialItem from '@/components/MaterialItem'
 import ArtifactQuality from '@/components/ArtifactQuality'
-import { type ExecuteDetailData } from '@/api/executeDetail'
+import { type ExecuteDetailData } from '@/types/flow'
 import { useExecuteDetail } from '@/hooks/useExecuteDetail'
 import styles from './Summary.module.css'
 

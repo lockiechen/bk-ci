@@ -72,7 +72,7 @@ export default defineComponent({
           buildNo: res.id,
           type: 'executeDetail',
         }
-        
+
         // 只有重试（reBuild）时才有 executeCount
         if (type === 'reBuild' && 'executeCount' in res) {
           params.executeCount = res.executeCount

@@ -7,13 +7,9 @@ import { useFlowModel } from '@/hooks/useFlowModel'
 import sharedStyles from '../shared.module.css'
 import styles from './BasicSettings.module.css'
 import type { FlowSettings } from '@/api/flowModel'
+import { RunLockType } from '@/types/flow'
 
 const { FormItem } = Form
-
-const runLockTypeMap = {
-  MULTIPLE: 'MULTIPLE',
-  GROUP_LOCK: 'GROUP_LOCK',
-}
 
 export default defineComponent({
   name: 'EditBasicSettings',
@@ -27,7 +23,7 @@ export default defineComponent({
     const formData = ref<FlowSettings>({
       name: '',
       desc: '',
-      runLockType: runLockTypeMap.MULTIPLE,
+      runLockType: RunLockType.MULTIPLE,
       maxConRunningQueueSize: 40,
       waitQueueTimeMinute: 20,
       concurrencyGroup: '${{ci.flow_id}}',
@@ -40,7 +36,7 @@ export default defineComponent({
     function initFormData(setting: FlowSettings) {
       formData.value.name = setting?.name || ''
       formData.value.desc = setting?.desc || ''
-      formData.value.runLockType = setting?.runLockType || runLockTypeMap.MULTIPLE
+      formData.value.runLockType = setting?.runLockType || RunLockType.MULTIPLE
       formData.value.maxConRunningQueueSize = setting?.maxConRunningQueueSize || 40
       formData.value.waitQueueTimeMinute = setting?.waitQueueTimeMinute || 20
       formData.value.concurrencyGroup = setting?.concurrencyGroup || '${{ci.flow_id}}'
@@ -104,14 +100,14 @@ export default defineComponent({
                     class={styles.radioGroup}
                     onChange={handleChange}
                   >
-                    <Radio label={runLockTypeMap.MULTIPLE} class={styles.radioItem}>
+                    <Radio label={RunLockType.MULTIPLE} class={styles.radioItem}>
                       {t('flow.content.concurrentExecution')}
                     </Radio>
-                    <Radio label={runLockTypeMap.GROUP_LOCK} class={styles.radioItem}>
+                    <Radio label={RunLockType.GROUP_LOCK} class={styles.radioItem}>
                       {t('flow.content.groupOnlyOneBuildTaskCanRunAtSameTime')}
                     </Radio>
                   </Radio.Group>
-                  {formData.value.runLockType === runLockTypeMap.MULTIPLE && (
+                  {formData.value.runLockType === RunLockType.MULTIPLE && (
                     <div class={styles.subForm}>
                       <FormItem
                         label={t('flow.content.maxConcurrentExecutions')}
@@ -148,7 +144,7 @@ export default defineComponent({
                       </FormItem>
                     </div>
                   )}
-                  {formData.value.runLockType === runLockTypeMap.GROUP_LOCK && (
+                  {formData.value.runLockType === RunLockType.GROUP_LOCK && (
                     <div class={styles.subForm}>
                       <FormItem
                         label={t('flow.content.groupName')}
