@@ -236,7 +236,20 @@
       "allEvents": "All Events",
       "enterKeywords": "Please enter keywords",
       "noEventsFound": "No events found",
-      "noEventsMeetRequirements": "No events meet the requirements? View publishing guidelines"
+      "noEventsMeetRequirements": "No events meet the requirements? View publishing guidelines",
+      "executionDetail": "Execution Detail",
+      "artifact": "Artifact",
+      "report": "Report",
+      "startParams": "Start Parameters",
+      "projectTemplate": "Project Template",
+      "storeTemplate": "Store Template",
+      "personalFlowGroup": "My Flow Groups",
+      "projectFlowGroup": "Project Flow Groups",
+      "lessThanOneMinute": "Less than 1 minute",
+      "greaterThanDays": "Greater than {0} days",
+      "total": "Total",
+      "items": "items",
+      "perPage": "Per page"
     },
     "triggerPanel": {
       "enabledLabel": "Enabled",
@@ -415,7 +428,8 @@
       "stageRunning": "Run when current Stage starts",
       "preStageSuccess": "Run when previous Stage succeeds",
       "preStageFail": "Run when previous Stage fails",
-      "preStageCancel": "Run when previous Stage is canceled"
+      "preStageCancel": "Run when previous Stage is canceled",
+      "stepIdPlaceholder": "Please enter Step ID, optional, must be unique within the current Job if not empty"
     },
     "dialog": {
       "createGroup": {
@@ -546,7 +560,7 @@
       "rePlayInfo1": "1. During replay, a new build is started with the same trigger parameters and the latest pipeline orchestration.",
       "rePlayInfo2": "2. During replay, trigger detection is skipped and may not meet the trigger conditions of the latest version.",
       "reBuildInfo1": "1. Rebuilding re-executes on the basis of the previous build.",
-      "reBuildInfo2": "2. Pipeline orchestration version, BK_CI_BUILD_ID, and first trigger are consistent."    
+      "reBuildInfo2": "2. Pipeline orchestration version, BK_CI_BUILD_ID, and first trigger are consistent."
     },
     "statusMap": {
       "PAUSE": "Pause",

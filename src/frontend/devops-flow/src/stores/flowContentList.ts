@@ -25,8 +25,8 @@ import {
   type MatchDynamicViewParams,
   type BuildStageStatus,
 } from '@/api/flowContentList'
-import { VERSION_STATUS_ENUM } from "@/utils/flowConst";
-import { convertTime } from "@/utils/util";
+import { VERSION_STATUS_ENUM } from '@/utils/flowConst'
+import { convertTime } from '@/utils/util'
 
 // 操作列弹窗类型枚举
 export enum DialogType {
@@ -190,10 +190,10 @@ export const useFlowHomeContentStore = defineStore('flowContentList', () => {
     if (arr.length) {
       switch (arr[1]) {
         case '秒':
-          res = '1分钟内'
+          res = t('flow.content.lessThanOneMinute')
           break
         case '天':
-          res = `大于${arr[0]}`
+          res = t('flow.content.greaterThanDays', [arr[0]])
           break
         case '时':
           res = str.replace(/\d{1,}秒/, '')
@@ -525,7 +525,7 @@ export const useFlowHomeContentStore = defineStore('flowContentList', () => {
       throw error
     }
   }
-  
+
   async function updateCollect(hasCollect: boolean, flowId: string) {
     try {
       // 调用收藏接口
@@ -536,7 +536,6 @@ export const useFlowHomeContentStore = defineStore('flowContentList', () => {
       throw error
     }
   }
-
 
   return {
     // State

@@ -8,7 +8,7 @@ const { CollapsePanel } = Collapse
 import type { AdditionalOptions, CustomVariable, Element } from '@/api/flowModel'
 import type { AtomModal, AtomVersion } from '@/api/atom'
 import { useAtomStore } from '@/stores/atom'
-import { useAtomVersion } from '@/hooks/useAtomVersion'
+import { DEFAULT_VERSION, useAtomVersion } from '@/hooks/useAtomVersion'
 import styles from './AtomPropertyPanel.module.css'
 import sharedStyles from './shared.module.css'
 import AtomForm from '@/components/AtomForm/AtomForm'
@@ -49,6 +49,7 @@ export default defineComponent({
     const versionList = ref<AtomVersion[]>([])
     const isLoadingVersion = ref(false)
     const nameEditing = ref(false)
+    const atomModal = ref<AtomModal | null>(null)
 
     // ========== Computed ==========
     const atomCode = computed(() => {
@@ -60,15 +61,7 @@ export default defineComponent({
     })
 
     const atomVersionValue = computed(() => {
-      return props.currentElement?.version || '1.*'
-    })
-
-    const atomModal = computed<AtomModal | null>(() => {
-      const code = atomCode.value
-      const version = atomVersionValue.value
-      if (!code || !version) return null
-      // 直接从 Pinia store 缓存中读取
-      return atomStore.getCachedAtomModal(code, version)
+      return props.currentElement?.version || DEFAULT_VERSION
     })
 
     const isLoadingModal = computed(() => {
@@ -206,13 +199,24 @@ export default defineComponent({
       (newCode) => {
         if (newCode) {
           loadVersionList()
+          getAtomModal()
         } else {
           versionList.value = []
         }
       },
       { immediate: true },
     )
+
     // ========== Functions ==========
+
+    async function getAtomModal() {
+      const code = atomCode.value
+      const version = atomVersionValue.value
+      if (!code || !version) return null
+      const modal = await atomStore.getAtomModal(code, version, projectCode)
+      atomModal.value = modal
+      return modal
+    }
     function getAtomName() {
       if (props.currentElement?.name) {
         return props.currentElement.name
@@ -518,7 +522,7 @@ export default defineComponent({
                           {{
                             label: () => (
                               <div class={styles.labelWithIcon}>
-                                <span>{t('flow.orchestration.version')}</span>
+                                <span>{t('flow.content.version')}</span>
                                 <Popover
                                   content={t('flow.orchestration.atomVersionDesc')}
                                   placement="top"

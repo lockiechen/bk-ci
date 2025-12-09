@@ -6,6 +6,7 @@ import { SvgIcon } from '@/components/SvgIcon'
 import { useFlowModel } from '@/hooks/useFlowModel'
 import sharedStyles from '../shared.module.css'
 import styles from './BasicSettings.module.css'
+import type { FlowSettings } from '@/api/flowModel'
 
 const { FormItem } = Form
 
@@ -20,10 +21,10 @@ export default defineComponent({
     const { t } = useI18n()
     const route = useRoute()
     const flowId = route.params.flowId as string
-    const { flowSetting } = useFlowModel({ flowId })
+    const { flowSetting, updateFlowSetting } = useFlowModel({ flowId })
 
     // 表单数据
-    const formData = ref<Record<string, unknown>>({
+    const formData = ref<FlowSettings>({
       name: '',
       desc: '',
       runLockType: runLockTypeMap.MULTIPLE,
@@ -31,9 +32,12 @@ export default defineComponent({
       waitQueueTimeMinute: 20,
       concurrencyGroup: '${{ci.flow_id}}',
       concurrencyCancelInProgress: false,
+      maxQueueSize: 10,
+      successSubscriptionList: [],
+      failSubscriptionList: [],
     })
 
-    function initFormData(setting: Record<string, unknown>) {
+    function initFormData(setting: FlowSettings) {
       formData.value.name = setting?.name || ''
       formData.value.desc = setting?.desc || ''
       formData.value.runLockType = setting?.runLockType || runLockTypeMap.MULTIPLE
@@ -53,10 +57,14 @@ export default defineComponent({
       { immediate: true },
     )
 
+    function handleChange() {
+      updateFlowSetting(formData.value)
+    }
+
     return () => (
       <div class={sharedStyles.tabContainer}>
         <div class={styles.basicSettings}>
-          <Form formType="vertical" labelWidth={120}>
+          <Form formType="vertical" labelWidth={120} model={formData.value}>
             {/* 基础信息 */}
             <div class={styles.section}>
               <div class={styles.sectionTitle}>{t('flow.content.basicInfo')}</div>
@@ -65,6 +73,7 @@ export default defineComponent({
                   v-model={formData.value.name}
                   placeholder={t('flow.content.workflowNamePlaceholder')}
                   maxlength={128}
+                  onChange={handleChange}
                 />
               </FormItem>
 
@@ -75,6 +84,7 @@ export default defineComponent({
                   rows={3}
                   placeholder={t('flow.content.descriptionPlaceholder')}
                   maxlength={500}
+                  onChange={handleChange}
                 />
               </FormItem>
             </div>
@@ -89,7 +99,11 @@ export default defineComponent({
                       {t('flow.content.concurrencySettings')}
                     </span>
                   </div>
-                  <Radio.Group v-model={formData.value.runLockType} class={styles.radioGroup}>
+                  <Radio.Group
+                    v-model={formData.value.runLockType}
+                    class={styles.radioGroup}
+                    onChange={handleChange}
+                  >
                     <Radio label={runLockTypeMap.MULTIPLE} class={styles.radioItem}>
                       {t('flow.content.concurrentExecution')}
                     </Radio>
@@ -111,6 +125,7 @@ export default defineComponent({
                           min={1}
                           max={200}
                           placeholder={t('flow.content.maxConcurrentExecutionsPlaceholder')}
+                          onChange={handleChange}
                         />
                       </FormItem>
                       <FormItem
@@ -126,6 +141,7 @@ export default defineComponent({
                             min={1}
                             max={1440}
                             placeholder={t('flow.content.queueTimeoutTimePlaceholder')}
+                            onChange={handleChange}
                           />
                           <span class={styles.unit}>{t('flow.content.minutes')}</span>
                         </div>
@@ -144,6 +160,7 @@ export default defineComponent({
                           v-model={formData.value.concurrencyGroup}
                           placeholder={t('flow.content.groupNamePlaceholder')}
                           maxlength={128}
+                          onChange={handleChange}
                         />
                       </FormItem>
                       <FormItem property="concurrencyCancelInProgress" class={styles.subFormItem}>
@@ -165,6 +182,7 @@ export default defineComponent({
                                 min={0}
                                 max={200}
                                 placeholder={t('flow.content.maxQueueSizePlaceholder')}
+                                onChange={handleChange}
                               />
                               <span class={styles.unit}>{t('flow.content.item')}</span>
                             </div>
@@ -181,6 +199,7 @@ export default defineComponent({
                                 min={1}
                                 max={1440}
                                 placeholder={t('flow.content.queueTimeoutTimePlaceholder')}
+                                onChange={handleChange}
                               />
                               <span class={styles.unit}>{t('flow.content.minutes')}</span>
                             </div>

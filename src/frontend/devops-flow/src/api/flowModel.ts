@@ -27,13 +27,37 @@ export interface FlowModelAndSetting {
   baseVersionName: string
   modelAndSetting: {
     model: FlowModel
-    setting: Record<string, unknown>
+    setting: FlowSettings
   }
   yamlPreview: YamlPreview
   canDebug: boolean
   yamlSupported: boolean
   updater: string
   updateTime: number
+}
+
+export interface FlowSettings {
+  name: string
+  desc: string
+  runLockType: string
+  maxConRunningQueueSize: number
+  waitQueueTimeMinute: number
+  maxQueueSize: number
+  concurrencyGroup: string
+  concurrencyCancelInProgress: boolean
+  successSubscriptionList: Subscription[]
+  failSubscriptionList: Subscription[]
+}
+
+export interface Subscription {
+  types: string[]
+  groups: string[]
+  users: string
+  wechatGroupFlag: boolean
+  wechatGroup: string
+  wechatGroupMarkdownFlag: boolean
+  detailFlag: boolean
+  content: string
 }
 
 export interface YamlPreview {
@@ -285,7 +309,7 @@ export interface SaveFlowModelParams {
   storageType?: 'MODEL' | 'YAML'
   modelAndSetting?: {
     model: FlowModel
-    setting?: Record<string, unknown>
+    setting?: FlowSettings
   }
   yaml?: string
 }
@@ -1030,34 +1054,13 @@ export function getMockFlowModel(): FlowModelAndSetting {
         latestVersion: 7,
       },
       setting: {
-        projectId: 'devops2release2',
-        pipelineId: 'p-5229008d0784437a841d3b653956c096',
         name: 'parameters',
-        version: 15,
         desc: '',
-        labels: [],
-        labelNames: [],
-        successSubscription: {
-          types: [],
-          groups: [],
-          users: '',
-          wechatGroupFlag: false,
-          wechatGroup: '',
-          wechatGroupMarkdownFlag: false,
-          detailFlag: false,
-          content: '',
-        },
-        failSubscription: {
-          types: ['EMAIL', 'RTX'],
-          groups: [],
-          users: '${{ci.actor}}',
-          wechatGroupFlag: false,
-          wechatGroup: '',
-          wechatGroupMarkdownFlag: false,
-          detailFlag: false,
-          content:
-            '【${{ci.project_name}}】- 【${{ci.pipeline_name}}】#${{ci.build_num}} 执行失败，耗时${{ci.pipeline_execute_time}}, 触发人: ${{ci.actor}}。',
-        },
+        runLockType: 'GROUP_LOCK',
+        maxConRunningQueueSize: 10,
+        waitQueueTimeMinute: 10,
+        concurrencyGroup: '${{ci.flow_id}}',
+        concurrencyCancelInProgress: false,
         successSubscriptionList: [
           {
             types: [],
@@ -1083,20 +1086,7 @@ export function getMockFlowModel(): FlowModelAndSetting {
               '【${{ci.project_name}}】- 【${{ci.pipeline_name}}】#${{ci.build_num}} 执行失败，耗时${{ci.pipeline_execute_time}}, 触发人: ${{ci.actor}}。',
           },
         ],
-        runLockType: 'GROUP_LOCK',
-        waitQueueTimeMinute: 10,
         maxQueueSize: 10,
-        concurrencyGroup: '${{ci.pipeline_id}}',
-        concurrencyCancelInProgress: false,
-        failIfVariableInvalid: false,
-        buildCancelPolicy: 'EXECUTE_PERMISSION',
-        maxPipelineResNum: 50,
-        cleanVariablesWhenRetry: false,
-        pipelineAsCodeSettings: {
-          enable: false,
-          projectDialect: 'CLASSIC',
-          inheritedDialect: true,
-        },
       },
     },
     yamlPreview: {

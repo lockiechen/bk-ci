@@ -1,4 +1,3 @@
-
 .header {
   display: flex;
   align-items: center;
@@ -29,18 +28,21 @@
 }
 
 .navTabs {
-    margin: auto;
-    :global(.bk-tab-header-active-bar) {
-        top: 0 !important;
-    }
-    :global(.bk-tab-header) {
-        border: 0;
-        line-height: 47px !important;
-    }
-    :global(.bk-tab-header--active) {
-        background-color: var(--bg-active);
-        color: var(--color-primary);
-    }
+  margin: auto;
+  :global(.bk-tab-header-active-bar) {
+    top: 0 !important;
+  }
+  :global(.bk-tab-header) {
+    border: 0;
+    line-height: 47px !important;
+  }
+  :global(.bk-tab-header--active) {
+    background-color: var(--bg-active);
+    color: var(--color-primary);
+  }
+  :global(.bk-tab-content) {
+    display: none;
+  }
 }
 
 .sidebar {
@@ -60,4 +62,3 @@
   flex-direction: column;
   height: 100%;
 }
-

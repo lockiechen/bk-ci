@@ -232,7 +232,20 @@
       "allEvents": "すべてのイベント",
       "enterKeywords": "キーワードを入力してください",
       "noEventsFound": "イベントが見つかりません",
-      "noEventsMeetRequirements": "要件を満たすイベントがありませんか？公開ガイドを参照"
+      "noEventsMeetRequirements": "要件を満たすイベントがありませんか？公開ガイドを参照",
+      "executionDetail": "実行の詳細",
+      "artifact": "成果物",
+      "report": "レポート",
+      "startParams": "起動パラメータ",
+      "projectTemplate": "プロジェクトテンプレート",
+      "storeTemplate": "ストアテンプレート",
+      "personalFlowGroup": "マイフローグループ",
+      "projectFlowGroup": "プロジェクトフローグループ",
+      "lessThanOneMinute": "1分未満",
+      "greaterThanDays": "{0}日より大きい",
+      "total": "合計",
+      "items": "件",
+      "perPage": "ページあたり"
     },
     "triggerPanel": {
       "enabledLabel": "有効",
@@ -461,7 +474,8 @@
       "stageRunning": "現在のStageが開始されたときに実行",
       "preStageSuccess": "前のStageが成功したときに実行",
       "preStageFail": "前のStageが失敗したときに実行",
-      "preStageCancel": "前のStageがキャンセルされたときに実行"
+      "preStageCancel": "前のStageがキャンセルされたときに実行",
+      "stepIdPlaceholder": "Step IDを入力してください。空の場合は任意ですが、現在のジョブ内で一意である必要があります"
     },
     "actions": {
       "rename": "名前を変更",
@@ -543,7 +557,7 @@
       "rePlayInfo1": "1. リプレイ時、同じトリガーパラメーターと最新のパイプライン編成で新しいビルドを開始します。",
       "rePlayInfo2": "2. リプレイ時、トリガー検出をスキップし、最新バージョンのトリガー条件を満たさない可能性があります。",
       "reBuildInfo1": "1. 再構築は、前のビルドの基礎で再実行されます。",
-      "reBuildInfo2": "2. パイプライン編成バージョン、BK_CI_BUILD_ID、および最初のトリガーは一致しています。"    
+      "reBuildInfo2": "2. パイプライン編成バージョン、BK_CI_BUILD_ID、および最初のトリガーは一致しています。"
     },
     "statusMap": {
       "PAUSE": "一時停止",

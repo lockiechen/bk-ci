@@ -7,6 +7,7 @@ import {
   yamlToFlowModel,
   type FlowModel,
   type SaveFlowModelParams,
+  type FlowSettings,
 } from '@/api/flowModel'
 
 /**
@@ -15,7 +16,7 @@ import {
 export const useFlowModelStore = defineStore('flowModel', () => {
   // Flow 模型数据
   const flowModel = ref<FlowModel | null>(null)
-  const flowSetting = ref<Record<string, unknown> | null>(null)
+  const flowSetting = ref<FlowSettings | null>(null)
 
   // YAML 格式的代码内容
   const yamlContent = ref<string>('')
@@ -74,6 +75,11 @@ export const useFlowModelStore = defineStore('flowModel', () => {
     hasUnsavedChanges.value = true
   }
 
+  function updateFlowSetting(setting: FlowSettings) {
+    flowSetting.value = setting
+    hasUnsavedChanges.value = true
+  }
+
   /**
    * 更新 YAML 内容
    * @param yaml YAML 字符串
@@ -108,7 +114,7 @@ export const useFlowModelStore = defineStore('flowModel', () => {
         ...params,
         modelAndSetting: {
           model: flowModel.value,
-          ...(params.modelAndSetting?.setting && { setting: params.modelAndSetting.setting }),
+          setting: flowSetting.value!,
         },
         storageType: params.storageType || 'MODEL',
       }
@@ -130,6 +136,7 @@ export const useFlowModelStore = defineStore('flowModel', () => {
   function reset() {
     flowModel.value = null
     yamlContent.value = ''
+    flowSetting.value = null
     loading.value = false
     hasError.value = false
     currentFlowId.value = ''
@@ -160,6 +167,7 @@ export const useFlowModelStore = defineStore('flowModel', () => {
     // 方法
     loadFlowModel,
     updateFlowModel,
+    updateFlowSetting,
     updateYamlContent,
     saveFlow,
     reset,

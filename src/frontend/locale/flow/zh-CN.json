@@ -230,7 +230,20 @@
       "allEvents": "全部事件",
       "enterKeywords": "请输入关键字",
       "noEventsFound": "暂无事件",
-      "noEventsMeetRequirements": "没有满足需求的事件?查看发布指引"
+      "noEventsMeetRequirements": "没有满足需求的事件?查看发布指引",
+      "executionDetail": "执行详情",
+      "artifact": "产出物",
+      "report": "产出报告",
+      "startParams": "启动参数",
+      "projectTemplate": "项目模板",
+      "storeTemplate": "研发商店模板",
+      "personalFlowGroup": "我的创作流组",
+      "projectFlowGroup": "项目创作流组",
+      "lessThanOneMinute": "1分钟内",
+      "greaterThanDays": "大于{0}天",
+      "total": "共计",
+      "items": "条",
+      "perPage": "每页"
     },
     "triggerPanel": {
       "enabledLabel": "已启用",
@@ -408,7 +421,8 @@
       "stageRunning": "当前Stage开始运行时",
       "preStageSuccess": "上游Stage成功时",
       "preStageFail": "上游Stage失败时",
-      "preStageCancel": "上游Stage取消时"
+      "preStageCancel": "上游Stage取消时",
+      "stepIdPlaceholder": "请输入Step ID，非必填, 不为空时需在当前Job下唯一"
     },
     "dialog": {
       "createGroup": {

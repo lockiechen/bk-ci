@@ -511,10 +511,7 @@ export default defineComponent({
                 class={styles.panelTab}
               >
                 {/* Variables Tab */}
-                <Tab.TabPanel
-                  name={VariablePanelTab.VARIABLES}
-                  label={t('flow.variable.variables')}
-                >
+                <Tab.TabPanel name={VariablePanelTab.VARIABLES} label={t('flow.variable.title')}>
                   <div class={styles.variableList}>
                     {/* Tips */}
                     <Alert theme="info">{t('flow.variable.variableTips')}</Alert>

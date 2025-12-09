@@ -2,7 +2,7 @@ import { computed, onMounted, onBeforeUnmount, ref, watch } from 'vue'
 import { storeToRefs } from 'pinia'
 import { useFlowModelStore } from '@/stores/flowModel'
 import { useAtomStore } from '@/stores/atom'
-import type { FlowModel, Stage, Container, Element } from '@/api/flowModel'
+import type { FlowModel, Stage, Container, Element, FlowSettings } from '@/api/flowModel'
 import type { AtomModal } from '@/api/atom'
 import { useEditingPos } from './useEditingPos'
 import {
@@ -19,6 +19,7 @@ import {
   diffAtomVersions,
 } from '@/utils/atom'
 import type { AddAtomEventPayload, AddStageEventPayload, ClickEventPayload } from 'bkui-pipeline'
+import { DEFAULT_VERSION } from './useAtomVersion'
 
 export interface UseFlowModelOptions {
   flowId?: string
@@ -367,7 +368,7 @@ export function useFlowModel(options: UseFlowModelOptions = {}) {
     const preVerEle = container?.elements?.[elementIndex!]
 
     const isChangeAtom = !preVerEle || preVerEle.atomCode !== atomCode
-    const finalVersion = version || '1.*'
+    const finalVersion = version || DEFAULT_VERSION
     const htmlTemplateVersion = atomModal.htmlTemplateVersion
     const isNewTemplate = isNewAtomTemplate(htmlTemplateVersion)
     const atomProps = atomModal.props || {}
@@ -392,7 +393,6 @@ export function useFlowModel(options: UseFlowModelOptions = {}) {
       }
 
       const outputObj = getAtomOutputObj(atomProps.output || {})
-      const canPause = atomProps.config?.canPauseBeforeRun === true
 
       element = createDefaultElement(elementIndex, {
         id: preVerEle?.id || generateId('element'),
@@ -432,9 +432,6 @@ export function useFlowModel(options: UseFlowModelOptions = {}) {
       })
     }
 
-    if (atomModal.os) (element as any).os = atomModal.os
-    if (atomModal.buildLessRunFlag !== undefined)
-      (element as any).buildLessRunFlag = atomModal.buildLessRunFlag
     if (atomModal.logoUrl) (element as any).logoUrl = atomModal.logoUrl
 
     atomStore.setAtomModal(atomCode, finalVersion, atomModal)
@@ -455,6 +452,10 @@ export function useFlowModel(options: UseFlowModelOptions = {}) {
 
   const updateFlowModel = (model: FlowModel) => {
     store.updateFlowModel(model)
+  }
+
+  const updateFlowSetting = (setting: FlowSettings) => {
+    store.updateFlowSetting(setting)
   }
 
   const updateYaml = (yaml: string) => store.updateYamlContent(yaml)
@@ -492,6 +493,7 @@ export function useFlowModel(options: UseFlowModelOptions = {}) {
     loadFlow,
     saveFlow,
     updateFlowModel,
+    updateFlowSetting,
     updateYaml,
     reset,
 
