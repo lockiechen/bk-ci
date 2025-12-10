@@ -1,10 +1,11 @@
 import { defineComponent, ref, computed, type PropType } from 'vue'
 import { useI18n } from 'vue-i18n'
-import { useRoute } from 'vue-router'
+import { useRoute, useRouter } from 'vue-router'
 import { Button, Input, Popover, Message } from 'bkui-vue'
 import { SvgIcon } from '@/components/SvgIcon'
 import MaterialItem from '@/components/MaterialItem'
 import ArtifactQuality from '@/components/ArtifactQuality'
+import { ROUTE_NAMES } from '@/constants/routes'
 import { type ExecuteDetailData } from '@/api/executeDetail'
 import { useExecuteDetail } from '@/hooks/useExecuteDetail'
 import styles from './Summary.module.css'
@@ -24,6 +25,7 @@ export default defineComponent({
   setup(props) {
     const { t } = useI18n()
     const route = useRoute()
+    const router = useRouter()
     const curVersionDesc = ref('')
     const isChangeRemark = ref(false)
     const remarkEditable = ref(false)
@@ -121,8 +123,19 @@ export default defineComponent({
       }
     }
 
-    const goOutputs = () => {
-      // TODO 跳转到outputs的tab页
+    const goOutputs = (values: any) => {
+      router.push({
+        name: ROUTE_NAMES.FLOW_DETAIL_EXECUTION_DETAIL,
+        params: {
+          ...route.params,
+          ...route.query,
+          type: 'outputs',
+        },
+        query: {
+          metadataKey: values[0].labelKey,
+          metadataValues: values.map((item: any) => item.value).join(','),
+        },
+      })
     }
 
     return () => (
@@ -181,7 +194,7 @@ export default defineComponent({
 
               <div style={{ overflow: 'hidden' }}>
                 <span class={styles.execDetailSummaryInfoBlockTitle}>
-                  {t('flow.execute.pipelineVersion')}
+                  {t('flow.execute.flowVersion')}
                 </span>
                 <div class={styles.execDetailSummaryInfoBlockContent}>
                   {isConstraintTemplate.value && (

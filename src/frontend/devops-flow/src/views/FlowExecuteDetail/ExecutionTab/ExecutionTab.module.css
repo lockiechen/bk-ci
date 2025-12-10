@@ -1,3 +1,14 @@
 .executionTab {
   width: 100%;
+  margin: 0 var(--spacing-xxl);
+  background-color: var(--bg-primary);
+  box-shadow: var(--shadow-md);
+}
+
+.tabSwitcher {
+  height: 100%;
+}
+.tabSwitcher :global(.bk-tab-content) {
+  height: 100%;
+  padding: 0;
 }

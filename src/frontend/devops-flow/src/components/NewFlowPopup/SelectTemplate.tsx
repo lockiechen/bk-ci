@@ -80,23 +80,23 @@ export default defineComponent({
     const configList = computed(() =>
       [
         {
-          title: t('flow.flowModel'),
+          title: t('flow.content.workflowOrchestration'),
           name: 'flowModel',
         },
         {
-          title: t('flow.authoringEnv'),
+          title: t('flow.content.workflowEnvironment'),
           name: 'authoringEnv',
         },
         {
-          title: t('flow.trigger'),
+          title: t('flow.content.triggerEvents'),
           name: 'trigger',
         },
         {
-          title: t('flow.noticeSetting'),
+          title: t('flow.content.notificationConfig'),
           name: 'notice',
         },
         {
-          title: t('flow.baseSetting'),
+          title: t('flow.content.basicSettings'),
           name: 'setting',
         },
       ].map((child) => ({
