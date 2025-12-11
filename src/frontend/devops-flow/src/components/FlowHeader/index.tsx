@@ -3,7 +3,7 @@ import type { PropType } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { Button, Tag, Select } from 'bkui-vue'
 import styles from './index.module.css'
-import { useRouter } from 'vue-router'
+import { useRoute, useRouter } from 'vue-router'
 import { FLOW_GROUP_TYPES } from '@/constants/flowGroup'
 import { SvgIcon } from '../SvgIcon'
 import ExtMenu from '../ExtMenu'
@@ -12,6 +12,8 @@ import { useDeleteConfirm } from '@/hooks/useDeleteConfirm'
 import { deleteContent } from '@/api/flowContentList'
 import type { MenuItem } from '@/api/flowContentList'
 import { CommonHeader } from '@/components/CommonHeader'
+import type { FlowInfo } from '@/types/flow'
+import type { FlowVersion } from '@/types/flow'
 
 const { Option } = Select
 
@@ -21,19 +23,15 @@ export interface VersionOption {
   isLatest?: boolean
 }
 
-export type FlowInfo = {
-  name: string
-  id: string
-  hasCollect: boolean
-  versions: VersionOption[]
-  currentVersion: string
-}
-
 export const FlowHeader = defineComponent({
   name: 'FlowHeader',
   props: {
     flowInfo: {
       type: Object as PropType<FlowInfo>,
+      required: true,
+    },
+    versionList: {
+      type: Array as PropType<FlowVersion[]>,
       required: true,
     },
     onEdit: {
@@ -43,13 +41,14 @@ export const FlowHeader = defineComponent({
       type: Function as PropType<() => void>,
     },
     onVersionChange: {
-      type: Function as PropType<(version: string) => void>,
+      type: Function as PropType<(version: number) => void>,
     },
   },
   setup(props) {
     const { t } = useI18n()
     const router = useRouter()
-    const selectedVersion = ref(props.flowInfo.currentVersion)
+    const route = useRoute()
+    const selectedVersion = ref(Number(route.params.version) ?? 1)
     const { collectHandler } = useFlowListData()
     const { showDeleteConfirm } = useDeleteConfirm()
     const flowList = {
@@ -93,13 +92,8 @@ export const FlowHeader = defineComponent({
       },
     ])
 
-    const handleVersionChange = (value: string) => {
-      selectedVersion.value = value
-      props.onVersionChange?.(value)
-    }
-
     const currentVersionOption = () => {
-      return props.flowInfo.versions.find((v) => v.value === selectedVersion.value)
+      return props.versionList.find((v) => v.version === selectedVersion.value)
     }
 
     const renderTag = () => {
@@ -124,29 +118,33 @@ export const FlowHeader = defineComponent({
 
       return (
         <>
-          <CommonHeader workflowName={props.flowInfo.name}>
+          <CommonHeader workflowName={props.flowInfo?.pipelineName}>
             {{
               'version-selector': () => (
                 <Select
-                  modelValue={selectedVersion.value}
-                  onChange={handleVersionChange}
+                  v-model={selectedVersion.value}
+                  onChange={props.onVersionChange}
                   class={styles.versionSelector}
                 >
                   {{
-                    trigger: ({ selected }: any) => (
+                    trigger: () => (
                       <span class={styles.versionTrigger}>
                         {renderCheckIcon(currentVersion?.isLatest)}
-                        {selected?.[0]?.['label']}
+                        {currentVersion?.versionName}
                         {currentVersion?.isLatest && renderTag()}
                         <SvgIcon name="angle-down" class={styles.versionSelectToggleIcon} />
                       </span>
                     ),
                     default: () =>
-                      props.flowInfo.versions.map((version) => (
-                        <Option key={version.value} value={version.value} label={version.label}>
+                      props.versionList.map((version) => (
+                        <Option
+                          key={version.version}
+                          value={version.version}
+                          label={version.versionName}
+                        >
                           <div class={styles.versionOption}>
                             {renderCheckIcon(version.isLatest)}
-                            <span>{version.label}</span>
+                            <span>{version.versionName}</span>
                             {version.isLatest && renderTag()}
                           </div>
                         </Option>

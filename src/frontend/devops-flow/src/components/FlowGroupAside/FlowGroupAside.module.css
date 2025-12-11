@@ -115,7 +115,6 @@
   padding-top: var(--spacing-xs);
 }
 
-
 /* ==========================================
  * 吸顶效果（Sticky）
  * ========================================== */
@@ -129,6 +128,10 @@
   position: sticky;
   z-index: 10;
   background: var(--bg-tertiary);
+
+  &.divider {
+    margin: 0;
+  }
 }
 
 .stickyPlaceholder {
@@ -138,12 +141,12 @@
 
 .menuItem.stickyMenuItem {
   top: var(--spacing-lg);
-} 
+  height: 40px;
+}
 
 .divider.sticky {
   top: calc(var(--spacing-lg) + 40px);
   background: var(--border-color);
-
 }
 
 .groupHeader.sticky {
@@ -247,4 +250,3 @@
   background: var(--border-color);
   margin: var(--spacing-xs) var(--spacing-md);
 }
-

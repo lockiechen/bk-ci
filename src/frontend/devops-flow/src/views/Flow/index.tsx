@@ -3,27 +3,17 @@ import styles from './index.module.css'
 import { RouterView, useRoute, useRouter } from 'vue-router'
 import { FlowHeader } from '@/components/FlowHeader'
 import { EditHeader } from '@/components/EditHeader'
-import type { FlowInfo } from '@/components/FlowHeader'
 import layoutStyles from '@/styles/layout.module.css'
 import { ROUTE_NAMES } from '@/constants/routes'
+import { useFlowInfo } from '@/hooks/useFlowInfo'
+import type { FlowInfo, FlowVersion } from '@/types/flow'
 
 export default defineComponent({
   setup() {
     const route = useRoute()
     const router = useRouter()
     const flowId = route.params.flowId as string
-
-    const flowInfo = ref<FlowInfo>({
-      name: 'stream-ci-demo',
-      id: 'content-1',
-      hasCollect: false,
-      versions: [
-        { value: 'v5-p2-t3-3', label: 'V5 (P2.T3.3)', isLatest: true },
-        { value: 'v5-p2-t3-2', label: 'V5 (P2.T3.2)' },
-        { value: 'v5-p2-t3-1', label: 'V5 (P2.T3.1)' },
-      ],
-      currentVersion: 'v5-p2-t3-3',
-    })
+    const { flowInfo, flowVersionList, loading } = useFlowInfo()
 
     // Check if current route is in edit mode
     const isEditMode = computed(() => {
@@ -31,10 +21,11 @@ export default defineComponent({
       return routeName?.startsWith('edit')
     })
 
-    const handleVersionChange = (version: string) => {
-      flowInfo.value.currentVersion = version
-      // TODO: 处理版本切换逻辑
-      console.log('版本切换:', version)
+    const handleVersionChange = (version: number) => {
+      router.push({
+        name: ROUTE_NAMES.FLOW_DETAIL_EXECUTION_RECORD,
+        params: { flowId, version },
+      })
     }
 
     const handleEdit = () => {
@@ -55,7 +46,8 @@ export default defineComponent({
           <EditHeader />
         ) : (
           <FlowHeader
-            flowInfo={flowInfo.value}
+            flowInfo={flowInfo.value as FlowInfo}
+            versionList={flowVersionList.value as FlowVersion[]}
             onVersionChange={handleVersionChange}
             onEdit={handleEdit}
             onExecute={handleExecute}

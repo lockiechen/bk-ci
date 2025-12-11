@@ -1,202 +1,10 @@
-import type { StatusType } from './flowContentList'
-
-// 时间成本
-export interface TimeCost {
-  systemCost: number // 系统耗时（毫秒）
-  executeCost: number // 执行耗时（毫秒）
-  waitCost: number // 等待耗时（毫秒）
-  queueCost: number // 排队耗时（毫秒）
-  totalCost: number // 总耗时（毫秒）
-}
-
-// Stage 状态信息
-export interface StageStatusInfo {
-  stageId: string
-  name: string
-  status: StatusType
-  startEpoch?: number
-  elapsed?: number
-}
-
-// 执行记录
-export interface ExecutionRecord {
-  startUser: string
-  timeCost: TimeCost
-}
-
-// 质量红线
-export interface ArtifactQuality {
-  [key: string]: any
-}
-
-// 插件元素
-export interface Element {
-  '@type': string
-  name: string
-  id: string
-  status: StatusType | ''
-  executeCount?: number
-  version?: string
-  [key: string]: any
-}
-
-// 容器
-export interface Container {
-  '@type': string
-  id: string
-  name: string
-  elements: Element[]
-  status: StatusType
-  startEpoch?: number
-  systemElapsed?: number
-  elementElapsed?: number
-  canRetry?: boolean
-  containerId: string
-  containerHashId: string
-  executeCount?: number
-  timeCost?: TimeCost
-  [key: string]: any
-}
-
-// Stage
-export interface Stage {
-  containers: Container[]
-  id: string
-  name: string
-  status: StatusType
-  elapsed?: number
-  fastKill?: boolean
-  finally?: boolean
-  canRetry?: boolean
-  executeCount?: number
-  timeCost?: TimeCost
-  startEpoch?: number
-  [key: string]: any
-}
-
-// 流水线模型
-export interface PipelineModel {
-  '@type': string
-  name: string
-  desc: string
-  stages: Stage[]
-  labels?: string[]
-  instanceFromTemplate?: boolean
-  pipelineCreator?: string
-  events?: Record<string, any>
-  staticViews?: any[]
-  timeCost?: TimeCost
-  latestVersion?: number
-  [key: string]: any
-}
-export interface ExecuteDetailData {
-  id: string // 构建ID
-  pipelineId: string // 流水线ID
-  pipelineName: string // 流水线名称
-  userId: string // 用户ID
-  triggerUser: string // 触发用户
-  trigger: string // 触发方式
-  queueTime: number // 排队时间戳
-  startTime: number // 开始时间戳
-  queueTimeCost: number // 排队耗时
-  endTime?: number // 结束时间戳
-  status: StatusType // 构建状态
-  model: PipelineModel // 流水线模型
-  currentTimestamp: number // 当前时间戳
-  buildNum: number // 构建次数
-  curVersion: number // 当前版本号
-  curVersionName: string // 当前版本名称
-  latestVersion: number // 最新版本号
-  latestBuildNum: number // 最新构建次数
-  lastModifyUser: string // 最后修改用户
-  executeTime: number // 执行时间
-  stageStatus: StageStatusInfo[] // Stage状态列表
-  executeCount: number // 执行次数
-  startUserList: string[] // 启动用户列表
-  recordList: ExecutionRecord[] // 执行记录列表
-  buildMsg: string // 构建消息
-  debug: boolean // 是否调试模式
-  artifactQuality?: ArtifactQuality // 制品质量信息
-  versionChange: boolean // 版本是否变更
-  webhookInfo?: Record<string, any> // Webhook信息
-  materials?: Record<string, any>[] // 材料列表
-  cancelBuildPerm: boolean // 是否有取消构建权限
-  [key: string]: any
-}
-
-/**
- * 版本状态类型
- */
-export type VersionStatus =
-  | 'RELEASED'
-  | 'COMMITTING'
-  | 'BRANCH'
-  | 'BRANCH_RELEASE'
-  | 'DRAFT_RELEASE'
-  | 'DELETE'
-  | 'HIDDEN'
-
-/**
- * 运行锁定类型
- */
-export type RunLockType = 'MULTIPLE' | 'SINGLE' | 'LOCK' | 'SINGLE_LOCK' | 'GROUP_LOCK'
-
-/**
- * 取消构建策略
- */
-export type BuildCancelPolicy = 'EXECUTE_PERMISSION' | 'RESTRICTED'
-
-/**
- * 权限信息
- */
-export interface FlowPermissions {
-  canManage: boolean // 是否可管理
-  canDelete: boolean // 是否可删除
-  canView: boolean // 是否可查看
-  canEdit: boolean // 是否可编辑
-  canExecute: boolean // 是否可执行
-  canDownload: boolean // 是否可下载
-  canShare: boolean // 是否可分享
-  canArchive: boolean // 是否可归档
-}
-
-/**
- * 流水线代码配置
- */
-export interface PipelineAsCodeSettings {
-  enable: boolean // 是否启用
-  inheritedDialect: boolean // 是否继承方言
-}
-
-/**
- * 创作流基本信息
- */
-export interface FlowInfo {
-  pipelineId: string // 流水线ID
-  pipelineName: string // 流水线名称
-  hasCollect: boolean // 是否已收藏
-  canManualStartup: boolean // 是否可手动启动
-  canDebug: boolean // 是否可调试
-  canRelease: boolean // 是否可发布
-  instanceFromTemplate: boolean // 是否从模板实例化
-  version: number // 当前版本
-  baseVersion: number // 基础版本
-  baseVersionStatus: VersionStatus // 基础版本状态
-  baseVersionName: string // 基础版本名称
-  releaseVersion: number // 发布版本
-  releaseVersionName: string // 发布版本名称
-  hasPermission: boolean // 是否有权限
-  pipelineDesc: string // 流水线描述
-  creator: string // 创建人
-  createTime: number // 创建时间戳
-  updateTime: number // 更新时间戳
-  permissions: FlowPermissions // 权限信息
-  runLockType: RunLockType // 运行锁定类型
-  latestVersionStatus: VersionStatus // 最新版本状态
-  pipelineAsCodeSettings: PipelineAsCodeSettings // 流水线代码配置
-  locked: boolean // 是否锁定
-  buildCancelPolicy: BuildCancelPolicy // 取消构建策略
-}
+import {
+  BuildCancelPolicy,
+  RunLockType,
+  type ExecuteDetailData,
+  type FlowPermissions,
+  type VersionStatus,
+} from '@/types/flow'
 
 /**
  * 重试流水线响应数据
@@ -681,178 +489,43 @@ export function requestTerminatePipeline({
   })
 }
 
-/**
- * 获取创作流基本信息
- * @param projectId 项目ID
- * @param flowId 创作流ID
- * @returns 创作流基本信息
- */
-export function getFlowInfo({
-  projectId,
-  flowId,
-}: {
-  projectId: string
-  flowId: string
-}): Promise<FlowInfo> {
-  // TODO: 调用实际接口
-  // return http.get(`/version/projects/${projectId}/pipelines/${flowId}/detail`)
-  //   .then(res => res.data)
-
-  // Mock 数据
-  return new Promise((resolve) => {
-    setTimeout(() => {
-      resolve({
-        pipelineId: 'p-fc1ba8afdea34eed8a95e668879f4115',
-        pipelineName: '归档测试111',
-        hasCollect: false,
-        canManualStartup: true,
-        canDebug: true,
-        canRelease: true,
-        instanceFromTemplate: false,
-        version: 1,
-        baseVersion: 2,
-        baseVersionStatus: 'RELEASED',
-        baseVersionName: 'V1(P1.T1.2)',
-        releaseVersion: 4,
-        releaseVersionName: 'V2(P2.T2.2)',
-        hasPermission: true,
-        pipelineDesc: '',
-        creator: 'zhangsan',
-        createTime: 1750665486000,
-        updateTime: 1764126574000,
-        permissions: {
-          canManage: true,
-          canDelete: true,
-          canView: true,
-          canEdit: true,
-          canExecute: true,
-          canDownload: true,
-          canShare: true,
-          canArchive: true,
-        },
-        runLockType: 'MULTIPLE',
-        latestVersionStatus: 'RELEASED',
-        pipelineAsCodeSettings: {
-          enable: false,
-          inheritedDialect: true,
-        },
-        locked: false,
-        buildCancelPolicy: 'EXECUTE_PERMISSION',
-      })
-    }, 500)
-  })
-}
-
-/**
- * 重试创作流
- * @param projectId 项目ID
- * @param flowId 创作流ID
- * @param buildId 构建ID
- * @param taskId 可选，任务ID
- * @param failedContainer 可选，失败的容器
- * @param skip 可选，是否跳过
- * @returns 重试响应数据
- */
 export function retryFlow({
   projectId,
   flowId,
   buildId,
-  taskId,
-  failedContainer,
-  skip,
 }: {
   projectId: string
   flowId: string
   buildId: string
-  taskId?: string
-  failedContainer?: string
-  skip?: boolean
 }): Promise<RetryPipelineResponse> {
-  // 构建查询字符串
-  const failedContainerStr =
-    failedContainer === undefined ? '' : `&failedContainer=${failedContainer}`
-  const queryStr = taskId ? `?taskId=${taskId}${failedContainerStr}&skip=${skip}` : ''
-
-  // TODO: 调用实际接口
-  // return http.post(`/user/builds/projects/${projectId}/${flowId}/${buildId}/retry${queryStr}`)
-  //   .then(res => res.data)
-
-  // Mock 数据
   return new Promise((resolve) => {
     setTimeout(() => {
       resolve({
-        id: 'b-2284bfd822ff4c47b2311a49c1308ba2',
-        executeCount: 2,
-        projectId: 'test',
+        id: 'b-d8311316d4a04e349f48102f9553b568',
+        executeCount: 3,
+        projectId: 'default-project',
         pipelineId: 'p-fc1ba8afdea34eed8a95e668879f4115',
-        num: 6,
+        num: 3,
       })
     }, 500)
   })
 }
 
-/**
- * 重放创作流
- * @param projectId 项目ID
- * @param flowId 创作流ID
- * @param buildId 构建ID
- * @param forceTrigger 是否强制触发，默认为false
- * @returns 重放响应数据
- */
 export function replayFlow({
   projectId,
   flowId,
   buildId,
-  forceTrigger = false,
 }: {
   projectId: string
   flowId: string
   buildId: string
-  forceTrigger?: boolean
 }): Promise<ReplayPipelineResponse> {
-  // TODO: 调用实际接口
-  // return http.post(`/user/builds/projects/${projectId}/${flowId}/${buildId}/replayByBuild?forceTrigger=${forceTrigger}`)
-  //   .then(res => res.data)
-
-  // Mock 数据
   return new Promise((resolve) => {
     setTimeout(() => {
       resolve({
-        status: 'REPLAY_SUCCESS',
-        id: 'b-5f8b5f651d4247f2a5150e8274262f29',
+        id: 'b-d8311316d4a04e349f48102f9553b568',
+        status: 'REPLAYING',
       })
     }, 500)
   })
 }
-
-/**
- * 保存创作流备注
- * @param projectId 项目ID
- * @param flowId 创作流ID
- * @param buildId 构建ID
- * @param remark 备注内容
- * @returns 是否保存成功
- */
-export function updateRemark({
-  projectId,
-  flowId,
-  buildId,
-  remark,
-}: {
-  projectId: string
-  flowId: string
-  buildId: string
-  remark: string
-}): Promise<boolean> {
-  // TODO: 调用实际接口
-  // return http.post(`/user/builds/${projectId}/${flowId}/${buildId}/updateRemark`, { remark })
-  //   .then(res => res.data)
-
-  // Mock 数据
-  return new Promise((resolve) => {
-    setTimeout(() => {
-      resolve(true)
-    }, 500)
-  })
-}
-

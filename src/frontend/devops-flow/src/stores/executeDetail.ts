@@ -1,22 +1,20 @@
-import { ref, computed } from 'vue'
+import { ref } from 'vue'
 import { defineStore } from 'pinia'
 import { useI18n } from 'vue-i18n'
 import { useRoute } from 'vue-router'
+import { fetchFlowInfo, updateRemark } from '@/api/flowInfo'
+import type { ExecuteDetailData, FlowInfo } from '@/types/flow'
 import {
+  replayFlow,
   requestPipelineExecDetail,
   requestTerminatePipeline,
-  getFlowInfo,
   retryFlow,
-  replayFlow,
-  updateRemark,
-  type ExecuteDetailData,
-  type FlowInfo,
 } from '@/api/executeDetail'
 
 export const useExecuteDetailStore = defineStore('executeDetail', () => {
-  const { t } = useI18n()
   const route = useRoute()
   const flowId = ref(route.params.flowId as string)
+  const projectId = ref(route.params.projectId as string)
   const buildNo = ref(route.params.buildNo as string)
 
   const loading = ref(false)
@@ -26,7 +24,7 @@ export const useExecuteDetailStore = defineStore('executeDetail', () => {
   async function getExecuteDetail() {
     // TODO: 从路由参数获取实际值
     const params = {
-      projectId: 'default-project',
+      projectId: projectId.value,
       buildNo: buildNo.value,
       flowId: flowId.value,
     }
@@ -35,8 +33,8 @@ export const useExecuteDetailStore = defineStore('executeDetail', () => {
 
   async function getFlowInfoDetail() {
     // TODO: 从路由参数获取实际值
-    return await getFlowInfo({
-      projectId: 'default-project',
+    return await fetchFlowInfo({
+      projectId: projectId.value,
       flowId: flowId.value,
     })
   }
@@ -64,7 +62,7 @@ export const useExecuteDetailStore = defineStore('executeDetail', () => {
     try {
       // TODO: 从路由参数获取实际值
       const res = await requestTerminatePipeline({
-        projectId: 'default-project',
+        projectId: projectId.value,
         flowId: flowId.value,
         buildId: buildId,
       })

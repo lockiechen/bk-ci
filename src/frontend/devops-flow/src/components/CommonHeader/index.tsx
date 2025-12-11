@@ -23,7 +23,7 @@ export const CommonHeader = defineComponent({
   },
   setup(props, { slots }) {
     const { t } = useI18n()
-    
+
     const flowList = {
       name: 'flowList',
       params: {
@@ -44,13 +44,13 @@ export const CommonHeader = defineComponent({
               <img src="/devops-flow-logo.svg" alt="flow" class={styles.logoIcon} />
             </div>
             {/* 创作流文本 */}
-            <span class={styles.flowLabel}>{t('flow.content.flowLabel')}</span>
+            <span class={styles.flowLabel}>{t('flow.title')}</span>
           </RouterLink>
-          
+
           <SvgIcon name="angle-down" class={styles.separatorIcon} size={18} />
-          
+
           {/* 工作流名称 */}
-          <span 
+          <span
             class={[styles.workflowName, props.onWorkflowNameClick && styles.clickable]}
             onClick={handleWorkflowNameClick}
           >
@@ -72,16 +72,10 @@ export const CommonHeader = defineComponent({
         </div>
 
         {/* 中间区域插槽 (如 ModeSwitch) */}
-        {slots.center && (
-          <div class={styles.headerCenter}>
-            {slots.center?.()}
-          </div>
-        )}
+        {slots.center && <div class={styles.headerCenter}>{slots.center?.()}</div>}
 
         {/* 右侧操作按钮插槽 */}
-        <div class={styles.headerRight}>
-          {slots.actions?.()}
-        </div>
+        <div class={styles.headerRight}>{slots.actions?.()}</div>
       </header>
     )
   },

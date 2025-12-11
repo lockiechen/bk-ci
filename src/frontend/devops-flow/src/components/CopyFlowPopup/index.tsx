@@ -62,13 +62,13 @@ export default defineComponent({
       return [
         {
           id: 'personal',
-          groupName: '我的创作流组',
+          groupName: t('flow.content.personalFlowGroup'),
           count: personalList.length || 0,
           children: personalList,
         },
         {
           id: 'project',
-          groupName: '项目创作流组',
+          groupName: t('flow.content.projectFlowGroup'),
           count: projectList.length || 0,
           children: projectList,
         },

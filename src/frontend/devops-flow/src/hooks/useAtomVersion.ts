@@ -1,6 +1,7 @@
-import { ref } from 'vue'
-import { fetchAtomVersionList, fetchAtomModal, type AtomVersion, type AtomModal } from '@/api/atom'
+import { useAtomStore } from '@/stores/atom'
+import type { AtomVersion, AtomModal } from '@/api/atom'
 
+export const DEFAULT_VERSION = '1.*'
 /**
  * 插件版本管理 Hook
  * 负责版本列表获取、默认版本选择和配置加载
@@ -31,7 +32,7 @@ export interface UseAtomVersionReturn {
  */
 function selectDefaultVersion(versionList: AtomVersion[]): string {
   if (!versionList || versionList.length === 0) {
-    return '1.*'
+    return DEFAULT_VERSION
   }
 
   // 优先推荐版本
@@ -53,44 +54,22 @@ function selectDefaultVersion(versionList: AtomVersion[]): string {
   }
 
   // 最后返回第一个
-  return versionList[0]?.version || '1.*'
+  return versionList[0]?.version || DEFAULT_VERSION
 }
 
 export function useAtomVersion(options: UseAtomVersionOptions): UseAtomVersionReturn {
   const { projectCode } = options
-
-  // 版本列表缓存：atomCode -> versions
-  const versionListCache = ref<Map<string, AtomVersion[]>>(new Map())
-  // 版本加载状态：atomCode -> loading
-  const versionLoadingMap = ref<Map<string, boolean>>(new Map())
-
-  // 插件配置缓存：atomCode@version -> modal
-  const atomModalCache = ref<Map<string, AtomModal>>(new Map())
-  // 配置加载状态：atomCode@version -> loading
-  const modalLoadingMap = ref<Map<string, boolean>>(new Map())
+  const atomStore = useAtomStore()
 
   /**
    * 加载版本列表
    */
   const loadVersionList = async (atomCode: string): Promise<AtomVersion[]> => {
-    // 检查缓存
-    if (versionListCache.value.has(atomCode)) {
-      return versionListCache.value.get(atomCode)!
+    const versionList = await atomStore.getVersionList(atomCode, projectCode)
+    if (!versionList) {
+      throw new Error(`Failed to load version list for ${atomCode}`)
     }
-
-    // 设置加载状态
-    versionLoadingMap.value.set(atomCode, true)
-
-    try {
-      const versionList = await fetchAtomVersionList({ projectCode, atomCode })
-      versionListCache.value.set(atomCode, versionList)
-      return versionList
-    } catch (error) {
-      console.error(`Failed to load version list for ${atomCode}:`, error)
-      throw error
-    } finally {
-      versionLoadingMap.value.set(atomCode, false)
-    }
+    return versionList
   }
 
   /**
@@ -104,46 +83,25 @@ export function useAtomVersion(options: UseAtomVersionOptions): UseAtomVersionRe
    * 加载插件配置
    */
   const loadAtomModal = async (atomCode: string, version: string): Promise<AtomModal> => {
-    const cacheKey = `${atomCode}@${version}`
-
-    // 检查缓存
-    if (atomModalCache.value.has(cacheKey)) {
-      return atomModalCache.value.get(cacheKey)!
+    const atomModal = await atomStore.getAtomModal(atomCode, version, projectCode)
+    if (!atomModal) {
+      throw new Error(`Failed to load atom modal for ${atomCode}@${version}`)
     }
-
-    // 设置加载状态
-    modalLoadingMap.value.set(cacheKey, true)
-
-    try {
-      const atomModal = await fetchAtomModal({
-        projectCode,
-        atomCode,
-        version,
-        queryOfflineFlag: false,
-      })
-      atomModalCache.value.set(cacheKey, atomModal)
-      return atomModal
-    } catch (error) {
-      console.error(`Failed to load atom modal for ${atomCode}@${version}:`, error)
-      throw error
-    } finally {
-      modalLoadingMap.value.set(cacheKey, false)
-    }
+    return atomModal
   }
 
   /**
    * 检查版本列表是否正在加载
    */
   const isLoadingVersion = (atomCode: string): boolean => {
-    return versionLoadingMap.value.get(atomCode) || false
+    return atomStore.isLoadingVersionList(atomCode)
   }
 
   /**
    * 检查插件配置是否正在加载
    */
   const isLoadingModal = (atomCode: string, version: string): boolean => {
-    const cacheKey = `${atomCode}@${version}`
-    return modalLoadingMap.value.get(cacheKey) || false
+    return atomStore.isLoadingAtomModal(atomCode, version)
   }
 
   return {

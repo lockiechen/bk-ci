@@ -134,8 +134,8 @@ export default defineComponent({
 
     const isModelListShow = ref(false)
     const panels = ref([
-      { name: 'projectModel', label: '项目模板' },
-      { name: 'storeModel', label: '研发商店模板' },
+      { name: 'projectModel', label: t('flow.content.projectTemplate') },
+      { name: 'storeModel', label: t('flow.content.storeTemplate') },
     ])
 
     const active = ref('projectModel')

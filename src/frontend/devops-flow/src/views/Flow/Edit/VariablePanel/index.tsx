@@ -14,6 +14,7 @@ import {
   saveFlowVariable,
   updateFlowVariable,
   deleteFlowVariable,
+  getFlowVariablesFromModel,
   getPluginOutputVariablesFromModel,
   getSystemVariables,
 } from '@/api/variable'
@@ -68,16 +69,18 @@ export default defineComponent({
     const editingVariable = ref<FlowVariable | null>(null)
     const currentAddingCategory = ref<VariableCategory>(VariableCategory.INPUT)
 
-    // Load variables
-    const loadVariables = async () => {
-      loading.value = true
+    // Load variables from flow model
+    const loadVariables = () => {
       try {
-        variables.value = await getFlowVariables(props.flowId)
+        const model = flowModelStore.flowModel
+        if (!model) {
+          variables.value = []
+          return
+        }
+        variables.value = getFlowVariablesFromModel(model)
       } catch (error) {
         console.error('Failed to load variables:', error)
         Message({ theme: 'error', message: t('flow.variable.loadFailed') })
-      } finally {
-        loading.value = false
       }
     }
 
@@ -335,6 +338,21 @@ export default defineComponent({
       editingVariable.value = null
     }
 
+    // Watch flow model changes to reload variables
+    watch(
+      () => flowModelStore.flowModel,
+      () => {
+        if (isOpen.value && activePanelTab.value === VariablePanelTab.VARIABLES) {
+          loadVariables()
+        }
+        // Also reload plugin output variables when model changes
+        if (isOpen.value && activePanelTab.value === VariablePanelTab.PLUGIN_OUTPUT) {
+          loadPluginOutputVariables()
+        }
+      },
+      { deep: true },
+    )
+
     // Initialize
     onMounted(() => {
       loadVariables()
@@ -493,10 +511,7 @@ export default defineComponent({
                 class={styles.panelTab}
               >
                 {/* Variables Tab */}
-                <Tab.TabPanel
-                  name={VariablePanelTab.VARIABLES}
-                  label={t('flow.variable.variables')}
-                >
+                <Tab.TabPanel name={VariablePanelTab.VARIABLES} label={t('flow.variable.title')}>
                   <div class={styles.variableList}>
                     {/* Tips */}
                     <Alert theme="info">{t('flow.variable.variableTips')}</Alert>

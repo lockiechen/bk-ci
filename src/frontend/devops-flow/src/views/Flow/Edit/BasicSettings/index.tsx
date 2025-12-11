@@ -6,13 +6,10 @@ import { SvgIcon } from '@/components/SvgIcon'
 import { useFlowModel } from '@/hooks/useFlowModel'
 import sharedStyles from '../shared.module.css'
 import styles from './BasicSettings.module.css'
+import type { FlowSettings } from '@/api/flowModel'
+import { RunLockType } from '@/types/flow'
 
 const { FormItem } = Form
-
-const runLockTypeMap = {
-  MULTIPLE: 'MULTIPLE',
-  GROUP_LOCK: 'GROUP_LOCK',
-}
 
 export default defineComponent({
   name: 'EditBasicSettings',
@@ -20,43 +17,50 @@ export default defineComponent({
     const { t } = useI18n()
     const route = useRoute()
     const flowId = route.params.flowId as string
-    const flowModel = useFlowModel({ flowId })
+    const { flowSetting, updateFlowSetting } = useFlowModel({ flowId })
 
     // 表单数据
-    const formData = ref({
+    const formData = ref<FlowSettings>({
       name: '',
       desc: '',
-      runLockType: runLockTypeMap.MULTIPLE, // MULTIPLE: 可并发运行, GROUP_LOCK: 分组
+      runLockType: RunLockType.MULTIPLE,
       maxConRunningQueueSize: 40,
       waitQueueTimeMinute: 20,
-      concurrencyGroup: '${{ci.flow_id}}', // 分组名称，默认使用流水线ID
-      concurrencyCancelInProgress: false, // 是否在新任务到来时取消正在运行的构建
-      maxQueueSize: 0, // 最大排队数量
+      concurrencyGroup: '${{ci.flow_id}}',
+      concurrencyCancelInProgress: false,
+      maxQueueSize: 10,
+      successSubscriptionList: [],
+      failSubscriptionList: [],
     })
 
-    // 从flowModel中初始化数据
-    const initFormData = () => {
-      if (flowModel.flowModel.value) {
-        formData.value.name = flowModel.flowModel.value.name || ''
-        formData.value.desc = flowModel.flowModel.value.desc || ''
-        // TODO: 从flowSetting中获取并发设置
-        // 这里暂时使用默认值，后续需要从API获取实际的flowSetting
-      }
+    function initFormData(setting: FlowSettings) {
+      formData.value.name = setting?.name || ''
+      formData.value.desc = setting?.desc || ''
+      formData.value.runLockType = setting?.runLockType || RunLockType.MULTIPLE
+      formData.value.maxConRunningQueueSize = setting?.maxConRunningQueueSize || 40
+      formData.value.waitQueueTimeMinute = setting?.waitQueueTimeMinute || 20
+      formData.value.concurrencyGroup = setting?.concurrencyGroup || '${{ci.flow_id}}'
+      formData.value.concurrencyCancelInProgress = setting?.concurrencyCancelInProgress || false
     }
 
-    // 监听flowModel变化
     watch(
-      () => flowModel.flowModel.value,
-      () => {
-        initFormData()
+      flowSetting,
+      (newVal) => {
+        if (newVal) {
+          initFormData(newVal)
+        }
       },
       { immediate: true },
     )
 
+    function handleChange() {
+      updateFlowSetting(formData.value)
+    }
+
     return () => (
       <div class={sharedStyles.tabContainer}>
         <div class={styles.basicSettings}>
-          <Form formType="vertical" labelWidth={120}>
+          <Form formType="vertical" labelWidth={120} model={formData.value}>
             {/* 基础信息 */}
             <div class={styles.section}>
               <div class={styles.sectionTitle}>{t('flow.content.basicInfo')}</div>
@@ -65,6 +69,7 @@ export default defineComponent({
                   v-model={formData.value.name}
                   placeholder={t('flow.content.workflowNamePlaceholder')}
                   maxlength={128}
+                  onChange={handleChange}
                 />
               </FormItem>
 
@@ -75,6 +80,7 @@ export default defineComponent({
                   rows={3}
                   placeholder={t('flow.content.descriptionPlaceholder')}
                   maxlength={500}
+                  onChange={handleChange}
                 />
               </FormItem>
             </div>
@@ -89,15 +95,19 @@ export default defineComponent({
                       {t('flow.content.concurrencySettings')}
                     </span>
                   </div>
-                  <Radio.Group v-model={formData.value.runLockType} class={styles.radioGroup}>
-                    <Radio label={runLockTypeMap.MULTIPLE} class={styles.radioItem}>
+                  <Radio.Group
+                    v-model={formData.value.runLockType}
+                    class={styles.radioGroup}
+                    onChange={handleChange}
+                  >
+                    <Radio label={RunLockType.MULTIPLE} class={styles.radioItem}>
                       {t('flow.content.concurrentExecution')}
                     </Radio>
-                    <Radio label={runLockTypeMap.GROUP_LOCK} class={styles.radioItem}>
+                    <Radio label={RunLockType.GROUP_LOCK} class={styles.radioItem}>
                       {t('flow.content.groupOnlyOneBuildTaskCanRunAtSameTime')}
                     </Radio>
                   </Radio.Group>
-                  {formData.value.runLockType === runLockTypeMap.MULTIPLE && (
+                  {formData.value.runLockType === RunLockType.MULTIPLE && (
                     <div class={styles.subForm}>
                       <FormItem
                         label={t('flow.content.maxConcurrentExecutions')}
@@ -111,6 +121,7 @@ export default defineComponent({
                           min={1}
                           max={200}
                           placeholder={t('flow.content.maxConcurrentExecutionsPlaceholder')}
+                          onChange={handleChange}
                         />
                       </FormItem>
                       <FormItem
@@ -126,13 +137,14 @@ export default defineComponent({
                             min={1}
                             max={1440}
                             placeholder={t('flow.content.queueTimeoutTimePlaceholder')}
+                            onChange={handleChange}
                           />
                           <span class={styles.unit}>{t('flow.content.minutes')}</span>
                         </div>
                       </FormItem>
                     </div>
                   )}
-                  {formData.value.runLockType === runLockTypeMap.GROUP_LOCK && (
+                  {formData.value.runLockType === RunLockType.GROUP_LOCK && (
                     <div class={styles.subForm}>
                       <FormItem
                         label={t('flow.content.groupName')}
@@ -144,10 +156,11 @@ export default defineComponent({
                           v-model={formData.value.concurrencyGroup}
                           placeholder={t('flow.content.groupNamePlaceholder')}
                           maxlength={128}
+                          onChange={handleChange}
                         />
                       </FormItem>
                       <FormItem property="concurrencyCancelInProgress" class={styles.subFormItem}>
-                        <Checkbox checked={formData.value.concurrencyCancelInProgress}>
+                        <Checkbox v-model={formData.value.concurrencyCancelInProgress}>
                           {t('flow.content.stopWhenNewCome')}
                         </Checkbox>
                       </FormItem>
@@ -165,6 +178,7 @@ export default defineComponent({
                                 min={0}
                                 max={200}
                                 placeholder={t('flow.content.maxQueueSizePlaceholder')}
+                                onChange={handleChange}
                               />
                               <span class={styles.unit}>{t('flow.content.item')}</span>
                             </div>
@@ -181,6 +195,7 @@ export default defineComponent({
                                 min={1}
                                 max={1440}
                                 placeholder={t('flow.content.queueTimeoutTimePlaceholder')}
+                                onChange={handleChange}
                               />
                               <span class={styles.unit}>{t('flow.content.minutes')}</span>
                             </div>

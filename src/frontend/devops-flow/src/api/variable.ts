@@ -7,6 +7,7 @@ import {
   type FlowVariable,
   type PluginOutputVariable,
   type ReadOnlyVariableGroup,
+  type VariableOption,
 } from '@/types/variable'
 import type { FlowModel } from './flowModel'
 import type { JobCategory } from './atom'
@@ -211,6 +212,90 @@ export async function getSystemVariables(): Promise<ReadOnlyVariableGroup[]> {
       resolve(getMockSystemVariableGroups())
     }, 300)
   })
+}
+
+/**
+ * Get flow variables from flow model
+ * Variables are stored in the trigger stage (index 0) container's params
+ * @param model Flow model
+ */
+export function getFlowVariablesFromModel(model: FlowModel | null): FlowVariable[] {
+  if (!model || !model.stages || model.stages.length === 0) {
+    return []
+  }
+
+  // Get trigger stage (first stage)
+  const triggerStage = model.stages[0]
+  if (!triggerStage || !triggerStage.containers || triggerStage.containers.length === 0) {
+    return []
+  }
+
+  // Get params from trigger container
+  const triggerContainer = triggerStage.containers[0]
+  if (!triggerContainer || !triggerContainer.params) {
+    return []
+  }
+
+  // Convert params to FlowVariable format
+  const variables: FlowVariable[] = triggerContainer.params.map((param, index) => {
+    // Map param type to VariableType
+    let variableType: VariableType = VariableType.STRING
+    if (param.type === 'ENUM' || param.type === 'MULTIPLE') {
+      variableType = param.type === 'ENUM' ? VariableType.ENUM : VariableType.MULTIPLE
+    } else if (param.type === 'BOOLEAN') {
+      variableType = VariableType.BOOLEAN
+    } else if (param.type === 'TEXTAREA') {
+      variableType = VariableType.TEXTAREA
+    }
+
+    // Convert options format if needed
+    let options: VariableOption[] | undefined
+    if (param.options && Array.isArray(param.options)) {
+      options = param.options.map((opt: any) => {
+        // Handle different option formats
+        if (typeof opt === 'string') {
+          return { id: opt, label: opt }
+        } else if (opt.id && opt.label) {
+          return { id: opt.id, label: opt.label }
+        } else if (opt.key && opt.value) {
+          return { id: opt.key, label: opt.value }
+        }
+        return { id: String(opt), label: String(opt) }
+      })
+    }
+
+    // Determine category based on constant flag
+    const category = param.constant ? VariableCategory.CONSTANT : VariableCategory.INPUT
+
+    // Convert defaultValue
+    let defaultValue: string | boolean | string[] = ''
+    if (param.defaultValue !== undefined && param.defaultValue !== null) {
+      if (typeof param.defaultValue === 'boolean') {
+        defaultValue = param.defaultValue
+      } else if (Array.isArray(param.defaultValue)) {
+        defaultValue = param.defaultValue.map(String)
+      } else {
+        defaultValue = String(param.defaultValue)
+      }
+    }
+
+    return {
+      id: param.id,
+      name: param.name || param.id,
+      type: variableType,
+      category,
+      defaultValue,
+      desc: param.desc,
+      required: param.required ?? false,
+      readOnly: param.readOnly ?? false,
+      options,
+      valueNotEmpty: param.valueNotEmpty ?? false,
+      groupLabel: param.category || undefined,
+      order: index,
+    }
+  })
+
+  return variables
 }
 
 /**

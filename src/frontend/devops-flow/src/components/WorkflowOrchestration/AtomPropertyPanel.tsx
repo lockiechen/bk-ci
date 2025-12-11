@@ -8,7 +8,7 @@ const { CollapsePanel } = Collapse
 import type { AdditionalOptions, CustomVariable, Element } from '@/api/flowModel'
 import type { AtomModal, AtomVersion } from '@/api/atom'
 import { useAtomStore } from '@/stores/atom'
-import { useAtomVersion } from '@/hooks/useAtomVersion'
+import { DEFAULT_VERSION, useAtomVersion } from '@/hooks/useAtomVersion'
 import styles from './AtomPropertyPanel.module.css'
 import sharedStyles from './shared.module.css'
 import AtomForm from '@/components/AtomForm/AtomForm'
@@ -39,7 +39,7 @@ export default defineComponent({
     const { t } = useI18n()
     const route = useRoute()
     const atomStore = useAtomStore()
-    const projectCode = (route.params.projectId as string) || 'lockie'
+    const projectCode = route.params.projectId as string
     const atomVersion = useAtomVersion({ projectCode })
     const uiStore = useUIStore()
     const { isVariablePanelOpen } = storeToRefs(uiStore)
@@ -49,6 +49,7 @@ export default defineComponent({
     const versionList = ref<AtomVersion[]>([])
     const isLoadingVersion = ref(false)
     const nameEditing = ref(false)
+    const atomModal = ref<AtomModal | null>(null)
 
     // ========== Computed ==========
     const atomCode = computed(() => {
@@ -60,15 +61,7 @@ export default defineComponent({
     })
 
     const atomVersionValue = computed(() => {
-      return props.currentElement?.version || '1.*'
-    })
-
-    const atomModal = computed<AtomModal | null>(() => {
-      const code = atomCode.value
-      const version = atomVersionValue.value
-      if (!code || !version) return null
-      // 直接从 Pinia store 缓存中读取
-      return atomStore.getCachedAtomModal(code, version)
+      return props.currentElement?.version || DEFAULT_VERSION
     })
 
     const isLoadingModal = computed(() => {
@@ -98,9 +91,27 @@ export default defineComponent({
       return props || {}
     })
 
+    // 判断是否是新模板版本
+    const isNewTemplate = computed(() => {
+      const modal = atomModal.value
+      if (!modal) return false
+      const { htmlTemplateVersion } = modal
+      return htmlTemplateVersion && htmlTemplateVersion !== '1.0'
+    })
+
     const atomValue = computed(() => {
       const element = props.currentElement
-      return element?.data?.input || {}
+      if (!element) return {}
+
+      // 新版本模板：从 element.data.input 获取
+      if (isNewTemplate.value) {
+        // 确保 data 和 data.input 存在，如果不存在则返回空对象
+        // 注意：这里不直接修改 element，而是在 handleConfigChange 中处理初始化
+        return element.data?.input || {}
+      }
+
+      // 旧版本模板：直接使用 element
+      return element
     })
 
     const customEnv = computed(() => {
@@ -188,13 +199,24 @@ export default defineComponent({
       (newCode) => {
         if (newCode) {
           loadVersionList()
+          getAtomModal()
         } else {
           versionList.value = []
         }
       },
       { immediate: true },
     )
+
     // ========== Functions ==========
+
+    async function getAtomModal() {
+      const code = atomCode.value
+      const version = atomVersionValue.value
+      if (!code || !version) return null
+      const modal = await atomStore.getAtomModal(code, version, projectCode)
+      atomModal.value = modal
+      return modal
+    }
     function getAtomName() {
       if (props.currentElement?.name) {
         return props.currentElement.name
@@ -227,14 +249,20 @@ export default defineComponent({
       if (!props.currentElement) return
 
       const element = { ...props.currentElement }
-      if (!element.data) {
-        element.data = { input: {}, output: [] }
-      }
-      if (!element.data.input) {
-        element.data.input = {}
-      }
 
-      element.data.input[key] = value
+      // 新版本模板：更新 element.data.input[key]
+      if (isNewTemplate.value) {
+        if (!element.data) {
+          element.data = { input: {}, output: [] }
+        }
+        if (!element.data.input) {
+          element.data.input = {}
+        }
+        element.data.input[key] = value
+      } else {
+        // 旧版本模板：直接更新 element[key]
+        element[key] = value
+      }
 
       emit('updateAtom', element)
     }
@@ -494,7 +522,7 @@ export default defineComponent({
                           {{
                             label: () => (
                               <div class={styles.labelWithIcon}>
-                                <span>{t('flow.orchestration.version')}</span>
+                                <span>{t('flow.content.version')}</span>
                                 <Popover
                                   content={t('flow.orchestration.atomVersionDesc')}
                                   placement="top"

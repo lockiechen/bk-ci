@@ -4,7 +4,7 @@ import { convertTime } from '@/utils/util'
 import { Tag } from 'bkui-vue'
 import Summary from '@/components/Summary'
 import { SvgIcon } from '@/components/SvgIcon'
-import { type ExecuteDetailData } from '@/api/executeDetail'
+import { type ExecuteDetailData } from '@/api/flowInfo'
 import { mapThemeOfStatus } from '@/utils/flowStatus'
 import styles from './ExecutionStatusBar.module.css'
 

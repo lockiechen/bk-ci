@@ -217,31 +217,35 @@ export default defineComponent({
         {{
           header: () => (
             <div class={sharedStyles.propertyPanelHeader}>
-              <div class={sharedStyles.nameEdit}>
-                {nameEditing.value ? (
-                  <Input
-                    modelValue={formData.value?.name || ''}
-                    maxlength={30}
-                    placeholder={t('flow.orchestration.jobNamePlaceholder')}
-                    onBlur={handleBlur}
-                    onEnter={handleEnter}
-                    onChange={handleNameChange}
-                    class={sharedStyles.nameInput}
-                    autoFocus
-                  />
-                ) : (
-                  <>
-                    <p class={sharedStyles.nameText} title={formData.value?.name}>
-                      {formData.value?.name}
-                    </p>
-                    {props.editable && (
-                      <span class={sharedStyles.editIcon} onClick={handleEditIconClick}>
-                        <SvgIcon name="edit" size={16} />
-                      </span>
-                    )}
-                  </>
-                )}
-              </div>
+              {props.isNew ? (
+                <span>{title.value}</span>
+              ) : (
+                <div class={sharedStyles.nameEdit}>
+                  {nameEditing.value ? (
+                    <Input
+                      modelValue={formData.value?.name || ''}
+                      maxlength={30}
+                      placeholder={t('flow.orchestration.jobNamePlaceholder')}
+                      onBlur={handleBlur}
+                      onEnter={handleEnter}
+                      onChange={handleNameChange}
+                      class={sharedStyles.nameInput}
+                      autoFocus
+                    />
+                  ) : (
+                    <>
+                      <p class={sharedStyles.nameText} title={formData.value?.name}>
+                        {formData.value?.name}
+                      </p>
+                      {props.editable && (
+                        <span class={sharedStyles.editIcon} onClick={handleEditIconClick}>
+                          <SvgIcon name="edit" size={16} />
+                        </span>
+                      )}
+                    </>
+                  )}
+                </div>
+              )}
             </div>
           ),
           default: () =>
@@ -534,14 +538,15 @@ export default defineComponent({
                 </Form>
               </div>
             ) : null,
-          footer: () => (
-            <div class={styles.jobPanelFooter}>
-              <Button theme="primary" onClick={handleConfirm} disabled={!props.editable}>
-                {t('flow.orchestration.add')}
-              </Button>
-              <Button onClick={handleCancel}>{t('flow.common.cancel')}</Button>
-            </div>
-          ),
+          footer: () =>
+            props.isNew && (
+              <div class={styles.jobPanelFooter}>
+                <Button theme="primary" onClick={handleConfirm} disabled={!props.editable}>
+                  {t('flow.orchestration.add')}
+                </Button>
+                <Button onClick={handleCancel}>{t('flow.common.cancel')}</Button>
+              </div>
+            ),
         }}
       </Sideslider>
     )

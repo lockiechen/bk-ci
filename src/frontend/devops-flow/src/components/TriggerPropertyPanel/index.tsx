@@ -43,7 +43,7 @@ export default defineComponent({
   emits: ['update:visible', 'save'],
   setup(props, { emit }) {
     const route = useRoute()
-    const projectCode = (route.params.projectId as string) || 'lockie'
+    const projectCode = route.params.projectId as string
     const { t, locale } = useI18n()
     const { FormItem } = Form
     const atomStore = useAtomStore()
@@ -151,6 +151,7 @@ export default defineComponent({
     const updateTimerInput = (key: string, value: any) => {
       ensureElementStructure()
       if (!localElement.value) return
+      if (!localElement.value.data) return
       localElement.value.data.input[key] = value
     }
 

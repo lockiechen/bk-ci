@@ -233,7 +233,20 @@
       "allEvents": "All Events",
       "enterKeywords": "Please enter keywords",
       "noEventsFound": "No events found",
-      "noEventsMeetRequirements": "No events meet the requirements? View publishing guide"
+      "noEventsMeetRequirements": "No events meet the requirements? View publishing guidelines",
+      "executionDetail": "Execution Detail",
+      "artifact": "Artifact",
+      "report": "Report",
+      "startParams": "Start Parameters",
+      "projectTemplate": "Project Template",
+      "storeTemplate": "Store Template",
+      "personalFlowGroup": "My Flow Groups",
+      "projectFlowGroup": "Project Flow Groups",
+      "lessThanOneMinute": "Less than 1 minute",
+      "greaterThanDays": "Greater than {0} days",
+      "total": "Total",
+      "items": "items",
+      "perPage": "Per page"
     },
     "triggerPanel": {
       "enabledLabel": "Enabled",
@@ -323,7 +336,10 @@
       "flowControlOptions": "Flow Control Options",
       "enableStage": "Enable this Stage",
       "whenToRunStage": "When to run this Stage",
-      "afterPrevStageSuccess": "Run when the previous Stage succeeds",
+      "afterPrevStageSuccess": "Run when previous Stage succeeds",
+      "customConditionMatch": "Run when custom conditions are met",
+      "customVariableMatch": "Run when custom variable conditions are met",
+      "customVariableNotMatch": "Run when custom variable conditions are not met",
       "add": "Add",
       "stageNameRequired": "Stage name cannot be empty",
       "addJob": "Add Creation Task Job",
@@ -405,11 +421,12 @@
       "customCondition": "Run when the following custom conditions are met",
       "customVar": "Custom Variables",
       "customConditionExp": "Custom Condition Expression",
-      "customConditionExpPlaceholder": "Enter custom condition expression, e.g.: ${{'{{'}} variables.var1 {'}}'} === 'value1'",
-      "stageRunning": "When the current Stage starts running",
-      "preStageSuccess": "When the upstream Stage succeeds",
-      "preStageFail": "When the upstream Stage fails",
-      "preStageCancel": "When the upstream Stage is canceled"
+      "customConditionExpPlaceholder": "Please enter custom condition expression, e.g.: ${'{{'} variables.var1 {'}}'} === 'value1'",
+      "stageRunning": "Run when current Stage starts",
+      "preStageSuccess": "Run when previous Stage succeeds",
+      "preStageFail": "Run when previous Stage fails",
+      "preStageCancel": "Run when previous Stage is canceled",
+      "stepIdPlaceholder": "Please enter Step ID, optional, must be unique within the current Job if not empty"
     },
     "dialog": {
       "createGroup": {

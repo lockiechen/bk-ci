@@ -5,6 +5,7 @@ import { Button, Message } from 'bkui-vue'
 import { ROUTE_NAMES } from '@/constants/routes'
 import { useFlowModel } from '@/hooks/useFlowModel'
 import styles from './EditHeader.module.css'
+import { CommonHeader } from '../CommonHeader'
 
 export const EditHeader = defineComponent({
   name: 'EditHeader',
@@ -13,10 +14,14 @@ export const EditHeader = defineComponent({
     const route = useRoute()
     const router = useRouter()
     const flowId = route.params.flowId as string
-    const projectId = (route.params.projectId as string) || route.query.projectId as string || ''
+    const projectId = (route.params.projectId as string) || (route.query.projectId as string)
 
     const flowModel = useFlowModel({ flowId })
     const isSaving = ref(false)
+
+    const workflowName = computed(() => {
+      return flowModel.flowModel.value?.name || '--'
+    })
 
     const handleCancel = () => {
       router.push({
@@ -47,7 +52,7 @@ export const EditHeader = defineComponent({
       try {
         await flowModel.saveFlow({
           projectId,
-          pipelineId: flowId,
+          flowId,
           storageType: 'MODEL',
         })
 
@@ -77,34 +82,41 @@ export const EditHeader = defineComponent({
     }
 
     return () => (
-      <header class={styles.editHeader}>
-        <div class={styles.headerLeft}>
-          <span class={styles.flowName}>
-            {t('flow.content.edit')} - {flowId}
-          </span>
-        </div>
-
-        <div class={styles.headerRight}>
-          <Button onClick={handleCancel} disabled={isSaving.value}>
-            {t('flow.common.cancel')}
-          </Button>
-          <Button
-            outline
-            theme="primary"
-            onClick={handleSave}
-            loading={isSaving.value}
-            disabled={isSaving.value || !flowModel.hasUnsavedChanges.value}
-          >
-            {t('flow.content.save')}
-          </Button>
-          <Button onClick={handleDebug} disabled={isSaving.value}>
-            {t('flow.content.debug')}
-          </Button>
-          <Button theme="primary" onClick={handlePublish} disabled={isSaving.value}>
-            {t('flow.content.publish')}
-          </Button>
-        </div>
-      </header>
+      <CommonHeader workflowName={workflowName.value} onWorkflowNameClick={handleCancel}>
+        {{
+          default: () => (
+            <div class={styles.editHeader}>
+              <div class={styles.headerLeft}>
+                <span class={styles.flowName}>
+                  {t('flow.content.edit')} - {flowId}
+                </span>
+              </div>
+            </div>
+          ),
+          actions: () => (
+            <div class={styles.headerRight}>
+              <Button onClick={handleCancel} disabled={isSaving.value}>
+                {t('flow.common.cancel')}
+              </Button>
+              <Button
+                outline
+                theme="primary"
+                onClick={handleSave}
+                loading={isSaving.value}
+                disabled={isSaving.value || !flowModel.hasUnsavedChanges.value}
+              >
+                {t('flow.content.save')}
+              </Button>
+              <Button onClick={handleDebug} disabled={isSaving.value}>
+                {t('flow.content.debug')}
+              </Button>
+              <Button theme="primary" onClick={handlePublish} disabled={isSaving.value}>
+                {t('flow.content.publish')}
+              </Button>
+            </div>
+          ),
+        }}
+      </CommonHeader>
     )
   },
 })

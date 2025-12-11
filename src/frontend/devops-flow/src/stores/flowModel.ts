@@ -7,6 +7,7 @@ import {
   yamlToFlowModel,
   type FlowModel,
   type SaveFlowModelParams,
+  type FlowSettings,
 } from '@/api/flowModel'
 
 /**
@@ -15,6 +16,7 @@ import {
 export const useFlowModelStore = defineStore('flowModel', () => {
   // Flow 模型数据
   const flowModel = ref<FlowModel | null>(null)
+  const flowSetting = ref<FlowSettings | null>(null)
 
   // YAML 格式的代码内容
   const yamlContent = ref<string>('')
@@ -50,8 +52,9 @@ export const useFlowModelStore = defineStore('flowModel', () => {
 
     try {
       const model = await getFlowModel(flowId, version)
-      flowModel.value = model
-      yamlContent.value = flowModelToYaml(model)
+      flowModel.value = model.modelAndSetting.model
+      flowSetting.value = model.modelAndSetting.setting
+      yamlContent.value = model.yamlPreview.yaml
       hasUnsavedChanges.value = false
     } catch (error) {
       console.error('Failed to load flow model:', error)
@@ -69,6 +72,11 @@ export const useFlowModelStore = defineStore('flowModel', () => {
   function updateFlowModel(model: FlowModel) {
     flowModel.value = model
     yamlContent.value = flowModelToYaml(model)
+    hasUnsavedChanges.value = true
+  }
+
+  function updateFlowSetting(setting: FlowSettings) {
+    flowSetting.value = setting
     hasUnsavedChanges.value = true
   }
 
@@ -106,7 +114,7 @@ export const useFlowModelStore = defineStore('flowModel', () => {
         ...params,
         modelAndSetting: {
           model: flowModel.value,
-          ...(params.modelAndSetting?.setting && { setting: params.modelAndSetting.setting }),
+          setting: flowSetting.value!,
         },
         storageType: params.storageType || 'MODEL',
       }
@@ -128,6 +136,7 @@ export const useFlowModelStore = defineStore('flowModel', () => {
   function reset() {
     flowModel.value = null
     yamlContent.value = ''
+    flowSetting.value = null
     loading.value = false
     hasError.value = false
     currentFlowId.value = ''
@@ -145,6 +154,7 @@ export const useFlowModelStore = defineStore('flowModel', () => {
   return {
     // 状态
     flowModel,
+    flowSetting,
     yamlContent,
     loading,
     hasError,
@@ -157,6 +167,7 @@ export const useFlowModelStore = defineStore('flowModel', () => {
     // 方法
     loadFlowModel,
     updateFlowModel,
+    updateFlowSetting,
     updateYamlContent,
     saveFlow,
     reset,

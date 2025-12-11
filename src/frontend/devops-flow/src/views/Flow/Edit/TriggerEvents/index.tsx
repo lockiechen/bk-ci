@@ -18,7 +18,7 @@ export default defineComponent({
     const { t } = useI18n()
     const route = useRoute()
     const flowId = route.params.flowId as string
-    const projectCode = (route.params.projectId as string) || 'lockie'
+    const projectCode = route.params.projectId as string
     const flowModel = useFlowModel({ flowId })
     const isTriggerPanelVisible = ref(false)
     const editingTriggerIndex = ref<number | null>(null)
