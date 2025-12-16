@@ -1,34 +1,20 @@
-import { defineComponent, ref, computed, onMounted, watch } from 'vue'
-import { useI18n } from 'vue-i18n'
-import { Tab, Button, Input, Message, Collapse, Alert } from 'bkui-vue'
-import { VueDraggable, type SortableEvent } from 'vue-draggable-plus'
-import {
-  type FlowVariable,
-  type PluginOutputVariable,
-  type SystemVariable,
-  type ReadOnlyVariableGroup,
-} from '@/types/variable'
-import { VariableCategory, VariablePanelTab } from '@/types/variable'
-import {
-  getFlowVariables,
-  saveFlowVariable,
-  updateFlowVariable,
-  deleteFlowVariable,
-  getFlowVariablesFromModel,
-  getPluginOutputVariablesFromModel,
-  getSystemVariables,
-} from '@/api/variable'
-import { useFlowModelStore } from '@/stores/flowModel'
+import type { Param } from '@/api/flowModel'
 import { SvgIcon } from '@/components/SvgIcon'
-import VariableItem from './VariableItem'
-import VariableForm from './VariableForm'
+import { useFlowVariables } from '@/hooks/useFlowVariables'
+import { VariableCategory, VariablePanelTab, type ReadOnlyVariableGroup } from '@/types/variable'
+import { Alert, Button, Collapse, Input, Message, Tab } from 'bkui-vue'
+import { computed, defineComponent, ref, watch } from 'vue'
+import { VueDraggable, type SortableEvent } from 'vue-draggable-plus'
+import { useI18n } from 'vue-i18n'
 import ReadOnlyVariableItem from './ReadOnlyVariableItem'
+import VariableForm from './VariableForm'
+import VariableItem from './VariableItem'
 import styles from './VariablePanel.module.css'
 
 interface CategoryItem {
   category: VariableCategory
   name: string
-  variables: Record<string, FlowVariable[]>
+  variables: Record<string, Param[]>
   emptyText: string
   totalCount?: number
 }
@@ -55,64 +41,41 @@ export default defineComponent({
     const DRAG_HANDLE_CLASS = 'drag-handle'
     const isOpen = ref(props.modelValue)
     const activePanelTab = ref(VariablePanelTab.VARIABLES) // 顶级Tab
-    const variables = ref<FlowVariable[]>([])
-    const pluginOutputVariables = ref<ReadOnlyVariableGroup[]>([])
-    const systemVariableGroups = ref<ReadOnlyVariableGroup[]>([])
-    const loading = ref(false)
     const searchKeyword = ref('')
 
-    // Get flow model store
-    const flowModelStore = useFlowModelStore()
+    // Use flow variables hook - unified hook for all variables
+    const {
+      // Flow variables
+      variables,
+      existingIds,
+      addVariable,
+      updateVariable,
+      removeVariable,
+      updateParams,
+      // Plugin output variables
+      pluginOutputVariables,
+      fetchPluginOutputVariables,
+      // System variables
+      systemVariables,
+      fetchSystemVariables,
+    } = useFlowVariables(props.flowId)
 
     // Edit mode state
     const isEditMode = ref(false)
-    const editingVariable = ref<FlowVariable | null>(null)
+    const editingVariable = ref<Param | null>(null)
     const currentAddingCategory = ref<VariableCategory>(VariableCategory.INPUT)
-
-    // Load variables from flow model
-    const loadVariables = () => {
-      try {
-        const model = flowModelStore.flowModel
-        if (!model) {
-          variables.value = []
-          return
-        }
-        variables.value = getFlowVariablesFromModel(model)
-      } catch (error) {
-        console.error('Failed to load variables:', error)
-        Message({ theme: 'error', message: t('flow.variable.loadFailed') })
-      }
-    }
-
-    // Load plugin output variables from flow model
-    const loadPluginOutputVariables = () => {
-      try {
-        const model = flowModelStore.flowModel
-        if (!model) {
-          pluginOutputVariables.value = []
-          return
-        }
-        pluginOutputVariables.value = getPluginOutputVariablesFromModel(model)
-      } catch (error) {
-        console.error('Failed to load plugin output variables:', error)
-        Message({ theme: 'error', message: t('flow.variable.loadPluginVariablesFailed') })
-      }
-    }
-
-    // Load system variables
-    const loadSystemVariables = async () => {
-      try {
-        systemVariableGroups.value = await getSystemVariables()
-      } catch (error) {
-        console.error('Failed to load system variables:', error)
-        Message({ theme: 'error', message: t('flow.variable.loadSystemVariablesFailed') })
-      }
-    }
 
     // Filter variables by category and group them
     const getVariablesByCategory = (category: VariableCategory) => {
       const filtered = variables.value.filter((v) => {
-        const matchCategory = v.category === category
+        // Determine category from constant flag
+
+        const variableCategory = v.constant
+          ? VariableCategory.CONSTANT
+          : !v.required
+            ? VariableCategory.OTHER
+            : VariableCategory.INPUT
+        const matchCategory = variableCategory === category
         const matchSearch =
           !searchKeyword.value ||
           v.id.toLowerCase().includes(searchKeyword.value.toLowerCase()) ||
@@ -120,17 +83,17 @@ export default defineComponent({
         return matchCategory && matchSearch
       })
 
-      // Group by groupLabel
+      // Group by category (user-defined group name)
       const grouped = filtered.reduce(
         (acc, variable) => {
-          const groupKey = variable.groupLabel || t('flow.variable.ungrouped')
+          const groupKey = variable.category || t('flow.variable.ungrouped')
           if (!acc[groupKey]) {
             acc[groupKey] = []
           }
           acc[groupKey].push(variable)
           return acc
         },
-        {} as Record<string, FlowVariable[]>,
+        {} as Record<string, Param[]>,
       )
 
       return grouped
@@ -162,14 +125,22 @@ export default defineComponent({
       getFilteredReadonlyVariableGroups(pluginOutputVariables.value),
     )
     const filteredSystemVariableGroups = computed(() =>
-      getFilteredReadonlyVariableGroups(systemVariableGroups.value),
+      getFilteredReadonlyVariableGroups(systemVariables.value),
     )
-
-    // Get existing variable IDs
-    const existingIds = computed(() => variables.value.map((v) => v.id))
 
     // Get current category for adding variables
     const currentCategory = computed(() => currentAddingCategory.value)
+
+    // Get existing categories (group names) from variables
+    const getExistingCategories = () => {
+      const categories = new Set<string>()
+      variables.value.forEach((v) => {
+        if (v.category) {
+          categories.add(v.category)
+        }
+      })
+      return Array.from(categories)
+    }
 
     const variableCategories = computed<CategoryItem[]>(() => {
       return [
@@ -216,35 +187,6 @@ export default defineComponent({
       }
     }
 
-    // Handle variable order update - 仅前端调整数组顺序
-    const handleVariableOrderUpdate = async (
-      category: VariableCategory,
-      group: string,
-      newOrder: FlowVariable[],
-    ) => {
-      try {
-        // 仅更新本地状态，不调用后端API
-        const variableIds = newOrder.map((v) => v.id)
-
-        // 更新variables数组中的顺序
-        const updatedVariables = [...variables.value]
-        newOrder.forEach((variable, index) => {
-          const varIndex = updatedVariables.findIndex((v) => v.id === variable.id)
-          if (varIndex !== -1) {
-            updatedVariables[varIndex] = { ...variable, order: index }
-          }
-        })
-
-        // 根据order字段重新排序
-        updatedVariables.sort((a, b) => (a.order || 0) - (b.order || 0))
-        variables.value = updatedVariables
-
-        console.log('Variable order updated locally:', { category, group, variableIds })
-      } catch (error) {
-        console.error('Failed to update variable order:', error)
-      }
-    }
-
     // Toggle panel
     const togglePanel = () => {
       isOpen.value = !isOpen.value
@@ -268,9 +210,9 @@ export default defineComponent({
       searchKeyword.value = ''
       // Load data when switching to different tabs
       if (name === VariablePanelTab.PLUGIN_OUTPUT) {
-        loadPluginOutputVariables()
-      } else if (name === VariablePanelTab.SYSTEM && systemVariableGroups.value.length === 0) {
-        loadSystemVariables()
+        fetchPluginOutputVariables()
+      } else if (name === VariablePanelTab.SYSTEM) {
+        fetchSystemVariables()
       }
     }
 
@@ -285,45 +227,35 @@ export default defineComponent({
     }
 
     // Handle edit variable
-    const handleEditVariable = (variable: FlowVariable) => {
+    const handleEditVariable = (variable: Param) => {
       editingVariable.value = variable
       isEditMode.value = true
     }
 
     // Handle save variable
-    const handleSaveVariable = async (variable: FlowVariable) => {
+    const handleSaveVariable = async (variable: Param) => {
       try {
         if (editingVariable.value) {
           // Update existing variable
-          await updateFlowVariable(props.flowId, variable.id, variable)
-          const index = variables.value.findIndex((v) => v.id === editingVariable.value!.id)
-          if (index !== -1) {
-            variables.value[index] = variable
-          }
-          Message({ theme: 'success', message: t('flow.variable.updateSuccess') })
+          await updateVariable(variable)
         } else {
           // Add new variable
-          await saveFlowVariable(props.flowId, variable)
-          variables.value.push(variable)
-          Message({ theme: 'success', message: t('flow.variable.addSuccess') })
+          await addVariable(variable)
         }
+
         isEditMode.value = false
         editingVariable.value = null
       } catch (error) {
-        console.error('Failed to save variable:', error)
-        Message({ theme: 'error', message: t('flow.variable.saveFailed') })
+        // Error handling is done in the hook
       }
     }
 
     // Handle delete variable
     const handleDeleteVariable = async (variableId: string) => {
       try {
-        await deleteFlowVariable(props.flowId, variableId)
-        variables.value = variables.value.filter((v) => v.id !== variableId)
-        Message({ theme: 'success', message: t('flow.variable.deleteSuccess') })
+        await removeVariable(variableId)
       } catch (error) {
-        console.error('Failed to delete variable:', error)
-        Message({ theme: 'error', message: t('flow.variable.deleteFailed') })
+        // Error handling is done in the hook
       }
     }
 
@@ -338,26 +270,16 @@ export default defineComponent({
       editingVariable.value = null
     }
 
-    // Watch flow model changes to reload variables
+    // Watch flow model changes to reload plugin output variables
     watch(
-      () => flowModelStore.flowModel,
+      () => props.flowId,
       () => {
-        if (isOpen.value && activePanelTab.value === VariablePanelTab.VARIABLES) {
-          loadVariables()
-        }
-        // Also reload plugin output variables when model changes
+        // Reload plugin output variables when model changes
         if (isOpen.value && activePanelTab.value === VariablePanelTab.PLUGIN_OUTPUT) {
-          loadPluginOutputVariables()
+          fetchPluginOutputVariables()
         }
       },
-      { deep: true },
     )
-
-    // Initialize
-    onMounted(() => {
-      loadVariables()
-      emit('toggle', isOpen.value)
-    })
 
     const renderSearchInput = () => (
       <Input
@@ -375,7 +297,7 @@ export default defineComponent({
     // Render grouped variable list - 平铺展示，支持拖拽排序
     const renderGroupedVariableList = (
       category: VariableCategory,
-      groupedVariables: Record<string, FlowVariable[]>,
+      groupedVariables: Record<string, Param[]>,
       emptyText: string,
     ) => {
       const groups = Object.keys(groupedVariables)
@@ -390,11 +312,27 @@ export default defineComponent({
           if (e.oldIndex === undefined || e.newIndex === undefined || e.oldIndex === e.newIndex) {
             return
           }
-          const newOrder = [...groupVariables]
-          const [movedItem] = newOrder.splice(e.oldIndex, 1)
-          if (!movedItem) return
-          newOrder.splice(e.newIndex, 0, movedItem)
-          handleVariableOrderUpdate(category, groupName, newOrder)
+
+          // Get the two variables that need to swap order
+          const oldVariable = groupVariables[e.oldIndex]
+          const newVariable = groupVariables[e.newIndex]
+
+          if (!oldVariable || !newVariable) return
+
+          // Swap order values
+          const tempOrder = oldVariable.order ?? e.oldIndex
+          oldVariable.order = newVariable.order ?? e.newIndex
+          newVariable.order = tempOrder
+
+          // Get all variables, sort by order, and update
+          const allVariables = [...variables.value].sort((a, b) => {
+            const orderA = a.order ?? Infinity
+            const orderB = b.order ?? Infinity
+            return orderA - orderB
+          })
+
+          // Update all variables with sorted order
+          updateParams(allVariables)
         }
 
         return (
@@ -406,7 +344,7 @@ export default defineComponent({
             <div class={styles.groupContent}>
               <VueDraggable
                 {...getDragOptions(category, groupName)}
-                modelValue={groupVariables as FlowVariable[]}
+                modelValue={groupVariables as Param[]}
                 class={styles.draggableList}
                 onEnd={handleDragEnd}
               >
@@ -429,14 +367,6 @@ export default defineComponent({
       })
     }
 
-    // Render plugin output variables with accordion grouping// Check if any plugin has no stepId
-    // const hasInvalidPlugin = pluginOutputVariables.value.length === 0 &&
-    //   flowModelStore.flowModel?.stages.some(stage =>
-    //     stage.containers.some(container =>
-    //       container.elements.some(element => !element.stepId)
-    //     )
-    //   )
-    // Render system variables with accordion grouping
     const renderReadonlyVariables = (
       variableGroups: ReadOnlyVariableGroup[],
       emptyText: string,
@@ -462,7 +392,7 @@ export default defineComponent({
                 title: (group: ReadOnlyVariableGroup) => (
                   <div class={styles.collapseHeader}>
                     <span class={styles.categoryTitle}>{group.name}</span>
-                    <span>{group.params.length}</span>
+                    <span class={styles.categorySum}>{group.params.length}</span>
                   </div>
                 ),
                 content: (group: ReadOnlyVariableGroup) => (
@@ -600,6 +530,7 @@ export default defineComponent({
                   variable={editingVariable.value}
                   category={currentCategory.value}
                   existingIds={existingIds.value}
+                  existingCategories={getExistingCategories()}
                   editable={props.editable}
                   onSave={handleSaveVariable}
                   onCancel={handleCancel}

@@ -26,13 +26,7 @@ export interface UseFlowConfigCodeOptions {
  */
 export function useFlowConfigCode(options: UseFlowConfigCodeOptions) {
   const { flowId, section, autoLoad = true } = options
-
-  // Use flowModel hook to get complete YAML content
-  const {
-    yamlContent: fullYamlContent,
-    loading,
-    flowModel,
-  } = useFlowModel({
+  const { yamlContent, loading, flowSetting } = useFlowModel({
     flowId,
     autoLoad,
   })
@@ -41,7 +35,7 @@ export function useFlowConfigCode(options: UseFlowConfigCodeOptions) {
    * Calculate highlight ranges for specific configuration section
    */
   const sectionHighlight = computed(() => {
-    const yaml = fullYamlContent.value
+    const yaml = yamlContent.value
     if (!yaml) return []
 
     const lines = yaml.split('\n')
@@ -133,11 +127,12 @@ export function useFlowConfigCode(options: UseFlowConfigCodeOptions) {
   /**
    * Check if configuration is empty
    */
-  const isEmpty = computed(() => !flowModel.value)
+  const isEmpty = computed(() => !flowSetting.value)
 
   return {
     loading,
-    yamlContent: fullYamlContent,
+    flowSetting,
+    yamlContent,
     sectionHighlight,
     isEmpty,
   }

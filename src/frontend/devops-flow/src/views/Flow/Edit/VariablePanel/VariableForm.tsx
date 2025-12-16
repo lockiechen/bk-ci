@@ -1,13 +1,13 @@
 import { defineComponent, ref, computed, watch, type PropType } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { Form, Input, Select, Checkbox, Button, Message } from 'bkui-vue'
-import type { FlowVariable } from '@/types/variable'
+import type { Param } from '@/api/flowModel'
+import type { ParamOption } from '@/types/variable'
 import {
-  VariableType,
+  ParamType,
   VariableCategory,
   DEFAULT_VARIABLE_VALUES,
   VARIABLE_TYPE_LIST,
-  CONSTANT_TYPE_LIST,
   validateVariableId,
 } from '@/types/variable'
 import styles from './VariableForm.module.css'
@@ -19,7 +19,7 @@ export default defineComponent({
   name: 'VariableForm',
   props: {
     variable: {
-      type: Object as PropType<FlowVariable | null>,
+      type: Object as PropType<Param | null>,
       default: null,
     },
     category: {
@@ -34,12 +34,16 @@ export default defineComponent({
       type: Boolean,
       default: true,
     },
+    existingCategories: {
+      type: Array as PropType<string[]>,
+      default: () => [],
+    },
   },
   emits: ['save', 'cancel'],
   setup(props, { emit }) {
     const { t } = useI18n()
     const formRef = ref()
-    const formData = ref<FlowVariable>(getInitialFormData())
+    const formData = ref<Param>(getInitialFormData())
 
     // Is editing mode
     const isEditMode = computed(() => !!props.variable)
@@ -49,11 +53,6 @@ export default defineComponent({
 
     // Available variable types
     const availableTypes = computed(() => {
-      if (isConstant.value) {
-        return VARIABLE_TYPE_LIST.filter((item) =>
-          CONSTANT_TYPE_LIST.includes(item.id as VariableType),
-        )
-      }
       return VARIABLE_TYPE_LIST
     })
 
@@ -103,13 +102,22 @@ export default defineComponent({
     }
 
     // Initialize form data
-    function getInitialFormData(): FlowVariable {
+    function getInitialFormData(): Param {
       if (props.variable) {
         return { ...props.variable }
       }
+      const defaultData = DEFAULT_VARIABLE_VALUES[ParamType.STRING]
       return {
-        ...DEFAULT_VARIABLE_VALUES[VariableType.STRING],
-        category: props.category,
+        id: '',
+        name: '',
+        type: ParamType.STRING,
+        constant: props.category === VariableCategory.CONSTANT,
+        defaultValue: defaultData.defaultValue,
+        required: false,
+        desc: '',
+        options: defaultData.options || [],
+        valueNotEmpty: false,
+        readOnly: false,
       }
     }
 
@@ -123,11 +131,12 @@ export default defineComponent({
     )
 
     // Handle type change
-    const handleTypeChange = (value: VariableType) => {
-      const defaultData = DEFAULT_VARIABLE_VALUES[value]
+    const handleTypeChange = (value: ParamType | string) => {
+      const typeValue = typeof value === 'string' ? value : value
+      const defaultData = DEFAULT_VARIABLE_VALUES[typeValue as ParamType]
       formData.value = {
         ...formData.value,
-        type: value,
+        type: typeValue,
         defaultValue: defaultData.defaultValue,
         options: defaultData.options || [],
       }
@@ -153,9 +162,9 @@ export default defineComponent({
       if (!formData.value.options) {
         formData.value.options = []
       }
-      formData.value.options.push({
-        id: `option_${Date.now()}`,
-        label: '',
+      ;(formData.value.options as ParamOption[]).push({
+        key: `option_${Date.now()}`,
+        value: '',
       })
     }
 
@@ -166,10 +175,13 @@ export default defineComponent({
 
     // Show options editor
     const showOptionsEditor = computed(() => {
-      return (
-        formData.value.type === VariableType.ENUM || formData.value.type === VariableType.MULTIPLE
-      )
+      return formData.value.type === ParamType.ENUM || formData.value.type === ParamType.MULTIPLE
     })
+
+    // Helper to check if type matches (handles both string and enum)
+    const isType = (type: ParamType | string): boolean => {
+      return formData.value.type === type || formData.value.type === String(type)
+    }
 
     return () => (
       <div class={styles.variableForm}>
@@ -209,11 +221,11 @@ export default defineComponent({
           </FormItem>
 
           <FormItem label={t('flow.variable.defaultValue')}>
-            {formData.value.type === VariableType.BOOLEAN ? (
+            {isType(ParamType.BOOLEAN) ? (
               <Checkbox v-model={formData.value.defaultValue} disabled={!props.editable}>
                 {String(formData.value.defaultValue)}
               </Checkbox>
-            ) : formData.value.type === VariableType.TEXTAREA ? (
+            ) : isType(ParamType.TEXTAREA) ? (
               <Input
                 v-model={formData.value.defaultValue}
                 type="textarea"
@@ -221,19 +233,15 @@ export default defineComponent({
                 placeholder={t('flow.variable.defaultValuePlaceholder')}
                 disabled={!props.editable}
               />
-            ) : formData.value.type === VariableType.ENUM ? (
-              <Select v-model={formData.value.defaultValue} disabled={!props.editable}>
-                {formData.value.options?.map((option) => (
-                  <Select.Option key={option.id} value={option.id} label={option.label}>
-                    {option.label}
-                  </Select.Option>
-                ))}
-              </Select>
-            ) : formData.value.type === VariableType.MULTIPLE ? (
-              <Select v-model={formData.value.defaultValue} multiple disabled={!props.editable}>
-                {formData.value.options?.map((option) => (
-                  <Select.Option key={option.id} value={option.id} label={option.label}>
-                    {option.label}
+            ) : isType(ParamType.ENUM) || isType(ParamType.MULTIPLE) ? (
+              <Select
+                v-model={formData.value.defaultValue}
+                multiple={isType(ParamType.MULTIPLE)}
+                disabled={!props.editable}
+              >
+                {((formData.value.options || []) as ParamOption[]).map((option) => (
+                  <Select.Option key={option.key} value={option.key} label={option.value}>
+                    {option.value}
                   </Select.Option>
                 ))}
               </Select>
@@ -249,16 +257,16 @@ export default defineComponent({
           {showOptionsEditor.value && (
             <FormItem label={t('flow.variable.options')}>
               <div class={styles.optionsEditor}>
-                {formData.value.options?.map((option, index) => (
-                  <div key={option.id} class={styles.optionItem}>
+                {((formData.value.options || []) as ParamOption[]).map((option, index: number) => (
+                  <div key={option.key} class={styles.optionItem}>
                     <Input
-                      v-model={option.id}
+                      v-model={option.key}
                       placeholder={t('flow.variable.optionId')}
                       disabled={!props.editable}
                       class={styles.optionInput}
                     />
                     <Input
-                      v-model={option.label}
+                      v-model={option.value}
                       placeholder={t('flow.variable.optionLabel')}
                       disabled={!props.editable}
                       class={styles.optionInput}
@@ -278,6 +286,20 @@ export default defineComponent({
             </FormItem>
           )}
 
+          <FormItem label={t('flow.variable.group')}>
+            <Input
+              v-model={formData.value.category}
+              placeholder={t('flow.variable.groupPlaceholder')}
+              disabled={!props.editable}
+              list="category-list"
+            />
+            <datalist id="category-list">
+              {props.existingCategories.map((cat) => (
+                <option key={cat} value={cat} />
+              ))}
+            </datalist>
+          </FormItem>
+
           <FormItem label={t('flow.content.description')}>
             <Input
               v-model={formData.value.desc}
@@ -288,13 +310,15 @@ export default defineComponent({
             />
           </FormItem>
 
-          {props.category === VariableCategory.INPUT && (
+          {/* 只在非常量类型时显示这些选项 */}
+          {!isConstant.value && (
             <>
               <FormItem>
                 <Checkbox v-model={formData.value.required} disabled={!props.editable}>
                   {t('flow.variable.showOnExec')}
                 </Checkbox>
               </FormItem>
+              {/* 只有勾选了"是否为入参"时才显示"是否必填" */}
               {formData.value.required && (
                 <FormItem>
                   <Checkbox v-model={formData.value.valueNotEmpty} disabled={!props.editable}>
@@ -302,6 +326,11 @@ export default defineComponent({
                   </Checkbox>
                 </FormItem>
               )}
+              <FormItem>
+                <Checkbox v-model={formData.value.readOnly} disabled={!props.editable}>
+                  {t('flow.variable.readOnlyOnRun')}
+                </Checkbox>
+              </FormItem>
             </>
           )}
 

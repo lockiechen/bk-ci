@@ -37,6 +37,9 @@ export interface FlowModelAndSetting {
 }
 
 export interface FlowSettings {
+  creator?: string
+  createTime?: number
+  updateTime?: number
   name: string
   desc: string
   runLockType: string
@@ -117,21 +120,13 @@ export interface Param {
   defaultValue: unknown
   options?: unknown[]
   desc?: string
-  category?: string
   displayCondition?: Record<string, string>
   readOnly?: boolean
   valueNotEmpty?: boolean
-  repoHashId?: string
-  scmType?: string
-  enableVersionControl?: boolean
-  randomStringInPath?: string
-  latestRandomStringInPath?: string
-  fileMetadata?: string
-  glob?: string
-  payload?: unknown
-  cascadeProps?: {
-    parentId: string
-    childId: string
+  category?: string // User-defined group name for categorization
+  order?: number // Order for sorting variables
+  payload?: {
+    [key: string]: unknown
   }
 }
 
@@ -768,7 +763,6 @@ export function getMockFlowModel(): FlowModelAndSetting {
                     options: [],
                     desc: '',
                     category: '',
-                    repoHashId: 'yzygX',
                     readOnly: false,
                     valueNotEmpty: false,
                   },
@@ -782,7 +776,6 @@ export function getMockFlowModel(): FlowModelAndSetting {
                     options: [],
                     desc: '',
                     category: '',
-                    scmType: 'CODE_GIT',
                     readOnly: false,
                     valueNotEmpty: false,
                   },
@@ -825,7 +818,6 @@ export function getMockFlowModel(): FlowModelAndSetting {
                     desc: '',
                     category: '',
                     displayCondition: {},
-                    enableVersionControl: false,
                     readOnly: false,
                     valueNotEmpty: false,
                   },
@@ -848,6 +840,20 @@ export function getMockFlowModel(): FlowModelAndSetting {
                 '@type': 'vmBuild',
                 id: '1',
                 name: '构建环境-Linux',
+                mutexGroup: {
+                  enable: true,
+                  mutexGroupName: 'mutexGroup',
+                  queueEnable: true,
+                  timeoutVar: '10',
+                  queue: 10,
+                },
+                matrixControlOption: {
+                  strategyStr: 'strategyStr',
+                  includeCaseStr: 'includeCaseStr',
+                  excludeCaseStr: 'excludeCaseStr',
+                  fastKill: false,
+                  maxConcurrency: 10,
+                },
                 elements: [
                   {
                     '@type': 'linuxScript',

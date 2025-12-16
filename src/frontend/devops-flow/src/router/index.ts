@@ -7,14 +7,14 @@ const router = createRouter({
   routes: [
     {
       path: '/creative-stream/:projectId',
-      children: [
-        {
-          path: '',
-          redirect: {
-            name: ROUTE_NAMES.FLOW_LIST,
-            params: { groupId: FLOW_GROUP_TYPES.ALL_FLOWS },
-          },
+      redirect: (to) => ({
+        name: ROUTE_NAMES.FLOW_LIST,
+        params: {
+          projectId: to.params.projectId,
+          groupId: FLOW_GROUP_TYPES.ALL_FLOWS,
         },
+      }),
+      children: [
         {
           path: 'list/:groupId',
           component: () => import('../views/FlowList'),
@@ -173,12 +173,12 @@ const router = createRouter({
           ],
         },
         {
-          path: '/flow/:flowId/execute/:buildNo/:type?/:executeCount?',
+          path: 'flow/:flowId/execute/:buildNo/:type?/:executeCount?',
           name: ROUTE_NAMES.FLOW_DETAIL_EXECUTION_DETAIL,
           component: () => import('../views/FlowExecuteDetail/index'),
         },
         {
-          path: '/template',
+          path: 'template',
           component: () => import('../views/Template'),
           name: ROUTE_NAMES.TEMPLATE,
         },

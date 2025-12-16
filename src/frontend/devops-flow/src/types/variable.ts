@@ -2,10 +2,12 @@
  * Variable type definitions for devops-flow
  */
 
+import type { Param } from '@/api/flowModel'
+
 /**
  * Variable types
  */
-export enum VariableType {
+export enum ParamType {
   STRING = 'STRING',
   TEXTAREA = 'TEXTAREA',
   BOOLEAN = 'BOOLEAN',
@@ -32,29 +34,11 @@ export enum VariablePanelTab {
 }
 
 /**
- * Variable data structure
+ * Param option for ENUM/MULTIPLE types
  */
-export interface FlowVariable {
-  id: string // Variable ID (unique identifier)
-  name: string // Variable alias (display name)
-  type: VariableType // Variable type
-  category: VariableCategory // Variable category
-  defaultValue: string | boolean | string[] // Default value
-  desc?: string // Description
-  required?: boolean // Is required (for input params)
-  readOnly?: boolean // Is read-only
-  options?: VariableOption[] // Options for ENUM/MULTIPLE types
-  valueNotEmpty?: boolean // Value cannot be empty (for input params)
-  groupLabel?: string // Group label for categorization
-  order?: number // Sort order within group
-}
-
-/**
- * Variable option for ENUM/MULTIPLE types
- */
-export interface VariableOption {
-  id: string
-  label: string
+export interface ParamOption {
+  key: string
+  value: string
 }
 
 /**
@@ -81,58 +65,58 @@ export interface SystemVariable {
 /**
  * Default variable values by type
  */
-export const DEFAULT_VARIABLE_VALUES: Record<VariableType, FlowVariable> = {
-  [VariableType.STRING]: {
+export const DEFAULT_VARIABLE_VALUES: Record<ParamType, Param> = {
+  [ParamType.STRING]: {
     id: '',
     name: '',
-    type: VariableType.STRING,
+    type: ParamType.STRING,
     category: VariableCategory.OTHER,
+    constant: false,
     defaultValue: '',
     required: false,
     readOnly: false,
-    order: 0,
   },
-  [VariableType.TEXTAREA]: {
+  [ParamType.TEXTAREA]: {
     id: '',
     name: '',
-    type: VariableType.TEXTAREA,
+    type: ParamType.TEXTAREA,
     category: VariableCategory.OTHER,
+    constant: false,
     defaultValue: '',
     required: false,
     readOnly: false,
-    order: 0,
   },
-  [VariableType.BOOLEAN]: {
+  [ParamType.BOOLEAN]: {
     id: '',
     name: '',
-    type: VariableType.BOOLEAN,
+    type: ParamType.BOOLEAN,
     category: VariableCategory.OTHER,
+    constant: false,
     defaultValue: false,
     required: false,
     readOnly: false,
-    order: 0,
   },
-  [VariableType.ENUM]: {
+  [ParamType.ENUM]: {
     id: '',
     name: '',
-    type: VariableType.ENUM,
+    type: ParamType.ENUM,
     category: VariableCategory.OTHER,
+    constant: false,
     defaultValue: '',
     required: false,
     readOnly: false,
     options: [],
-    order: 0,
   },
-  [VariableType.MULTIPLE]: {
+  [ParamType.MULTIPLE]: {
     id: '',
     name: '',
-    type: VariableType.MULTIPLE,
+    type: ParamType.MULTIPLE,
     category: VariableCategory.OTHER,
+    constant: false,
     defaultValue: [],
     required: false,
     readOnly: false,
     options: [],
-    order: 0,
   },
 }
 
@@ -140,23 +124,12 @@ export const DEFAULT_VARIABLE_VALUES: Record<VariableType, FlowVariable> = {
  * Variable type list for selector
  */
 export const VARIABLE_TYPE_LIST = [
-  { id: VariableType.STRING, name: 'string' },
-  { id: VariableType.TEXTAREA, name: 'textarea' },
-  { id: VariableType.BOOLEAN, name: 'boolean' },
-  { id: VariableType.ENUM, name: 'enum' },
-  { id: VariableType.MULTIPLE, name: 'multiple' },
+  { id: ParamType.STRING, name: 'string' },
+  { id: ParamType.TEXTAREA, name: 'textarea' },
+  { id: ParamType.BOOLEAN, name: 'boolean' },
+  { id: ParamType.ENUM, name: 'enum' },
+  { id: ParamType.MULTIPLE, name: 'multiple' },
 ]
-
-/**
- * Constant type list (subset of variable types)
- */
-export const CONSTANT_TYPE_LIST = [
-  VariableType.STRING,
-  VariableType.TEXTAREA,
-  VariableType.ENUM,
-  VariableType.MULTIPLE,
-]
-
 /**
  * Validate variable ID
  * - Must start with letter or underscore
@@ -177,16 +150,6 @@ export function validateVariableId(id: string, isConstant: boolean): boolean {
 
   return true
 }
-
-/**
- * Get variable type display name
- */
-export function getVariableTypeName(type: VariableType): string {
-  const typeItem = VARIABLE_TYPE_LIST.find(item => item.id === type)
-  return typeItem?.name || type
-}
-
-
 /**
  * System variable group
  */

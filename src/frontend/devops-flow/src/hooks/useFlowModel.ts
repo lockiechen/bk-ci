@@ -1,22 +1,22 @@
-import { computed, onMounted, onBeforeUnmount, ref, watch } from 'vue'
-import { storeToRefs } from 'pinia'
-import { useFlowModelStore } from '@/stores/flowModel'
-import { useAtomStore } from '@/stores/atom'
-import type { FlowModel, Stage, Container, Element, FlowSettings } from '@/api/flowModel'
 import type { AtomModal } from '@/api/atom'
-import { useEditingPos } from './useEditingPos'
+import type { Container, Element, FlowModel, FlowSettings, Stage } from '@/api/flowModel'
+import { useAtomStore } from '@/stores/atom'
+import { useFlowModelStore } from '@/stores/flowModel'
 import {
-  createDefaultStage,
   createDefaultContainer,
   createDefaultElement,
+  createDefaultStage,
   generateId,
 } from '@/utils/flowDefaults'
+import { storeToRefs } from 'pinia'
+import { computed, onMounted, ref } from 'vue'
+import { useEditingPos } from './useEditingPos'
 
 import {
+  diffAtomVersions,
   getAtomDefaultValue,
   getAtomOutputObj,
   isNewAtomTemplate,
-  diffAtomVersions,
 } from '@/utils/atom'
 import type { AddAtomEventPayload, AddStageEventPayload, ClickEventPayload } from 'bkui-pipeline'
 import { DEFAULT_VERSION } from './useAtomVersion'
@@ -64,16 +64,29 @@ export function useFlowModel(options: UseFlowModelOptions = {}) {
 
   // 计算属性：Flow 数据（去除触发器 Stage 用于展示）
   const flowModelWithoutTriggerStage = computed(() => {
-    if (!flowModel.value) return null
+    if (!flowModel.value?.stages || flowModel.value.stages.length === 0) {
+      return null
+    }
     return {
       ...flowModel.value,
-      stages: flowModel.value.stages?.slice(1) || [],
+      stages: flowModel.value.stages.slice(1),
     }
   })
 
   // 计算属性：是否有 Stage（排除 trigger stage）
   const hasFlowStages = computed(() => {
     return flowModel.value?.stages && flowModel.value?.stages.length > 1
+  })
+
+  // 计算属性：触发事件列表（从 flowModel 的 trigger stage 中提取）
+  const triggerEvents = computed(() => {
+    const triggerStage = flowModel.value?.stages?.[0]
+    if (!triggerStage) return []
+
+    const container = triggerStage.containers?.[0]
+    if (!container) return []
+
+    return container.elements || []
   })
 
   // 获取当前正在编辑的对象
@@ -91,12 +104,34 @@ export function useFlowModel(options: UseFlowModelOptions = {}) {
     return flowModel.value?.stages[stageIndex]?.containers?.[containerIndex] || null
   })
 
+  // 当前编辑 Job 所属的 Stage
+  const editingContainerStage = computed(() => {
+    if (!isEditingJob.value) return null
+    const { stageIndex } = realEditingPos.value
+    return flowModel.value?.stages[stageIndex] || null
+  })
+
+  // 当前编辑 Job 的索引
+  const editingContainerIndex = computed(() => {
+    if (!isEditingJob.value) return -1
+    return realEditingPos.value.containerIndex ?? -1
+  })
+
+  // 当前编辑的 Stage 是否是 Finally Stage
+  const isEditingFinallyStage = computed(() => {
+    return editingContainerStage.value?.finally === true
+  })
+
   const editingElement = computed(() => {
     if (!isEditingPlugin.value) return null
     const { stageIndex, containerIndex, elementIndex } = realEditingPos.value
     return flowModel.value?.stages[stageIndex]?.containers?.[containerIndex!]?.elements?.[
       elementIndex!
     ]
+  })
+
+  onMounted(() => {
+    if (autoLoad && flowId) loadFlow()
   })
 
   /**
@@ -228,7 +263,6 @@ export function useFlowModel(options: UseFlowModelOptions = {}) {
     const realElementIndex = elementIndex !== undefined ? elementIndex : atomIndex
 
     if (stageIndex === -1) return
-
     // 重置新建状态
     isNewStage.value = false
     isNewJob.value = false
@@ -305,18 +339,6 @@ export function useFlowModel(options: UseFlowModelOptions = {}) {
     setEditingPos({ stageIndex, containerIndex: 0 })
     tempEditingObject.value = newContainer
     isNewJob.value = true
-  }
-
-  /**
-   * 处理 Job 变更 (属性面板)
-   */
-  const handleJobChange = (container: Container) => {
-    if (!isNewJob.value) {
-      updateJob(container)
-    }
-    if (isNewJob.value) {
-      tempEditingObject.value = container
-    }
   }
 
   /**
@@ -461,15 +483,12 @@ export function useFlowModel(options: UseFlowModelOptions = {}) {
   const updateYaml = (yaml: string) => store.updateYamlContent(yaml)
   const reset = () => store.reset()
 
-  onMounted(() => {
-    if (autoLoad && flowId) loadFlow()
-  })
-
   return {
     // State
     flowModel,
     flowModelWithoutTriggerStage,
     hasFlowStages,
+    triggerEvents,
     yamlContent,
     loading,
     hasError,
@@ -487,6 +506,9 @@ export function useFlowModel(options: UseFlowModelOptions = {}) {
 
     editingStage,
     editingContainer,
+    editingContainerStage,
+    editingContainerIndex,
+    isEditingFinallyStage,
     editingElement, // Plugin context
 
     // Actions
@@ -515,11 +537,57 @@ export function useFlowModel(options: UseFlowModelOptions = {}) {
     handleStageChange,
     handleStageConfirm,
     handleAddJob,
-    handleJobChange,
     handleJobConfirm,
     handleAddAtom,
     handleAtomSelect,
     // Close handler (simply clear pos)
     handleClosePanel: clearEditingPos,
+
+    /**
+     * 处理 BkPipeline 组件的变更事件（用于复制、拖拽等操作）
+     * bk-pipeline 会发出不同类型的对象：
+     * - Stage 复制/删除：发出完整的 pipeline 对象 { stages: [...] }
+     * - Job 复制/删除：发出 stage 对象 { containers: [...], id: ... }
+     * - Atom 复制/删除：发出 container 对象 { elements: [...], containerId: ... }
+     * @param changedObject - bk-pipeline 发出的变更对象
+     */
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    handlePipelineChange: (changedObject: any) => {
+      if (!flowModel.value?.stages) return
+
+      const triggerStage = flowModel.value.stages[0]
+      const currentStages = flowModel.value.stages
+
+      // 判断变更对象的类型并相应处理
+      if (changedObject?.stages && Array.isArray(changedObject.stages)) {
+        // 收到的是 pipeline 对象（Stage 复制/删除/拖拽）
+        // 直接替换整个 stages 数组以触发响应式更新
+        flowModel.value.stages = [triggerStage, ...changedObject.stages] as Stage[]
+      } else if (changedObject?.containers && Array.isArray(changedObject.containers)) {
+        // 收到的是 stage 对象（Job 复制/删除）
+        // 找到对应的 stage 并替换（+1 是因为 index 0 是 trigger stage）
+        const stageId = changedObject.id
+        const stageIndex = currentStages.findIndex((s) => s.id === stageId)
+        if (stageIndex !== -1) {
+          // 使用 splice 替换以触发响应式更新
+          currentStages.splice(stageIndex, 1, changedObject as Stage)
+        }
+      } else if (changedObject?.elements && Array.isArray(changedObject.elements)) {
+        // 收到的是 container 对象（Atom 复制/删除）
+        // 找到对应的 container 并替换
+        const containerId = changedObject.containerId
+        for (const stage of currentStages) {
+          if (!stage?.containers) continue
+          const cIdx = stage.containers.findIndex((c) => c.containerId === containerId)
+          if (cIdx !== -1) {
+            // 使用 splice 替换以触发响应式更新
+            stage.containers.splice(cIdx, 1, changedObject as Container)
+            break
+          }
+        }
+      }
+
+      emitChange()
+    },
   }
 }

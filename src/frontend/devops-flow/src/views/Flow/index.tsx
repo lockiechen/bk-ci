@@ -13,7 +13,7 @@ export default defineComponent({
     const route = useRoute()
     const router = useRouter()
     const flowId = route.params.flowId as string
-    const { flowInfo, flowVersionList, loading } = useFlowInfo()
+    const { flowInfo, flowVersionList } = useFlowInfo()
 
     // Check if current route is in edit mode
     const isEditMode = computed(() => {

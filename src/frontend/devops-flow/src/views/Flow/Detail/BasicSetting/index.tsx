@@ -1,4 +1,4 @@
-import { defineComponent } from 'vue'
+import { defineComponent, computed } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useRoute } from 'vue-router'
 import { Loading } from 'bkui-vue'
@@ -8,6 +8,7 @@ import EmptyPage from '@/components/EmptyPage/index'
 import CodeEditor from '@/components/CodeEditor'
 import SettingContent from './SettingContent'
 import { useFlowConfigCode } from '@/hooks/useFlowConfigCode'
+import { useFlowModel } from '@/hooks/useFlowModel'
 import styles from './SettingTab.module.css'
 import layoutStyles from '@/styles/layout.module.css'
 
@@ -24,17 +25,27 @@ export default defineComponent({
     const { t } = useI18n()
     const route = useRoute()
     const modeStore = useModeStore()
+    const flowId = route.params.flowId as string
 
     // Use flow config code hook for Code mode
-    const {
-      loading,
-      yamlContent,
-      sectionHighlight,
-      isEmpty,
-    } = useFlowConfigCode({
-      flowId: route.params.flowId as string,
+    const { loading, yamlContent, sectionHighlight, isEmpty, flowSetting } = useFlowConfigCode({
+      flowId,
       section: 'basic-setting',
       autoLoad: true,
+    })
+
+    // Get flowModel for group information
+    const { flowModel } = useFlowModel({ flowId, autoLoad: true })
+
+    // Combine flowSetting with group info from flowModel
+    const basicSettingsWithGroup = computed(() => {
+      if (!flowSetting.value) return null
+
+      return {
+        ...flowSetting.value,
+        // Get group names from flowModel.staticViews
+        groupNames: flowModel.value?.staticViews || [],
+      }
     })
 
     return () => (
@@ -64,8 +75,10 @@ export default defineComponent({
                     />
                   )}
                 </div>
+              ) : basicSettingsWithGroup.value ? (
+                <SettingContent basicSettings={basicSettingsWithGroup.value} />
               ) : (
-                <div>{true ? <SettingContent /> : <EmptyPage />}</div>
+                <EmptyPage />
               )}
             </>
           )}

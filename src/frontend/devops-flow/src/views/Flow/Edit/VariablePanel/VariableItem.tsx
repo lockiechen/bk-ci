@@ -2,8 +2,7 @@ import { defineComponent, type PropType } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { PopConfirm, Message } from 'bkui-vue'
 import { SvgIcon } from '@/components/SvgIcon'
-import type { FlowVariable } from '@/types/variable'
-import { getVariableTypeName } from '@/types/variable'
+import type { Param } from '@/api/flowModel'
 import styles from './VariableItem.module.css'
 
 export default defineComponent({
@@ -13,7 +12,7 @@ export default defineComponent({
       type: String,
     },
     variable: {
-      type: Object as PropType<FlowVariable>,
+      type: Object as PropType<Param>,
       required: true,
     },
     editable: {
@@ -25,8 +24,8 @@ export default defineComponent({
       default: true,
     },
   },
-  components:{
-    SvgIcon
+  components: {
+    SvgIcon,
   },
   emits: ['edit', 'delete', 'copy'],
   setup(props, { emit }) {
@@ -77,14 +76,10 @@ export default defineComponent({
         <div class={styles.variableInfo} onClick={handleEdit}>
           <div class={styles.variableHeader}>
             <span class={styles.variableId}>{props.variable.id}</span>
-            <span class={styles.variableType}>
-              {getVariableTypeName(props.variable.type)}
-            </span>
+            <span class={styles.variableType}>{props.variable.type}</span>
           </div>
           <div class={styles.variableName}>{props.variable.name}</div>
-          {props.variable.desc && (
-            <div class={styles.variableDesc}>{props.variable.desc}</div>
-          )}
+          {props.variable.desc && <div class={styles.variableDesc}>{props.variable.desc}</div>}
           <div class={styles.variableValue}>
             <span class={styles.valueLabel}>{t('flow.variable.defaultValue')}:</span>
             <span class={styles.valueText}>{getValueDisplay()}</span>
@@ -104,10 +99,7 @@ export default defineComponent({
         {/* Variable actions - visible on hover */}
         {props.editable && (
           <div class={styles.variableActions}>
-            <span
-              class={styles.actionItem}
-              onClick={handleCopy}
-            >
+            <span class={styles.actionItem} onClick={handleCopy}>
               <SvgIcon name="copy" />
             </span>
             <span class={styles.actionItem} onClick={handleEditClick}>
@@ -115,13 +107,13 @@ export default defineComponent({
             </span>
             <PopConfirm
               title={t('flow.variable.deleteConfirm')}
-              trigger='click'
+              trigger="click"
               content={t('flow.variable.deleteConfirmContent', { name: props.variable.name })}
               onConfirm={handleDelete}
             >
-                <span class={styles.actionItem}>
-                  <SvgIcon name="minus-circle" class={styles.dangerAction} />
-                </span>
+              <span class={styles.actionItem}>
+                <SvgIcon name="minus-circle" class={styles.dangerAction} />
+              </span>
             </PopConfirm>
           </div>
         )}

@@ -1,11 +1,11 @@
-import { defineComponent, ref, computed, watch } from 'vue'
-import { useI18n } from 'vue-i18n'
-import { Table, DatePicker, Checkbox } from 'bkui-vue'
-import SearchSelect from '@blueking/search-select-v3'
-import { useRoute, useRouter } from 'vue-router'
-import { useExecutionRecordData } from '@/hooks/useExecutionRecordData'
 import type { ExecutionRecord } from '@/api/executionRecord'
 import { ROUTE_NAMES } from '@/constants/routes'
+import { useExecutionRecordData } from '@/hooks/useExecutionRecordData'
+import SearchSelect from '@blueking/search-select-v3'
+import { DatePicker, Table } from 'bkui-vue'
+import { computed, defineComponent, ref, watch } from 'vue'
+import { useI18n } from 'vue-i18n'
+import { useRoute, useRouter } from 'vue-router'
 import styles from './ExecutionRecord.module.css'
 
 export default defineComponent({
@@ -193,39 +193,23 @@ export default defineComponent({
     // 表格列配置
     const tableColumns = computed(() => [
       {
-        label: '',
-        field: 'checkbox',
-        render: ({ row }: any) => (
-          <Checkbox
-            checked={(row as ExecutionRecord).checked}
-            onChange={(checked: boolean) => handleSelect(row as ExecutionRecord, checked)}
-          />
-        ),
-        header: () => (
-          <Checkbox
-            checked={isAllChecked.value}
-            indeterminate={isIndeterminate.value}
-            onChange={handleSelectAll}
-          />
-        ),
-      },
-      {
-        label: t('flow.content.buildNumber'),
-        field: 'buildNumber',
+        label: t('flow.content.buildNo'),
+        field: 'buildNo',
         render: ({ row }: any) => (
           <span
-            class={styles.buildNumber}
+            class={styles.buildNo}
             onClick={() => {
               router.push({
                 name: ROUTE_NAMES.FLOW_DETAIL_EXECUTION_DETAIL,
                 params: {
+                  ...route.params,
                   flowId,
-                  buildNo: (row as ExecutionRecord).buildNumber,
+                  buildNo: (row as ExecutionRecord).buildNo,
                 },
               })
             }}
           >
-            #{(row as ExecutionRecord).buildNumber}
+            #{(row as ExecutionRecord).buildNo}
           </span>
         ),
       },

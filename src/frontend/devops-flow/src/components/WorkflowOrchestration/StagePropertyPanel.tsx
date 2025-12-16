@@ -1,15 +1,15 @@
+import type { CustomVariable, Stage } from '@/api/flowModel'
+import KeyValueMap from '@/components/AtomForm/KeyValueMap'
+import { SvgIcon } from '@/components/SvgIcon'
+import { getStageRunConditionList } from '@/constants/flowOptionConfig'
+import { useUIStore } from '@/stores/ui'
+import { StageRunCondition } from '@/utils/flowDefaults'
+import { Button, Checkbox, Collapse, Form, InfoBox, Input, Select, Sideslider } from 'bkui-vue'
+import { storeToRefs } from 'pinia'
 import { computed, defineComponent, type PropType, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
-import { Sideslider, Form, Input, Checkbox, Collapse, Button, InfoBox, Select } from 'bkui-vue'
-import type { Stage, CustomVariable } from '@/api/flowModel'
-import { SvgIcon } from '@/components/SvgIcon'
-import KeyValueMap from '@/components/AtomForm/KeyValueMap'
-import styles from './StagePropertyPanel.module.css'
 import sharedStyles from './shared.module.css'
-import { getStageRunConditionList } from '@/constants/flowOptionConfig'
-import { StageRunCondition } from '@/utils/flowDefaults'
-import { useUIStore } from '@/stores/ui'
-import { storeToRefs } from 'pinia'
+import styles from './StagePropertyPanel.module.css'
 
 const { FormItem } = Form
 
@@ -42,13 +42,10 @@ export default defineComponent({
   },
   emits: ['update:modelValue', 'change', 'confirm'],
   setup(props, { emit }) {
-    // ========== Hooks ==========
     const { t } = useI18n()
-    const uiStore = useUIStore()
-    const { isVariablePanelOpen } = storeToRefs(uiStore)
+    const { isVariablePanelOpen } = storeToRefs(useUIStore())
 
-    // ========== Refs ==========
-    const formRef = ref()
+    // ========== State ==========
     const formData = ref({
       name: '',
       enable: true,
@@ -59,122 +56,29 @@ export default defineComponent({
     })
     const nameEditing = ref(false)
 
-    const isTriggerStage = computed(() => {
-      return props.stage?.containers?.[0]?.['@type'] === 'trigger'
-    })
-
-    const isFinallyStage = computed(() => {
-      return props.stage?.finally === true
-    })
-
-    // 判断是否显示自定义变量输入框
-    const showCustomVariables = computed(() => {
-      const runCondition = formData.value.runCondition
-      return (
-        runCondition === StageRunCondition.CUSTOM_VARIABLE_MATCH ||
-        runCondition === StageRunCondition.CUSTOM_VARIABLE_MATCH_NOT_RUN
-      )
-    })
-
-    // 判断是否显示自定义条件表达式输入框
-    const showCustomCondition = computed(() => {
-      return formData.value.runCondition === 'CUSTOM_CONDITION_MATCH'
-    })
-
-    // ========== Lifecycle Hooks ==========
-    watch(
-      () => props.stage,
-      (newStage) => {
-        if (newStage) {
-          const stageControl = newStage.stageControlOption
-          formData.value = {
-            name: newStage.name || '',
-            enable: stageControl?.enable ?? true,
-            fastKill: newStage.fastKill || false,
-            runCondition: stageControl?.runCondition || 'AFTER_LAST_FINISHED',
-            customVariables: stageControl?.customVariables || [],
-            customCondition: stageControl?.customCondition || '',
-          }
-        }
-      },
-      { immediate: true, deep: true },
+    // ========== Computed ==========
+    const isTriggerStage = computed(() => props.stage?.containers?.[0]?.['@type'] === 'trigger')
+    const isFinallyStage = computed(() => props.stage?.finally === true)
+    const showCustomVariables = computed(() =>
+      [StageRunCondition.CUSTOM_VARIABLE_MATCH, StageRunCondition.CUSTOM_VARIABLE_MATCH_NOT_RUN].includes(
+        formData.value.runCondition as StageRunCondition,
+      ),
+    )
+    const showCustomCondition = computed(
+      () => formData.value.runCondition === StageRunCondition.CUSTOM_CONDITION_MATCH,
     )
 
-    // 监听runCondition变化，清理不需要的字段
-    watch(
-      () => formData.value.runCondition,
-      (newCondition) => {
-        // 如果切换到非变量匹配选项，清空customVariables
-        if (
-          newCondition !== StageRunCondition.CUSTOM_VARIABLE_MATCH &&
-          newCondition !== StageRunCondition.CUSTOM_VARIABLE_MATCH_NOT_RUN
-        ) {
-          formData.value.customVariables = []
-        } else if (!formData.value.customVariables || formData.value.customVariables.length === 0) {
-          // 如果切换到变量匹配选项且没有customVariables，初始化默认值
-          formData.value.customVariables = [{ key: 'param1', value: '' }]
-        }
-
-        // 如果切换到非表达式选项，清空customCondition
-        if (newCondition !== StageRunCondition.CUSTOM_CONDITION_MATCH) {
-          formData.value.customCondition = ''
-        }
-      },
-    )
-
-    // ========== Functions ==========
     const collapses = [t('flow.orchestration.flowControlOptions')]
-    const runConditionOptions = getStageRunConditionList(t)
+    const runConditionOptions = getStageRunConditionList(t).map((opt) => ({
+      label: opt.name,
+      value: opt.id,
+    }))
 
-    function toggleEditName(show: boolean) {
-      if (!props.editable) return
-      nameEditing.value = show
-    }
-
-    function handleEditName(value: string) {
-      formData.value.name = value
-    }
-
-    function handleBlur() {
-      toggleEditName(false)
-    }
-
-    function handleEnter() {
-      toggleEditName(false)
-    }
-
-    function handleNameChange(val: string) {
-      handleEditName(val)
-    }
-
-    function handleEditIconClick() {
-      toggleEditName(true)
-    }
-
-    function handleVisibleChange(val: boolean) {
-      emit('update:modelValue', val)
-    }
-
-    function validateForm() {
-      if (!formData.value.name || formData.value.name.trim() === '') {
-        InfoBox({
-          title: t('flow.common.failed'),
-          subTitle: t('flow.orchestration.stageNameRequired'),
-          theme: 'danger',
-        })
-        return false
-      }
-      return true
-    }
-
-    function handleConfirm() {
-      if (!validateForm()) {
-        return
-      }
-
-      if (!props.stage) return
-
-      const updatedStage = {
+    // ========== Helpers ==========
+    /** 根据 formData 构造完整的 Stage 对象 */
+    function buildUpdatedStage() {
+      if (!props.stage) return null
+      return {
         ...props.stage,
         name: formData.value.name,
         fastKill: formData.value.fastKill,
@@ -186,29 +90,92 @@ export default defineComponent({
           customCondition: formData.value.customCondition,
         },
       }
+    }
 
-      emit('confirm', updatedStage)
+    function closePanel() {
       emit('update:modelValue', false)
     }
 
-    function handleCancel() {
-      emit('update:modelValue', false)
+    // ========== Watchers ==========
+    // 同步 props.stage 到 formData
+    watch(
+      () => props.stage,
+      (stage) => {
+        if (!stage) return
+        const ctrl = stage.stageControlOption
+        formData.value = {
+          name: stage.name || '',
+          enable: ctrl?.enable ?? true,
+          fastKill: stage.fastKill || false,
+          runCondition: ctrl?.runCondition || 'AFTER_LAST_FINISHED',
+          customVariables: ctrl?.customVariables || [],
+          customCondition: ctrl?.customCondition || '',
+        }
+      },
+      { immediate: true, deep: true },
+    )
+
+    // 清理 runCondition 相关的条件字段
+    watch(
+      () => formData.value.runCondition,
+      (condition) => {
+        const isVarMatch = [
+          StageRunCondition.CUSTOM_VARIABLE_MATCH,
+          StageRunCondition.CUSTOM_VARIABLE_MATCH_NOT_RUN,
+        ].includes(condition as StageRunCondition)
+
+        if (!isVarMatch) {
+          formData.value.customVariables = []
+        } else if (!formData.value.customVariables?.length) {
+          formData.value.customVariables = [{ key: 'param1', value: '' }]
+        }
+
+        if (condition !== StageRunCondition.CUSTOM_CONDITION_MATCH) {
+          formData.value.customCondition = ''
+        }
+      },
+    )
+
+    // 表单变化时同步到 flowModel（仅编辑模式）
+    watch(
+      formData,
+      () => {
+        if (!props.isNew && props.stage) {
+          const updated = buildUpdatedStage()
+          if (updated) emit('change', updated)
+        }
+      },
+      { deep: true },
+    )
+
+    // ========== Handlers ==========
+    function handleConfirm() {
+      if (!formData.value.name?.trim()) {
+        InfoBox({
+          title: t('flow.common.failed'),
+          subTitle: t('flow.orchestration.stageNameRequired'),
+          theme: 'danger',
+        })
+        return
+      }
+      const updated = buildUpdatedStage()
+      if (updated) {
+        emit('confirm', updated)
+        closePanel()
+      }
     }
 
-    function handleCustomVariablesChange(name: string, value: CustomVariable[]) {
-      formData.value.customVariables = value
+    function exitNameEdit() {
+      if (props.editable) nameEditing.value = false
     }
 
-    function handleCustomConditionChange(value: string) {
-      formData.value.customCondition = value
-    }
-
+    // ========== Render ==========
     return () => (
       <Sideslider
         isShow={props.modelValue}
         width={640}
-        quick-close={true}
-        onUpdate:isShow={handleVisibleChange}
+        quick-close
+        onUpdate:isShow={(val: boolean) => emit('update:modelValue', val)}
         class={['bkci-property-panel', isVariablePanelOpen.value && 'with-variable-open']}
       >
         {{
@@ -223,9 +190,9 @@ export default defineComponent({
                       modelValue={formData.value.name}
                       maxlength={30}
                       placeholder={t('flow.orchestration.stageNamePlaceholder')}
-                      onBlur={handleBlur}
-                      onEnter={handleEnter}
-                      onChange={handleNameChange}
+                      onBlur={exitNameEdit}
+                      onEnter={exitNameEdit}
+                      onChange={(val: string) => (formData.value.name = val)}
                       class={sharedStyles.nameInput}
                       autoFocus
                     />
@@ -235,7 +202,7 @@ export default defineComponent({
                         {formData.value.name || t('flow.orchestration.stageNamePlaceholder')}
                       </p>
                       {props.editable && (
-                        <span class={sharedStyles.editIcon} onClick={handleEditIconClick}>
+                        <span class={sharedStyles.editIcon} onClick={() => (nameEditing.value = true)}>
                           <SvgIcon name="edit" size={16} />
                         </span>
                       )}
@@ -245,9 +212,10 @@ export default defineComponent({
               )}
             </div>
           ),
+
           default: () => (
             <div class={styles.stagePanelContent}>
-              <Form ref={formRef} form-type="vertical" model={formData.value}>
+              <Form form-type="vertical" model={formData.value}>
                 {!isTriggerStage.value && !isFinallyStage.value && (
                   <div class={sharedStyles.flowControlSection}>
                     <Collapse useBlockTheme list={collapses}>
@@ -261,10 +229,7 @@ export default defineComponent({
                             </FormItem>
 
                             <FormItem>
-                              <Checkbox
-                                v-model={formData.value.fastKill}
-                                disabled={!props.editable}
-                              >
+                              <Checkbox v-model={formData.value.fastKill} disabled={!props.editable}>
                                 {t('flow.orchestration.stageFastKill')}
                               </Checkbox>
                               <span
@@ -279,57 +244,50 @@ export default defineComponent({
                               <Select
                                 v-model={formData.value.runCondition}
                                 disabled={!props.editable}
-                                list={runConditionOptions.map((option) => ({
-                                  label: option.name,
-                                  value: option.id,
-                                }))}
+                                list={runConditionOptions}
                               />
                             </FormItem>
 
-                            {/* 自定义变量输入框 - 当选择满足变量或不满足变量时显示 */}
                             {showCustomVariables.value && (
-                              <FormItem>
-                                {{
+                              <FormItem
+                                v-slots={{
                                   label: () => (
                                     <div class={sharedStyles.labelWithIcon}>
                                       <span>{t('flow.orchestration.customVar')}</span>
                                     </div>
                                   ),
-                                  default: () => (
-                                    <KeyValueMap
-                                      value={formData.value.customVariables}
-                                      name="customVariables"
-                                      handleChange={handleCustomVariablesChange}
-                                      addBtnText={t('flow.orchestration.addVariable')}
-                                      keyPlaceholder={t('flow.orchestration.envKeyPlaceholder')}
-                                      valuePlaceholder={t('flow.orchestration.envValuePlaceholder')}
-                                      allowNull={false}
-                                      disabled={!props.editable}
-                                    />
-                                  ),
                                 }}
+                              >
+                                <KeyValueMap
+                                  value={formData.value.customVariables}
+                                  name="customVariables"
+                                  handleChange={(_: string, val: CustomVariable[]) =>
+                                    (formData.value.customVariables = val)
+                                  }
+                                  addBtnText={t('flow.orchestration.addVariable')}
+                                  keyPlaceholder={t('flow.orchestration.envKeyPlaceholder')}
+                                  valuePlaceholder={t('flow.orchestration.envValuePlaceholder')}
+                                  allowNull={false}
+                                  disabled={!props.editable}
+                                />
                               </FormItem>
                             )}
 
-                            {/* 自定义条件表达式输入框 - 当选择表达式时显示 */}
                             {showCustomCondition.value && (
-                              <FormItem>
-                                {{
+                              <FormItem
+                                v-slots={{
                                   label: () => (
                                     <div class={sharedStyles.labelWithIcon}>
                                       <span>{t('flow.orchestration.customConditionExp')}</span>
                                     </div>
                                   ),
-                                  default: () => (
-                                    <Input
-                                      v-model={formData.value.customCondition}
-                                      placeholder={t(
-                                        'flow.orchestration.customConditionExpPlaceholder',
-                                      )}
-                                      disabled={!props.editable}
-                                    />
-                                  ),
                                 }}
+                              >
+                                <Input
+                                  v-model={formData.value.customCondition}
+                                  placeholder={t('flow.orchestration.customConditionExpPlaceholder')}
+                                  disabled={!props.editable}
+                                />
                               </FormItem>
                             )}
                           </div>
@@ -341,13 +299,14 @@ export default defineComponent({
               </Form>
             </div>
           ),
+
           footer: () =>
             props.isNew && (
               <div class={styles.stagePanelFooter}>
                 <Button theme="primary" onClick={handleConfirm} disabled={!props.editable}>
                   {t('flow.orchestration.add')}
                 </Button>
-                <Button onClick={handleCancel}>{t('flow.common.cancel')}</Button>
+                <Button onClick={closePanel}>{t('flow.common.cancel')}</Button>
               </div>
             ),
         }}

@@ -54,7 +54,7 @@
   background-color: var(--bg-primary);
 }
 
-.buildNumber {
+.buildNo {
   color: var(--color-primary);
   cursor: pointer;
 }

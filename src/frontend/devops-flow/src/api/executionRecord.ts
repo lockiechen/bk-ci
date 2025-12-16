@@ -4,7 +4,7 @@
 
 export interface ExecutionRecord {
   id: string
-  buildNumber: number
+  buildNo: number
   checked: boolean
   stageStatus: Array<{
     status: 'success' | 'failed' | 'pending' | 'running'
@@ -65,7 +65,7 @@ function generateMockData(count: number): ExecutionRecord[] {
   const mockData: ExecutionRecord[] = []
 
   for (let i = 0; i < count; i++) {
-    const buildNumber = 200 - i
+    const buildNo = 200 - i
     const daysAgo = Math.floor(i / 5)
     const hoursAgo = i % 24
     const minutesAgo = (i * 7) % 60
@@ -130,7 +130,7 @@ function generateMockData(count: number): ExecutionRecord[] {
 
     mockData.push({
       id: String(i + 1),
-      buildNumber,
+      buildNo,
       checked: i % 3 === 0,
       stageStatus,
       workflowNode: `ins-${workflowNodeId}`,
@@ -172,7 +172,7 @@ export async function getExecutionRecords(
         const keyword = params.keyword.toLowerCase()
         filteredData = allMockData.filter(
           (item) =>
-            item.buildNumber.toString().includes(keyword) ||
+            item.buildNo.toString().includes(keyword) ||
             item.triggerMethod.toLowerCase().includes(keyword) ||
             item.workflowNode.toLowerCase().includes(keyword) ||
             item.remark.toLowerCase().includes(keyword) ||

@@ -227,6 +227,13 @@
   composes: text-ellipsis from '@/styles/global.css';
 }
 
+.groupCount {
+  flex-shrink: 0;
+  justify-self: flex-end;
+  margin-left: auto;
+  margin-right: var(--spacing-sm);
+}
+
 .groupContent {
   flex: 1;
   overflow: hidden;

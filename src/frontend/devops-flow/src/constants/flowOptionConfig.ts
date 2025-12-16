@@ -114,6 +114,6 @@ export const getJobRunConditionList = (t: (key: string) => string, isFinally?: b
 
 // Job 依赖选项
 export const getJobDependOnOptions = (t: (key: string) => string) => [
-  { id: 'select', name: t('flow.orchestration.selectDependentJob') },
-  { id: 'input', name: t('flow.orchestration.inputDependentJobId') },
+  { id: 'ID', name: t('flow.orchestration.selectDependentJob') },
+  { id: 'NAME', name: t('flow.orchestration.inputDependentJobId') },
 ]

@@ -1,15 +1,15 @@
-import { defineComponent } from 'vue';
-import { useI18n } from 'vue-i18n';
-import { useRoute } from 'vue-router';
-import { Loading } from 'bkui-vue';
-import { useModeStore } from "@/stores/flowMode";
-import ModeSwitch from '@/components/ModeSwitch';
-import EmptyPage from '@/components/EmptyPage/index';
-import CodeEditor from '@/components/CodeEditor';
-import NoticeContent from './NoticeContent';
-import { useFlowConfigCode } from '@/hooks/useFlowConfigCode';
-import styles from './NoticeTab.module.css';
-import layoutStyles from '@/styles/layout.module.css';
+import { defineComponent } from 'vue'
+import { useI18n } from 'vue-i18n'
+import { useRoute } from 'vue-router'
+import { Loading } from 'bkui-vue'
+import { useModeStore } from '@/stores/flowMode'
+import ModeSwitch from '@/components/ModeSwitch'
+import EmptyPage from '@/components/EmptyPage/index'
+import CodeEditor from '@/components/CodeEditor'
+import NoticeContent from './NoticeContent'
+import { useFlowConfigCode } from '@/hooks/useFlowConfigCode'
+import styles from './NoticeTab.module.css'
+import layoutStyles from '@/styles/layout.module.css'
 
 export default defineComponent({
   name: 'NoticeTab',
@@ -21,21 +21,16 @@ export default defineComponent({
     Loading,
   },
   setup(props, { emit }) {
-    const { t } = useI18n();
-    const route = useRoute();
-    const modeStore = useModeStore();
+    const { t } = useI18n()
+    const route = useRoute()
+    const modeStore = useModeStore()
 
     // Use flow config code hook for Code mode
-    const {
-      loading,
-      yamlContent,
-      sectionHighlight,
-      isEmpty,
-    } = useFlowConfigCode({
+    const { loading, yamlContent, sectionHighlight, isEmpty, flowSetting } = useFlowConfigCode({
       flowId: route.params.flowId as string,
       section: 'notice',
       autoLoad: true,
-    });
+    })
 
     return () => (
       <div class={layoutStyles.detailContainerWithRightPadding}>
@@ -65,16 +60,12 @@ export default defineComponent({
                   )}
                 </div>
               ) : (
-                <div>
-                  {
-                    true ? <NoticeContent /> : <EmptyPage />
-                  }
-                </div>
+                <NoticeContent flowSetting={flowSetting.value} />
               )}
             </>
           )}
         </div>
       </div>
-    );
-  }
-});
+    )
+  },
+})

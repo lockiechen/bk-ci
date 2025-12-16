@@ -1,24 +1,26 @@
-import { ref } from 'vue'
-import { defineStore } from 'pinia'
-import { useI18n } from 'vue-i18n'
-import { type CreateContentParams } from '@/api/flowContentList'
-import { useFlowListData } from '@/hooks/useFlowListData'
 import {
-  apiSaveBaseInfo,
-  apiGetAuthoringEnvList,
-  apiGetAuthoringNodeList,
-  apiGetProjectTemplates,
-  apiGetStoreTemplates,
-  type AuthoringEnvItem,
-  type AuthoringNodeItem,
+    apiGetAuthoringEnvList,
+    apiGetAuthoringNodeList,
+    apiGetProjectTemplates,
+    apiGetStoreTemplates,
+    apiSaveBaseInfo,
+    createContent,
+    type AuthoringEnvItem,
+    type AuthoringNodeItem,
+    type CreateContentParams,
 } from '@/api/flowContentList'
+import { defineStore } from 'pinia'
+import { ref } from 'vue'
+import { useI18n } from 'vue-i18n'
 
 /**
  * 创作流创建流程状态管理
+ * 
+ * 注意：不要在 store 中导入 hooks，避免循环依赖
+ * 直接调用 API 方法
  */
 export const useNewFlowStore = defineStore('newFlow', () => {
   const { t } = useI18n()
-  const { createNewContent } = useFlowListData()
 
   // 状态定义
   const currentStep = ref(1)
@@ -217,12 +219,14 @@ export const useNewFlowStore = defineStore('newFlow', () => {
 
   /**
    * 创建创作流
+   * 直接调用 API，避免循环依赖
    */
-  async function createNewFlow(): Promise<void> {
+  async function createNewFlow(): Promise<any> {
     isLoading.value = true
     try {
-      await createNewContent(formData.value)
+      const result = await createContent(formData.value)
       resetForm()
+      return result
     } catch (error) {
       console.error('Failed to create new flow:', error)
       throw error

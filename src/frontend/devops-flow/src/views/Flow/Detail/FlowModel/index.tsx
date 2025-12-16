@@ -28,10 +28,11 @@ export default defineComponent({
     const modeStore = useModeStore()
 
     // 使用 useFlowModel hook 管理数据
-    const { flowModel, yamlContent, loading, isFlowEmpty } = useFlowModel({
-      flowId: route.params.flowId as string, // TODO: 从路由参数获取实际的 flowId
-      autoLoad: true,
-    })
+    const { flowModel, flowModelWithoutTriggerStage, yamlContent, loading, isFlowEmpty } =
+      useFlowModel({
+        flowId: route.params.flowId as string, // TODO: 从路由参数获取实际的 flowId
+        autoLoad: true,
+      })
 
     return () => (
       <div class={styles.flowModel}>
@@ -55,8 +56,8 @@ export default defineComponent({
                 </div>
               ) : (
                 <div class={styles.uiModeWrapper}>
-                  {!isFlowEmpty.value && flowModel.value ? (
-                    <BkPipeline editable={false} pipeline={flowModel.value} />
+                  {!isFlowEmpty.value && flowModelWithoutTriggerStage.value ? (
+                    <BkPipeline editable={false} pipeline={flowModelWithoutTriggerStage.value} />
                   ) : (
                     <EmptyPage
                       title={t('flow.content.blankTemplateNoOrchestration')}

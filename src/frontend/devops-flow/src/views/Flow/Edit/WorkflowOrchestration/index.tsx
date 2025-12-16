@@ -1,19 +1,18 @@
-import { computed, defineComponent, watch, ref } from 'vue'
-import { useI18n } from 'vue-i18n'
-import { useRoute } from 'vue-router'
-import { Exception } from 'bkui-vue'
-import sharedStyles from '../shared.module.css'
-import styles from './index.module.css'
-import BkPipeline from 'bkui-pipeline/vue3'
-import 'bkui-pipeline/dist/bkui-pipeline.css'
-import { useFlowModel } from '@/hooks/useFlowModel'
-import { useUIStore } from '@/stores/ui'
 import { SvgIcon } from '@/components/SvgIcon'
-import StagePropertyPanel from '@/components/WorkflowOrchestration/StagePropertyPanel'
-import JobPropertyPanel from '@/components/WorkflowOrchestration/JobPropertyPanel'
 import AtomPropertyPanel from '@/components/WorkflowOrchestration/AtomPropertyPanel'
 import AtomSelector from '@/components/WorkflowOrchestration/AtomSelector'
-import type { FlowModel } from '@/api/flowModel'
+import JobPropertyPanel from '@/components/WorkflowOrchestration/JobPropertyPanel'
+import StagePropertyPanel from '@/components/WorkflowOrchestration/StagePropertyPanel'
+import { useFlowModel } from '@/hooks/useFlowModel'
+import { useUIStore } from '@/stores/ui'
+import 'bkui-pipeline/dist/bkui-pipeline.css'
+import BkPipeline from 'bkui-pipeline/vue3'
+import { Exception } from 'bkui-vue'
+import { defineComponent, ref, watch } from 'vue'
+import { useI18n } from 'vue-i18n'
+import { useRoute } from 'vue-router'
+import sharedStyles from '../shared.module.css'
+import styles from './index.module.css'
 
 export default defineComponent({
   name: 'EditWorkflowOrchestration',
@@ -121,6 +120,7 @@ export default defineComponent({
             onAddAtom={flowModel.handleAddAtom}
             onClick={flowModel.handleFlowClick}
             onAddStage={flowModel.handleAddStage}
+            onChange={flowModel.handlePipelineChange}
           />
         ) : flowModel.flowModelWithoutTriggerStage.value ? (
           renderEmptyState()
@@ -145,8 +145,10 @@ export default defineComponent({
           v-model={isJobPanelVisible.value}
           editable={true}
           editingContainer={flowModel.editingContainer.value}
+          stage={flowModel.editingContainerStage.value}
+          containerIndex={flowModel.editingContainerIndex.value}
           isNew={flowModel.isNewJob.value}
-          onChange={flowModel.handleJobChange}
+          isFinally={flowModel.isEditingFinallyStage.value}
           onConfirm={flowModel.handleJobConfirm}
         />
 

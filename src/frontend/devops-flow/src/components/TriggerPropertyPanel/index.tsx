@@ -1,24 +1,26 @@
-import { defineComponent, computed, ref, watch, type PropType } from 'vue'
-import { useRoute } from 'vue-router'
-import { useI18n } from 'vue-i18n'
-import {
-  Sideslider,
-  Form,
-  Input,
-  Select,
-  Switcher,
-  Checkbox,
-  Radio,
-  Button,
-  Loading,
-} from 'bkui-vue'
-import CronTab from '@blueking/crontab'
-import '@blueking/crontab/vue3/vue3.css'
 import type { Element } from '@/api/flowModel'
-import { createDefaultElement } from '@/utils/flowDefaults'
+import AtomForm from '@/components/AtomForm/AtomForm'
 import { SvgIcon } from '@/components/SvgIcon'
 import { useAtomStore } from '@/stores/atom'
-import AtomForm from '@/components/AtomForm/AtomForm'
+import { createDefaultElement } from '@/utils/flowDefaults'
+import CronTab from '@blueking/crontab'
+import '@blueking/crontab/vue3/vue3.css'
+import {
+  Button,
+  Checkbox,
+  Form,
+  Input,
+  Loading,
+  Radio,
+  Select,
+  Sideslider,
+  Switcher,
+} from 'bkui-vue'
+import { computed, defineComponent, ref, watch, type PropType } from 'vue'
+import { useI18n } from 'vue-i18n'
+import { useRoute } from 'vue-router'
+import type { TriggerModal } from '../../api/trigger'
+import { useTriggerManager } from '../../hooks/useTriggerManager'
 import styles from './TriggerPropertyPanel.module.css'
 
 interface StartParam {
@@ -48,7 +50,9 @@ export default defineComponent({
     const { FormItem } = Form
     const atomStore = useAtomStore()
     const localElement = ref<Element | null>(null)
+    const atomModal = ref<TriggerModal | null>(null)
     const defaultAdditionalOptions = createDefaultElement(0).additionalOptions!
+    const triggerManager = useTriggerManager()
 
     const resetLocalElement = () => {
       localElement.value = props.element ? cloneElement(props.element) : null
@@ -314,7 +318,8 @@ export default defineComponent({
       const version = atomVersion.value
       if (!code || !version || !props.visible) return
       try {
-        await atomStore.getAtomModal(code, version, projectCode)
+        const modal = await triggerManager.fetchModal(localElement.value?.ownerStoreCode || '', code, version)
+        atomModal.value = modal
       } catch (error) {
         console.error('Failed to load trigger atom modal:', error)
       }
@@ -322,12 +327,6 @@ export default defineComponent({
 
     watch([atomCode, atomVersion, () => props.visible], loadAtomModal, { immediate: true })
 
-    const atomModal = computed(() => {
-      const code = atomCode.value
-      const version = atomVersion.value
-      if (!code || !version) return null
-      return atomStore.getCachedAtomModal(code, version)
-    })
 
     const atomPropsModel = computed(() => {
       const modal = atomModal.value

@@ -1,14 +1,14 @@
-import { defineComponent, ref, computed, watch } from 'vue'
+import type { Element } from '@/api/flowModel'
+import { SvgIcon } from '@/components/SvgIcon'
+import TriggerEventSelector from '@/components/TriggerEventSelector'
+import TriggerPropertyPanel from '@/components/TriggerPropertyPanel'
+import { useFlowModel } from '@/hooks/useFlowModel'
+import { createDefaultElement } from '@/utils/flowDefaults'
+import { Button, Message, Popover, Switcher, Table } from 'bkui-vue'
+import { computed, defineComponent, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useRoute } from 'vue-router'
-import { Button, Table, Switcher, Message, Popover } from 'bkui-vue'
-import { SvgIcon } from '@/components/SvgIcon'
-import { useFlowModel } from '@/hooks/useFlowModel'
-import TriggerEventSelector from '@/components/TriggerEventSelector'
-import type { AtomItem } from '@/api/atom'
-import type { Element } from '@/api/flowModel'
-import { createDefaultElement } from '@/utils/flowDefaults'
-import TriggerPropertyPanel from '@/components/TriggerPropertyPanel'
+import type { TriggerBaseItem } from '../../../../api/trigger'
 import sharedStyles from '../shared.module.css'
 import styles from './TriggerEvents.module.css'
 
@@ -29,17 +29,6 @@ export default defineComponent({
     function cloneElement(element: Element): Element {
       return JSON.parse(JSON.stringify(element))
     }
-
-    // 触发事件列表（从flowModel的trigger stage中提取）
-    const triggerEvents = computed<Element[]>(() => {
-      const triggerStage = flowModel.flowModel.value?.stages?.[0]
-      if (!triggerStage) return []
-
-      const container = triggerStage.containers?.[0]
-      if (!container) return []
-
-      return container.elements || []
-    })
 
     const triggerContainer = computed(() => {
       return flowModel.flowModel.value?.stages?.[0]?.containers?.[0] || null
@@ -69,7 +58,7 @@ export default defineComponent({
     }
 
     // 处理选择触发事件
-    const handleSelectEvent = (event: AtomItem) => {
+    const handleSelectEvent = (trigger: TriggerBaseItem) => {
       const triggerStage = flowModel.flowModel.value?.stages?.[0]
       if (!triggerStage) return
 
@@ -79,11 +68,9 @@ export default defineComponent({
       const nextIndex = container.elements?.length || 0
 
       // 创建新的触发事件元素
-      const newElement = createDefaultElement(nextIndex, {
-        name: event.name,
-        '@type': event.atomCode,
-        atomCode: event.atomCode,
-        version: event.version || '1.latest',
+      const newElement = createDefaultElement(nextIndex, { 
+        ...trigger, 
+        '@type': trigger.atomCode
       })
 
       // 设置启用状态
@@ -97,7 +84,7 @@ export default defineComponent({
 
     // 切换启用状态
     const handleToggleEnable = (index: number, enabled: boolean) => {
-      const event = triggerEvents.value[index]
+      const event = flowModel.triggerEvents.value[index]
       if (!event) return
 
       // 更新flowModel中的enable状态
@@ -127,7 +114,7 @@ export default defineComponent({
 
     // 删除触发事件
     const handleDelete = (index: number) => {
-      if (triggerEvents.value.length <= 1) {
+      if (flowModel.triggerEvents.value.length <= 1) {
         Message({
           theme: 'error',
           message: t('flow.content.triggerEventAtLeastOne'),
@@ -247,7 +234,11 @@ export default defineComponent({
             </Popover>
           </div>
 
-          <Table data={triggerEvents.value} columns={columns as any} class={styles.triggerTable}>
+          <Table
+            data={flowModel.triggerEvents.value}
+            columns={columns as any}
+            class={styles.triggerTable}
+          >
             {{
               empty: () => <div class={styles.emptyState}>{t('flow.content.noTriggerEvents')}</div>,
             }}

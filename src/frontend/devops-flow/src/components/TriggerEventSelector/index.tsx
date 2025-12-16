@@ -1,11 +1,11 @@
-import { defineComponent, ref, computed, watch, onMounted, onUnmounted } from 'vue'
-import { useI18n } from 'vue-i18n'
-import { Input, Loading } from 'bkui-vue'
-import { useAtomManager } from '@/hooks/useAtomManager'
-import { JobCategory, type AtomItem, type AtomClassify } from '@/api/atom'
-import styles from './TriggerEventSelector.module.css'
+import type { TriggerBaseItem } from '@/api/trigger'
 import { SvgIcon } from '@/components/SvgIcon'
+import { useTriggerManager } from '@/hooks/useTriggerManager'
+import { Input, Loading, Message } from 'bkui-vue'
+import { computed, defineComponent, onMounted, onUnmounted, ref } from 'vue'
+import { useI18n } from 'vue-i18n'
 import TriggerEventCard from './TriggerEventCard'
+import styles from './TriggerEventSelector.module.css'
 
 export default defineComponent({
   name: 'TriggerEventSelector',
@@ -18,41 +18,20 @@ export default defineComponent({
   emits: ['update:visible', 'select', 'close'],
   setup(props, { emit }) {
     const { t } = useI18n()
-    const projectCode = props.projectCode || 'lockie'
-
-    const atomManager = useAtomManager({
-      projectCode,
-      category: JobCategory.TRIGGER,
-    })
+    const triggerManager = useTriggerManager()
 
     const searchKey = ref('')
-    const selectedClassify = ref<string>('all')
-    const allEventList = ref<AtomItem[]>([])
+    const selectedClassify = ref<string>('')
+    const allEventList = ref<TriggerBaseItem[]>([])
     const loading = ref(false)
+    const selectingAtomCode = ref<string | null>(null)
 
-    const classifyList = computed(() => {
-      const list: Array<AtomClassify & { count: number }> = [
-        {
-          id: 'all',
-          classifyCode: 'all',
-          classifyName: t('flow.content.allEvents'),
-          count: allEventList.value.length,
-        },
-        ...atomManager.classifyOptions.value.map((item) => ({
-          ...item,
-          count: allEventList.value.filter((e) => e.classifyCode === item.classifyCode).length,
-        })),
-      ]
-      return list
-    })
 
+    // 根据分类和搜索关键词过滤事件列表
     const filteredEventList = computed(() => {
       let list = allEventList.value
 
-      if (selectedClassify.value !== 'all') {
-        list = list.filter((item) => item.classifyCode === selectedClassify.value)
-      }
-
+      // 按搜索关键词过滤
       if (searchKey.value) {
         const keyword = searchKey.value.toLowerCase()
         list = list.filter(
@@ -65,10 +44,21 @@ export default defineComponent({
       return list
     })
 
-    const loadEventList = async () => {
+    const loadTypeList = async () => {
+      try {
+        const response = await triggerManager.fetchTypeList()
+        selectedClassify.value = response[0]?.ownerStoreCode || ''
+      } catch (error) {
+        console.error('Failed to load trigger types:', error)
+      }
+    }
+
+    // 加载事件列表
+    const loadEventList = async (ownerStoreCode?: string) => {
       try {
         loading.value = true
-        const response = await atomManager.fetchAtomList({
+        const response = await triggerManager.fetchList({
+          ownerStoreCode,
           page: 1,
           pageSize: 100,
         })
@@ -81,23 +71,56 @@ export default defineComponent({
       }
     }
 
-    onMounted(async () => {
-      await atomManager.fetchClassifyList()
-      await loadEventList()
+    // 初始化：加载分类列表和事件列表
+    onMounted(() => {
+      loadTypeList()
+      loadEventList()
     })
 
     onUnmounted(() => {
       searchKey.value = ''
-      selectedClassify.value = 'all'
+      selectedClassify.value = ''
     })
 
-    const handleSelectEvent = (event: AtomItem) => {
-      emit('select', event)
-      emit('update:visible', false)
+    // 处理分类切换
+    const handleClassifyChange = async (classifyCode: string) => {
+      selectedClassify.value = classifyCode
+      // 重新加载对应分类的列表
+      await loadEventList(classifyCode || undefined)
     }
 
+    // 处理选择事件
+    const handleSelectEvent = async (trigger: TriggerBaseItem) => {
+      try {
+        selectingAtomCode.value = trigger.atomCode
+
+        const version = trigger.version || '1.*'
+
+        
+
+        // 发送选择事件，包含触发器基础信息和配置详情
+        emit('select', trigger)
+
+        emit('update:visible', false)
+      } catch (error) {
+        console.error('Failed to get trigger modal:', error)
+        Message({
+          theme: 'error',
+          message: t('flow.content.getTriggerConfigFailed'),
+        })
+      } finally {
+        selectingAtomCode.value = null
+      }
+    }
+
+    // 跳转到发布指南
     const handleGoToPublishGuide = () => {
       window.open('https://iwiki.example.com/publish-guide', '_blank')
+    }
+
+    // 检查是否正在选中某个触发器
+    const isSelectingTrigger = (atomCode: string) => {
+      return selectingAtomCode.value === atomCode
     }
 
     return () => (
@@ -114,31 +137,32 @@ export default defineComponent({
         </Input>
 
         <div class={styles.body}>
+          {/* 左侧分类导航 */}
           <div class={styles.nav}>
-            {classifyList.value.map((classify) => (
+            {triggerManager.typeList.value.map((type) => (
               <div
-                key={classify.classifyCode}
+                key={type.ownerStoreCode}
                 class={[
                   styles.navItem,
-                  selectedClassify.value === classify.classifyCode && styles.navItemActive,
+                  selectedClassify.value === type.ownerStoreCode && styles.navItemActive,
                 ]}
-                onClick={() => {
-                  selectedClassify.value = classify.classifyCode
-                }}
+                onClick={() => handleClassifyChange(type.ownerStoreCode)}
               >
-                <span class={styles.navName}>{classify.classifyName}</span>
-                <span class={styles.navCount}>{classify.count}</span>
+                <span class={styles.navName}>{type.name}</span>
+                <span class={styles.navCount}>{type.count}</span>
               </div>
             ))}
           </div>
 
+          {/* 右侧事件列表 */}
           <div class={styles.listContainer}>
-            <Loading loading={loading.value} class={styles.list}>
+            <Loading loading={loading.value || triggerManager.isLoadingTypes.value} class={styles.list}>
               {filteredEventList.value.length ? (
                 filteredEventList.value.map((eventAtom) => (
                   <TriggerEventCard
                     key={eventAtom.atomCode}
                     eventAtom={eventAtom}
+                    loading={isSelectingTrigger(eventAtom.atomCode)}
                     onClick={() => handleSelectEvent(eventAtom)}
                   />
                 ))

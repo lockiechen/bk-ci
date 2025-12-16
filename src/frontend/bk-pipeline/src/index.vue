@@ -31,18 +31,17 @@
 
 <script setup>
 import {
-  ref,
   computed,
-  provide,
-  onMounted,
-  onBeforeUnmount,
   nextTick,
+  onBeforeUnmount,
+  onMounted,
+  provide,
+  ref,
 } from "vue";
 import { VueDraggable } from "vue-draggable-plus";
-import Stage from "./Stage";
-import { eventBus, hashID, isTriggerContainer } from "./util";
 import {
   ADD_STAGE,
+  APPEND_JOB,
   ATOM_ADD_EVENT_NAME,
   ATOM_CONTINUE_EVENT_NAME,
   ATOM_EXEC_EVENT_NAME,
@@ -54,8 +53,9 @@ import {
   DELETE_EVENT_NAME,
   STAGE_CHECK,
   STAGE_RETRY,
-  APPEND_JOB,
 } from "./constants";
+import Stage from "./Stage";
+import { eventBus, hashID, isTriggerContainer } from "./util";
 
 // 定义 emits - 必须在 defineProps 之前，且不能引用局部变量
 const emit = defineEmits([
@@ -199,7 +199,8 @@ const computedStages = computed({
 
 const dragOptions = computed(() => {
   return {
-    group: "pipeline-job",
+    group: "pipeline-stage",
+    handle: ".pipeline-stage-entry",
     ghostClass: "sortable-ghost-atom",
     chosenClass: "sortable-chosen-atom",
     animation: 130,

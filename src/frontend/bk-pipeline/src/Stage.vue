@@ -79,8 +79,7 @@
     <VueDraggable
       v-model="computedContainer"
       v-bind="dragOptions"
-      :move="checkMove"
-      tag="ul"
+      :move="checkMove" 
     >
       <stage-container
         v-for="(container, index) in computedContainer"
@@ -159,32 +158,32 @@
 
 <script setup>
 import {
-  ref,
   computed,
-  inject,
-  onMounted,
-  onBeforeUnmount,
-  onUpdated,
-  nextTick,
   getCurrentInstance,
+  inject,
+  nextTick,
+  onBeforeUnmount,
+  onMounted,
+  onUpdated,
+  ref,
 } from "vue";
 import { VueDraggable } from "vue-draggable-plus";
+import AppendMenu from "./AppendMenu.vue";
 import CruveLine from "./CruveLine";
 import InsertStageMenu from "./InsertStageMenu";
 import Logo from "./Logo";
 import StageCheckIcon from "./StageCheckIcon";
-import AppendMenu from "./AppendMenu.vue";
 import StageContainer from "./StageContainer";
-import { t } from "./locale";
 import {
   ADD_STAGE,
+  APPEND_JOB,
   CLICK_EVENT_NAME,
   COPY_EVENT_NAME,
   DELETE_EVENT_NAME,
   STAGE_RETRY,
   STATUS_MAP,
-  APPEND_JOB,
 } from "./constants";
+import { t } from "./locale";
 import {
   eventBus,
   getOuterHeight,

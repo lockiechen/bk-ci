@@ -1,13 +1,13 @@
-import { defineComponent, computed, onMounted, watch } from 'vue'
-import { useI18n } from 'vue-i18n'
-import { useRoute, useRouter, RouterView } from 'vue-router'
-import { Tab } from 'bkui-vue'
 import { FLOW_EDIT_TABS, isValidFlowEditTab } from '@/constants/routes'
-import VariablePanel from './VariablePanel'
-import styles from './Edit.module.css'
 import { useFlowModel } from '@/hooks/useFlowModel'
 import { useUIStore } from '@/stores/ui'
+import { Tab } from 'bkui-vue'
 import { storeToRefs } from 'pinia'
+import { computed, defineComponent, watch } from 'vue'
+import { useI18n } from 'vue-i18n'
+import { RouterView, useRoute, useRouter } from 'vue-router'
+import styles from './Edit.module.css'
+import VariablePanel from './VariablePanel'
 
 export default defineComponent({
   name: 'FlowEdit',

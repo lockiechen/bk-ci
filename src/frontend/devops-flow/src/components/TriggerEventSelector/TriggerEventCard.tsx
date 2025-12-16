@@ -1,16 +1,21 @@
-import { computed, defineComponent, type PropType } from 'vue'
-import type { AtomItem } from '@/api/atom'
+import type { TriggerBaseItem } from '@/api/trigger'
 import { SvgIcon } from '@/components/SvgIcon'
+import { Loading } from 'bkui-vue'
+import { computed, defineComponent, type PropType } from 'vue'
 import styles from './TriggerEventCard.module.css'
 
 export default defineComponent({
   name: 'TriggerEventCard',
   props: {
     eventAtom: {
-      type: Object as PropType<AtomItem>,
+      type: Object as PropType<TriggerBaseItem>,
       required: true,
     },
     compact: {
+      type: Boolean,
+      default: false,
+    },
+    loading: {
       type: Boolean,
       default: false,
     },
@@ -20,9 +25,7 @@ export default defineComponent({
     // 获取事件图标名称
     const eventAtomLogo = computed(() => {
       // 根据atomCode或classifyCode返回对应的图标
-      if (props.eventAtom.atomCode === 'manualTrigger') return 'hand'
-      if (props.eventAtom.atomCode === 'timerTrigger') return 'clock'
-      if (props.eventAtom.classifyCode === 'cloudDesktop') return 'cloud-desktop'
+     
       return 'placeholder'
     })
 
@@ -35,8 +38,17 @@ export default defineComponent({
       return count.toLocaleString()
     }
 
+    const handleClick = () => {
+      if (!props.loading) {
+        emit('click')
+      }
+    }
+
     return () => (
-      <div class={styles.eventCard} onClick={() => emit('click')}>
+      <div
+        class={[styles.eventCard, props.loading && styles.eventCardLoading]}
+        onClick={handleClick}
+      >
         <div class={styles.eventIcon}>
           {props.eventAtom.logoUrl ? (
             <img src={props.eventAtom.logoUrl} alt={props.eventAtom.name} />
@@ -46,7 +58,10 @@ export default defineComponent({
         </div>
 
         <div class={styles.eventInfo}>
-          <div class={styles.eventName}>{props.eventAtom.name}</div>
+          <div class={styles.eventName}>
+            {props.eventAtom.name}
+            {props.loading && <Loading mode="spin" size="mini" class={styles.loadingSpin} />}
+          </div>
           <div class={styles.eventDesc}>{props.eventAtom.summary || ''}</div>
           <div class={styles.eventMeta}>
             <span class={styles.eventRating}>

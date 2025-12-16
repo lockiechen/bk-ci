@@ -1,28 +1,40 @@
-import { computed, defineComponent, ref, watch, type PropType } from 'vue'
-import { useI18n } from 'vue-i18n'
+import type { Container, CustomVariable, Stage } from '@/api/flowModel'
+import KeyValueMap from '@/components/AtomForm/KeyValueMap'
+import { SvgIcon } from '@/components/SvgIcon'
+import { getJobRunConditionList } from '@/constants/flowOptionConfig'
+import { useUIStore } from '@/stores/ui'
+import { JobRunCondition } from '@/utils/flowDefaults'
 import {
-  Sideslider,
-  Form,
-  Input,
-  Select,
+  Button,
   Checkbox,
   Collapse,
-  Radio,
-  Button,
+  Form,
   InfoBox,
+  Input,
+  Radio,
+  Select,
+  Sideslider,
   Switcher,
 } from 'bkui-vue'
-import { SvgIcon } from '@/components/SvgIcon'
-import KeyValueMap from '@/components/AtomForm/KeyValueMap'
+import { storeToRefs } from 'pinia'
+import { computed, defineComponent, ref, watch, type PropType } from 'vue'
+import { useI18n } from 'vue-i18n'
 import styles from './JobPropertyPanel.module.css'
 import sharedStyles from './shared.module.css'
-import { getJobRunConditionList, getJobDependOnOptions } from '@/constants/flowOptionConfig'
-import type { Container, CustomVariable } from '@/api/flowModel'
-import { JobRunCondition } from '@/utils/flowDefaults'
-import { useUIStore } from '@/stores/ui'
-import { storeToRefs } from 'pinia'
 
 const { FormItem } = Form
+
+// 依赖类型枚举
+enum DependOnType {
+  ID = 'ID',
+  NAME = 'NAME',
+}
+
+// 验证规则
+const RULES = {
+  MUTEX_QUEUE: { min: 1, max: 50 },
+  MATRIX_CONCURRENCY: { min: 1, max: 20 },
+}
 
 export default defineComponent({
   name: 'JobPropertyPanel',
@@ -35,6 +47,16 @@ export default defineComponent({
       type: Object as PropType<Container | null>,
       default: null,
     },
+    /** 当前 Job 所属的 Stage，用于获取依赖 Job 列表 */
+    stage: {
+      type: Object as PropType<Stage | null>,
+      default: null,
+    },
+    /** 当前 Job 在 Stage 中的索引 */
+    containerIndex: {
+      type: Number,
+      default: -1,
+    },
     editable: {
       type: Boolean,
       default: true,
@@ -43,176 +65,450 @@ export default defineComponent({
       type: Boolean,
       default: false,
     },
+    /** 是否是 Finally Stage */
+    isFinally: {
+      type: Boolean,
+      default: false,
+    },
   },
-  emits: ['update:modelValue', 'change', 'confirm'],
+  emits: ['update:modelValue', 'confirm'],
   setup(props, { emit }) {
-    // ========== Hooks ==========
     const { t } = useI18n()
-    const uiStore = useUIStore()
-    const { isVariablePanelOpen } = storeToRefs(uiStore)
+    const { isVariablePanelOpen } = storeToRefs(useUIStore())
 
-    // ========== Refs ==========
+    // ========== State ==========
     const formRef = ref()
-    const formData = ref(props.editingContainer)
+    const formData = ref<Container | null>(null)
     const nameEditing = ref(false)
 
     // ========== Computed ==========
-    const title = computed(() => {
-      return props.isNew ? t('flow.orchestration.addJob') : t('flow.orchestration.editJob')
-    })
-
-    // 判断是否显示自定义变量输入框
-    const showCustomVariables = computed(() => {
-      const runCondition = formData.value?.jobControlOption?.runCondition
-      return (
-        runCondition === JobRunCondition.CUSTOM_VARIABLE_MATCH ||
-        runCondition === JobRunCondition.CUSTOM_VARIABLE_MATCH_NOT_RUN
-      )
-    })
-
-    // 判断是否显示自定义条件表达式输入框
-    const showCustomCondition = computed(() => {
-      return formData.value?.jobControlOption?.runCondition === 'CUSTOM_CONDITION_MATCH'
-    })
-
-    // ========== Lifecycle Hooks ==========
-    watch(
-      () => props.editingContainer,
-      (newContainer) => {
-        formData.value = newContainer
-      },
+    const title = computed(() =>
+      props.isNew ? t('flow.orchestration.addJob') : t('flow.orchestration.editJob'),
     )
 
-    // 监听runCondition变化，清理不需要的字段
-    watch(
-      () => formData.value?.jobControlOption?.runCondition,
-      (newCondition) => {
-        if (!formData.value || !formData.value.jobControlOption) return
+    // 运行条件选项（区分普通阶段和 Finally 阶段）
+    const runConditionOptions = computed(() =>
+      getJobRunConditionList(t, props.isFinally).map((opt) => ({
+        label: opt.name,
+        value: opt.id,
+      })),
+    )
 
-        // 如果切换到非变量匹配选项，清空customVariables
-        if (
-          newCondition !== JobRunCondition.CUSTOM_VARIABLE_MATCH &&
-          newCondition !== JobRunCondition.CUSTOM_VARIABLE_MATCH_NOT_RUN
-        ) {
+    // 依赖类型选项
+    const dependOnTypeOptions = [
+      { label: t('flow.orchestration.dependOnById'), value: DependOnType.ID },
+      { label: t('flow.orchestration.dependOnByName'), value: DependOnType.NAME },
+    ]
+
+    // 可依赖的 Job 列表（排除当前 Job）
+    const dependOnJobList = computed(() => {
+      if (!props.stage?.containers) return []
+      return props.stage.containers
+      .filter((container, index) => index !== props.containerIndex && container.jobId)
+        .map((container, index) => ({
+          value: container.jobId,
+          label: `${container.name} (${container.jobId})`,
+          disabled: !container.jobId
+        }))
+        
+    })
+
+    // 条件显示计算
+    const jobCtrl = computed(() => formData.value?.jobControlOption)
+    const showCustomVariables = computed(() =>
+      [JobRunCondition.CUSTOM_VARIABLE_MATCH, JobRunCondition.CUSTOM_VARIABLE_MATCH_NOT_RUN].includes(
+        jobCtrl.value?.runCondition as JobRunCondition,
+      ),
+    )
+    const showCustomCondition = computed(
+      () => jobCtrl.value?.runCondition === JobRunCondition.CUSTOM_CONDITION_MATCH,
+    )
+    const showDependOnId = computed(
+      () => jobCtrl.value?.dependOnType === DependOnType.ID || !jobCtrl.value?.dependOnType,
+    )
+    const showDependOnName = computed(() => jobCtrl.value?.dependOnType === DependOnType.NAME)
+
+    // ========== Watchers ==========
+    // 同步 props.editingContainer 到 formData
+    watch(
+      () => props.editingContainer,
+      (container) => {
+        console.log(1)
+        formData.value = container ? { ...container } : null
+      },
+      { immediate: true },
+    )
+
+    // 清理 runCondition 相关的条件字段
+    watch(
+      () => jobCtrl.value?.runCondition,
+      (condition) => {
+        if (!formData.value?.jobControlOption) return
+
+        const isVarMatch = [
+          JobRunCondition.CUSTOM_VARIABLE_MATCH,
+          JobRunCondition.CUSTOM_VARIABLE_MATCH_NOT_RUN,
+        ].includes(condition as JobRunCondition)
+
+        if (!isVarMatch) {
           formData.value.jobControlOption.customVariables = []
-        } else if (
-          !formData.value.jobControlOption.customVariables ||
-          formData.value.jobControlOption.customVariables.length === 0
-        ) {
-          // 如果切换到变量匹配选项且没有customVariables，初始化默认值
+        } else if (!formData.value.jobControlOption.customVariables?.length) {
           formData.value.jobControlOption.customVariables = [{ key: 'param1', value: '' }]
         }
 
-        // 如果切换到非表达式选项，清空customCondition
-        if (newCondition !== 'CUSTOM_CONDITION_MATCH') {
+        if (condition !== JobRunCondition.CUSTOM_CONDITION_MATCH) {
           formData.value.jobControlOption.customCondition = ''
         }
       },
     )
 
-    // ========== Functions ==========
-    const matrixJobPanel = t('flow.orchestration.matrixJob')
-    const flowControlPanel = t('flow.orchestration.flowControlOptions')
-    const mutexGroupPanel = t('flow.orchestration.mutexGroup')
-    const runConditionOptions = getJobRunConditionList(t)
-    const dependOnOptions = getJobDependOnOptions(t)
-    const matrixJobDocLink = 'https://docs.bkci.net/'
-
-    function toggleEditName(show: boolean) {
-      if (!props.editable) return
-      nameEditing.value = show
+    // ========== Helpers ==========
+    function closePanel() {
+      emit('update:modelValue', false)
     }
 
-    function handleEditName(value: string) {
-      if (formData.value) {
-        formData.value.name = value
-        if (!props.isNew) {
-          emit('change', formData.value)
-        }
-      }
+    function exitNameEdit() {
+      if (props.editable) nameEditing.value = false
     }
 
-    function handleBlur() {
-      toggleEditName(false)
-    }
-
-    function handleEnter() {
-      toggleEditName(false)
-    }
-
-    function handleNameChange(val: string) {
-      handleEditName(val)
-    }
-
-    function handleEditIconClick() {
-      toggleEditName(true)
-    }
-
-    function handleSwitcherClick(e: Event) {
+    function stopPropagation(e: Event) {
       e.stopPropagation()
     }
 
-    function handleDocLinkClick(e: Event) {
-      e.stopPropagation()
-    }
-
-    function handleVisibleChange(val: boolean) {
-      emit('update:modelValue', val)
-    }
-
-    async function validateForm() {
+    // ========== Handlers ==========
+    async function handleConfirm() {
       try {
-        return await formRef.value?.validate()
-      } catch (error) {
+        await formRef.value?.validate()
+      } catch {
         InfoBox({
           title: t('flow.common.failed'),
           subTitle: t('flow.orchestration.jobIdRequired'),
           theme: 'danger',
         })
-        return false
-      }
-    }
-
-    async function handleConfirm() {
-      const isValid = await validateForm()
-      if (!isValid) {
         return
       }
 
-      if (!formData.value) return
-
-      emit('confirm', formData.value)
-      emit('update:modelValue', false)
-    }
-
-    function handleCancel() {
-      emit('update:modelValue', false)
-    }
-
-    function handleMatrixJobChange(val: boolean) {
-      formData.value!.matrixGroupFlag = val
-    }
-
-    function handleMutexGroupChange(val: boolean) {
-      formData.value!.mutexGroup!.enable = val
-    }
-
-    function handleCustomVariablesChange(name: string, value: CustomVariable[]) {
-      if (formData.value?.jobControlOption) {
-        formData.value.jobControlOption.customVariables = value
-        if (!props.isNew) {
-          emit('change', formData.value)
-        }
+      if (formData.value) {
+        emit('confirm', formData.value)
+        closePanel()
       }
     }
 
+    // ========== Render Helpers ==========
+    const renderMatrixSection = () => {
+      if (!formData.value?.matrixControlOption) return null
+      const matrix = formData.value.matrixControlOption
+
+      return (
+        <div class={sharedStyles.flowControlSection}>
+          <Collapse useBlockTheme>
+            <Collapse.CollapsePanel>
+              {{
+                default: () => (
+                  <div class={sharedStyles.collapseHeader}>
+                    <div class={sharedStyles.collapseHeaderLeft}>
+                      <span>{t('flow.orchestration.matrixJob')}</span>
+                      <Switcher
+                        v-model={formData.value!.matrixGroupFlag}
+                        size="small"
+                        theme="primary"
+                        disabled={!props.editable}
+                        onClick={stopPropagation}
+                      />
+                    </div>
+                    <a
+                      href="https://docs.bkci.net/"
+                      target="_blank"
+                      class={sharedStyles.docLink}
+                      onClick={stopPropagation}
+                    >
+                      {t('flow.orchestration.viewDocumentation')}
+                    </a>
+                  </div>
+                ),
+                content: () =>
+                  formData.value!.matrixGroupFlag && (
+                    <div class={sharedStyles.collapseContent}>
+                      <FormItem label={t('flow.orchestration.strategy')} required>
+                        <Input
+                          v-model={matrix.strategyStr}
+                          type="textarea"
+                          rows={4}
+                          placeholder={t('flow.orchestration.strategyPlaceholder')}
+                          disabled={!props.editable}
+                        />
+                        <p class={sharedStyles.fieldDesc}>{t('flow.orchestration.strategyDesc')}</p>
+                      </FormItem>
+
+                      <FormItem label={t('flow.orchestration.includeCase')}>
+                        <Input
+                          v-model={matrix.includeCaseStr}
+                          type="textarea"
+                          rows={4}
+                          placeholder={t('flow.orchestration.includeCasePlaceholder')}
+                          disabled={!props.editable}
+                        />
+                        <p class={sharedStyles.fieldDesc}>{t('flow.orchestration.includeCaseDesc')}</p>
+                      </FormItem>
+
+                      <FormItem label={t('flow.orchestration.excludeCase')}>
+                        <Input
+                          v-model={matrix.excludeCaseStr}
+                          type="textarea"
+                          rows={4}
+                          placeholder={t('flow.orchestration.excludeCasePlaceholder')}
+                          disabled={!props.editable}
+                        />
+                        <p class={sharedStyles.fieldDesc}>{t('flow.orchestration.excludeCaseDesc')}</p>
+                      </FormItem>
+
+                      <FormItem>
+                        <Checkbox v-model={matrix.fastKill} disabled={!props.editable}>
+                          {t('flow.orchestration.fastKill')}
+                        </Checkbox>
+                      </FormItem>
+
+                      <FormItem label={t('flow.orchestration.maxConcurrency')} required>
+                        <Input
+                          v-model={matrix.maxConcurrency}
+                          type="number"
+                          min={RULES.MATRIX_CONCURRENCY.min}
+                          max={RULES.MATRIX_CONCURRENCY.max}
+                          placeholder={t('flow.orchestration.maxConcurrencyPlaceholder')}
+                          disabled={!props.editable}
+                        />
+                      </FormItem>
+                    </div>
+                  ),
+              }}
+            </Collapse.CollapsePanel>
+          </Collapse>
+        </div>
+      )
+    }
+
+    const renderFlowControlSection = () => {
+      if (!formData.value?.jobControlOption) return null
+      const ctrl = formData.value.jobControlOption
+
+      return (
+        <div class={sharedStyles.flowControlSection}>
+          <Collapse useBlockTheme>
+            <Collapse.CollapsePanel>
+              {{
+                default: () => (
+                  <div class={sharedStyles.collapseHeader}>
+                    <span class={styles.collapseTitle}>{t('flow.orchestration.flowControlOptions')}</span>
+                  </div>
+                ),
+                content: () => (
+                  <div class={sharedStyles.collapseContent}>
+                    {/* 启用 Job */}
+                    <FormItem>
+                      <Checkbox v-model={ctrl.enable} disabled={!props.editable}>
+                        {t('flow.orchestration.enableJob')}
+                      </Checkbox>
+                    </FormItem>
+
+                    {/* 依赖前置 Job */}
+                    <FormItem label={t('flow.orchestration.dependOn')}>
+                      <p class={sharedStyles.fieldDesc}>{t('flow.orchestration.dependOnDesc')}</p>
+                      <Radio.Group v-model={ctrl.dependOnType} class={styles.dependOnTypeGroup}>
+                        {dependOnTypeOptions.map((opt) => (
+                          <Radio key={opt.value} label={opt.value} disabled={!props.editable}>
+                            {opt.label}
+                          </Radio>
+                        ))}
+                      </Radio.Group>
+
+                      {showDependOnId.value && (
+                        <Select
+                          v-model={ctrl.dependOnId}
+                          multiple
+                          placeholder={t('flow.orchestration.selectDependOnJob')}
+                          disabled={!props.editable}
+                          list={dependOnJobList.value}
+                        />
+                      )}
+
+                      {showDependOnName.value && (
+                        <Input
+                          v-model={ctrl.dependOnName}
+                          placeholder={t('flow.orchestration.dependOnNamePlaceholder')}
+                          disabled={!props.editable}
+                        />
+                      )}
+                    </FormItem>
+
+                    {/* Job 超时时间 */}
+                    <FormItem label={t('flow.orchestration.jobTimeout')} required>
+                      <Input
+                        v-model={ctrl.timeout}
+                        type="number"
+                        placeholder={t('flow.orchestration.jobTimeoutPlaceholder')}
+                        disabled={!props.editable}
+                      />
+                      <p class={sharedStyles.fieldDesc}>{t('flow.orchestration.jobTimeoutDesc')}</p>
+                    </FormItem>
+
+                    {/* 运行条件 */}
+                    <FormItem label={t('flow.orchestration.whenToRunJob')} required>
+                      <Select
+                        v-model={ctrl.runCondition}
+                        disabled={!props.editable}
+                        list={runConditionOptions.value}
+                      />
+                    </FormItem>
+
+                    {/* 自定义变量 */}
+                    {showCustomVariables.value && (
+                      <FormItem
+                        v-slots={{
+                          label: () => (
+                            <div class={sharedStyles.labelWithIcon}>
+                              <span>{t('flow.orchestration.customVar')}</span>
+                            </div>
+                          ),
+                        }}
+                      >
+                        <KeyValueMap
+                          value={ctrl.customVariables || []}
+                          name="customVariables"
+                          handleChange={(_: string, val: CustomVariable[]) => (ctrl.customVariables = val)}
+                          addBtnText={t('flow.orchestration.addVariable')}
+                          keyPlaceholder={t('flow.orchestration.envKeyPlaceholder')}
+                          valuePlaceholder={t('flow.orchestration.envValuePlaceholder')}
+                          allowNull={false}
+                          disabled={!props.editable}
+                        />
+                      </FormItem>
+                    )}
+
+                    {/* 自定义条件表达式 */}
+                    {showCustomCondition.value && (
+                      <FormItem
+                        label={t('flow.orchestration.customConditionExp')}
+                        required
+                        v-slots={{
+                          label: () => (
+                            <div class={sharedStyles.labelWithIcon}>
+                              <span>{t('flow.orchestration.customConditionExp')}</span>
+                              <a
+                                href="https://docs.bkci.net/"
+                                target="_blank"
+                                class={sharedStyles.docLink}
+                              >
+                                {t('flow.orchestration.viewDocumentation')}
+                              </a>
+                            </div>
+                          ),
+                        }}
+                      >
+                        <Input
+                          v-model={ctrl.customCondition}
+                          placeholder={t('flow.orchestration.customConditionExpPlaceholder')}
+                          disabled={!props.editable}
+                        />
+                      </FormItem>
+                    )}
+                  </div>
+                ),
+              }}
+            </Collapse.CollapsePanel>
+          </Collapse>
+        </div>
+      )
+    }
+
+    const renderMutexSection = () => {
+      if (!formData.value?.mutexGroup) return null
+      const mutex = formData.value.mutexGroup
+
+      return (
+        <div class={sharedStyles.flowControlSection}>
+          <Collapse useBlockTheme>
+            <Collapse.CollapsePanel>
+              {{
+                default: () => (
+                  <div class={sharedStyles.collapseHeader}>
+                    <div class={sharedStyles.collapseHeaderLeft}>
+                      <span>{t('flow.orchestration.mutexGroup')}</span>
+                      <Switcher
+                        v-model={mutex.enable}
+                        size="small"
+                        theme="primary"
+                        disabled={!props.editable}
+                        onClick={stopPropagation}
+                      />
+                    </div>
+                  </div>
+                ),
+                content: () =>
+                  mutex.enable && (
+                    <div class={sharedStyles.collapseContent}>
+                      <FormItem label={t('flow.orchestration.mutexGroupName')} required>
+                        <Input
+                          v-model={mutex.mutexGroupName}
+                          placeholder={t('flow.orchestration.mutexGroupNamePlaceholder')}
+                          disabled={!props.editable}
+                        />
+                      </FormItem>
+
+                      <FormItem>
+                        <Checkbox v-model={mutex.queueEnable} disabled={!props.editable}>
+                          {t('flow.orchestration.queueEnable')}
+                        </Checkbox>
+                      </FormItem>
+
+                      {mutex.queueEnable && (
+                        <>
+                          <FormItem label={t('flow.orchestration.mutexTimeout')} required>
+                            <Input
+                              v-model={mutex.timeoutVar}
+                              type="number"
+                              placeholder={t('flow.orchestration.mutexTimeoutPlaceholder')}
+                              disabled={!props.editable}
+                            />
+                            <p class={sharedStyles.fieldDesc}>{t('flow.orchestration.mutexTimeoutDesc')}</p>
+                          </FormItem>
+
+                          <FormItem label={t('flow.orchestration.queueSize')} required>
+                            <Input
+                              v-model={mutex.queue}
+                              type="number"
+                              min={RULES.MUTEX_QUEUE.min}
+                              max={RULES.MUTEX_QUEUE.max}
+                              placeholder={t('flow.orchestration.queueSizePlaceholder')}
+                              disabled={!props.editable}
+                            />
+                          </FormItem>
+                        </>
+                      )}
+                    </div>
+                  ),
+              }}
+            </Collapse.CollapsePanel>
+          </Collapse>
+        </div>
+      )
+    }
+
+    function beforeClose() {
+      if (!props.isNew) {
+        emit('confirm', formData.value)
+      }
+      return true
+    }
+
+    // ========== Render ==========
     return () => (
       <Sideslider
         isShow={props.modelValue}
         width={640}
-        quick-close={true}
-        onUpdate:isShow={handleVisibleChange}
+        quick-close
+        onUpdate:isShow={(val: boolean) => emit('update:modelValue', val)}
         class={['bkci-property-panel', isVariablePanelOpen.value && 'with-variable-open']}
+        beforeClose={beforeClose}
       >
         {{
           header: () => (
@@ -226,9 +522,9 @@ export default defineComponent({
                       modelValue={formData.value?.name || ''}
                       maxlength={30}
                       placeholder={t('flow.orchestration.jobNamePlaceholder')}
-                      onBlur={handleBlur}
-                      onEnter={handleEnter}
-                      onChange={handleNameChange}
+                      onBlur={exitNameEdit}
+                      onEnter={exitNameEdit}
+                      onChange={(val: string) => formData.value && (formData.value.name = val)}
                       class={sharedStyles.nameInput}
                       autoFocus
                     />
@@ -238,7 +534,7 @@ export default defineComponent({
                         {formData.value?.name}
                       </p>
                       {props.editable && (
-                        <span class={sharedStyles.editIcon} onClick={handleEditIconClick}>
+                        <span class={sharedStyles.editIcon} onClick={() => (nameEditing.value = true)}>
                           <SvgIcon name="edit" size={16} />
                         </span>
                       )}
@@ -248,303 +544,39 @@ export default defineComponent({
               )}
             </div>
           ),
+
           default: () =>
-            formData.value ? (
+            formData.value && (
               <div class={styles.jobPanelContent}>
                 <Form ref={formRef} form-type="vertical" model={formData.value}>
+                  {/* Job ID */}
                   <FormItem label={t('flow.orchestration.jobId')} property="jobId" required>
                     <Input
-                      v-model={formData.value!.jobId}
+                      v-model={formData.value.jobId}
                       placeholder={t('flow.orchestration.jobIdPlaceholder')}
                       disabled={!props.editable}
                     />
                   </FormItem>
 
-                  <div class={sharedStyles.flowControlSection}>
-                    <Collapse useBlockTheme>
-                      <Collapse.CollapsePanel>
-                        {{
-                          default: () => (
-                            <div class={sharedStyles.collapseHeader}>
-                              <div class={sharedStyles.collapseHeaderLeft}>
-                                <span>{matrixJobPanel}</span>
-                                <Switcher
-                                  v-model={formData.value!.matrixGroupFlag}
-                                  size="small"
-                                  theme="primary"
-                                  disabled={!props.editable}
-                                  onChange={handleMatrixJobChange}
-                                  onClick={handleSwitcherClick}
-                                />
-                              </div>
-                              <a
-                                href={matrixJobDocLink}
-                                target="_blank"
-                                class={sharedStyles.docLink}
-                                onClick={handleDocLinkClick}
-                              >
-                                {t('flow.orchestration.viewDocumentation')}
-                              </a>
-                            </div>
-                          ),
-                          content: () =>
-                            formData.value!.matrixGroupFlag ? (
-                              <div class={sharedStyles.collapseContent}>
-                                <FormItem label={t('flow.orchestration.strategy')} required>
-                                  <Input
-                                    v-model={formData.value!.matrixControlOption!.strategyStr}
-                                    type="textarea"
-                                    rows={4}
-                                    placeholder={t('flow.orchestration.strategyPlaceholder')}
-                                    disabled={!props.editable}
-                                  />
-                                </FormItem>
+                  {/* Matrix Job */}
+                  {renderMatrixSection()}
 
-                                <FormItem label={t('flow.orchestration.includeCase')}>
-                                  <Input
-                                    v-model={formData.value!.matrixControlOption!.includeCaseStr}
-                                    type="textarea"
-                                    rows={4}
-                                    placeholder={t('flow.orchestration.includeCasePlaceholder')}
-                                    disabled={!props.editable}
-                                  />
-                                </FormItem>
+                  {/* Flow Control */}
+                  {renderFlowControlSection()}
 
-                                <FormItem label={t('flow.orchestration.excludeCase')}>
-                                  <Input
-                                    v-model={formData.value!.matrixControlOption!.excludeCaseStr}
-                                    type="textarea"
-                                    rows={4}
-                                    placeholder={t('flow.orchestration.excludeCasePlaceholder')}
-                                    disabled={!props.editable}
-                                  />
-                                </FormItem>
-
-                                <FormItem>
-                                  <Checkbox
-                                    v-model={formData.value!.matrixControlOption!.fastKill}
-                                    disabled={!props.editable}
-                                  >
-                                    {t('flow.orchestration.fastKill')}
-                                  </Checkbox>
-                                </FormItem>
-
-                                <FormItem label={t('flow.orchestration.maxConcurrency')} required>
-                                  <Input
-                                    v-model={formData.value!.matrixControlOption!.maxConcurrency}
-                                    type="number"
-                                    placeholder={t('flow.orchestration.maxConcurrencyPlaceholder')}
-                                    disabled={!props.editable}
-                                  />
-                                </FormItem>
-                              </div>
-                            ) : null,
-                        }}
-                      </Collapse.CollapsePanel>
-                    </Collapse>
-                  </div>
-
-                  <div class={sharedStyles.flowControlSection}>
-                    <Collapse useBlockTheme>
-                      <Collapse.CollapsePanel>
-                        {{
-                          default: () => (
-                            <div class={sharedStyles.collapseHeader}>
-                              <span class={styles.collapseTitle}>{flowControlPanel}</span>
-                            </div>
-                          ),
-                          content: () => (
-                            <div class={sharedStyles.collapseContent}>
-                              <FormItem>
-                                <Checkbox
-                                  v-model={formData.value!.jobControlOption!.enable}
-                                  disabled={!props.editable}
-                                >
-                                  {t('flow.orchestration.enableJob')}
-                                </Checkbox>
-                              </FormItem>
-
-                              <FormItem label={t('flow.orchestration.dependOnPrevJob')}>
-                                <Radio.Group>
-                                  {dependOnOptions.map((option) => (
-                                    <Radio
-                                      key={option.id}
-                                      v-model={formData.value!.jobControlOption!.dependOnType}
-                                      label={option.id}
-                                      disabled={!props.editable}
-                                    >
-                                      {option.name}
-                                    </Radio>
-                                  ))}
-                                </Radio.Group>
-                                {formData.value!.jobControlOption!.dependOnType === 'select' ? (
-                                  <Select
-                                    placeholder={t('flow.orchestration.selectPlaceholder')}
-                                    disabled={!props.editable}
-                                    list={[]}
-                                  />
-                                ) : (
-                                  <Input
-                                    v-model={formData.value!.jobControlOption!.dependOnType}
-                                    placeholder={t('flow.orchestration.dependOnJobIdPlaceholder')}
-                                    disabled={!props.editable}
-                                  />
-                                )}
-                              </FormItem>
-
-                              <FormItem label={t('flow.orchestration.jobTimeout')} required>
-                                <Input
-                                  v-model={formData.value!.maxRunningMinutes}
-                                  type="number"
-                                  placeholder={t('flow.orchestration.jobTimeoutPlaceholder')}
-                                  disabled={!props.editable}
-                                />
-                              </FormItem>
-
-                              <FormItem label={t('flow.orchestration.whenToRunJob')} required>
-                                <Select
-                                  v-model={formData.value!.jobControlOption!.runCondition}
-                                  disabled={!props.editable}
-                                  list={runConditionOptions.map((option) => ({
-                                    label: option.name,
-                                    value: option.id,
-                                  }))}
-                                />
-                              </FormItem>
-
-                              {/* 自定义变量输入框 - 当选择满足变量或不满足变量时显示 */}
-                              {showCustomVariables.value && (
-                                <FormItem>
-                                  {{
-                                    label: () => (
-                                      <div class={sharedStyles.labelWithIcon}>
-                                        <span>{t('flow.orchestration.customVar')}</span>
-                                      </div>
-                                    ),
-                                    default: () => (
-                                      <KeyValueMap
-                                        value={
-                                          formData.value!.jobControlOption!.customVariables || []
-                                        }
-                                        name="customVariables"
-                                        handleChange={handleCustomVariablesChange}
-                                        addBtnText={t('flow.orchestration.addVariable')}
-                                        keyPlaceholder={t('flow.orchestration.envKeyPlaceholder')}
-                                        valuePlaceholder={t(
-                                          'flow.orchestration.envValuePlaceholder',
-                                        )}
-                                        allowNull={false}
-                                        disabled={!props.editable}
-                                      />
-                                    ),
-                                  }}
-                                </FormItem>
-                              )}
-
-                              {/* 自定义条件表达式输入框 - 当选择表达式时显示 */}
-                              {showCustomCondition.value && (
-                                <FormItem>
-                                  {{
-                                    label: () => (
-                                      <div class={sharedStyles.labelWithIcon}>
-                                        <span>{t('flow.orchestration.customConditionExp')}</span>
-                                      </div>
-                                    ),
-                                    default: () => (
-                                      <Input
-                                        v-model={formData.value!.jobControlOption!.customCondition}
-                                        placeholder={t(
-                                          'flow.orchestration.customConditionExpPlaceholder',
-                                        )}
-                                        disabled={!props.editable}
-                                      />
-                                    ),
-                                  }}
-                                </FormItem>
-                              )}
-                            </div>
-                          ),
-                        }}
-                      </Collapse.CollapsePanel>
-                    </Collapse>
-                  </div>
-
-                  <div class={sharedStyles.flowControlSection}>
-                    <Collapse useBlockTheme>
-                      <Collapse.CollapsePanel>
-                        {{
-                          default: () => (
-                            <div class={sharedStyles.collapseHeader}>
-                              <div class={sharedStyles.collapseHeaderLeft}>
-                                <span>{mutexGroupPanel}</span>
-                                <Switcher
-                                  v-model={formData.value!.mutexGroup!.enable}
-                                  size="small"
-                                  theme="primary"
-                                  disabled={!props.editable}
-                                  onChange={handleMutexGroupChange}
-                                  onClick={handleSwitcherClick}
-                                />
-                              </div>
-                            </div>
-                          ),
-                          content: () =>
-                            formData.value!.mutexGroup!.enable ? (
-                              <div class={sharedStyles.collapseContent}>
-                                <FormItem label={t('flow.orchestration.mutexGroupName')} required>
-                                  <Input
-                                    v-model={formData.value!.mutexGroup!.mutexGroupName}
-                                    placeholder={t('flow.orchestration.mutexGroupNamePlaceholder')}
-                                    disabled={!props.editable}
-                                  />
-                                </FormItem>
-
-                                <FormItem>
-                                  <Checkbox
-                                    v-model={formData.value!.mutexGroup!.queueEnable}
-                                    disabled={!props.editable}
-                                  >
-                                    {t('flow.orchestration.queueEnable')}
-                                  </Checkbox>
-                                </FormItem>
-
-                                {formData.value!.mutexGroup!.queueEnable && (
-                                  <FormItem label={t('flow.orchestration.mutexTimeout')} required>
-                                    <Input
-                                      v-model={formData.value!.mutexGroup!.timeoutVar}
-                                      type="number"
-                                      placeholder={t('flow.orchestration.mutexTimeoutPlaceholder')}
-                                      disabled={!props.editable}
-                                    />
-                                  </FormItem>
-                                )}
-
-                                {formData.value!.mutexGroup!.queueEnable && (
-                                  <FormItem label={t('flow.orchestration.queueSize')} required>
-                                    <Input
-                                      v-model={formData.value!.mutexGroup!.queue}
-                                      type="number"
-                                      placeholder={t('flow.orchestration.queueSizePlaceholder')}
-                                      disabled={!props.editable}
-                                    />
-                                  </FormItem>
-                                )}
-                              </div>
-                            ) : null,
-                        }}
-                      </Collapse.CollapsePanel>
-                    </Collapse>
-                  </div>
+                  {/* Mutex Group */}
+                  {renderMutexSection()}
                 </Form>
               </div>
-            ) : null,
+            ),
+
           footer: () =>
             props.isNew && (
               <div class={styles.jobPanelFooter}>
                 <Button theme="primary" onClick={handleConfirm} disabled={!props.editable}>
                   {t('flow.orchestration.add')}
                 </Button>
-                <Button onClick={handleCancel}>{t('flow.common.cancel')}</Button>
+                <Button onClick={closePanel}>{t('flow.common.cancel')}</Button>
               </div>
             ),
         }}

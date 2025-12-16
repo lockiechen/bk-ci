@@ -1,332 +1,104 @@
 /**
  * Variable management API
  */
-import {
-  VariableCategory,
-  VariableType,
-  type FlowVariable,
-  type PluginOutputVariable,
-  type ReadOnlyVariableGroup,
-  type VariableOption,
-} from '@/types/variable'
-import type { FlowModel } from './flowModel'
-import type { JobCategory } from './atom'
+import { post } from '@/utils/http'
+import { type ReadOnlyVariableGroup } from '@/types/variable'
+import type { FlowModel, Param } from './flowModel'
 
-/**
- * Get flow variables
- * @param flowId Flow ID
- */
-export async function getFlowVariables(flowId: string): Promise<FlowVariable[]> {
-  // TODO: Call actual API
-  // const response = await http.get(`/api/flow/${flowId}/variables`)
-  // return response.data
-
-  // Mock data for development
-  return new Promise((resolve) => {
-    setTimeout(() => {
-      resolve(getMockVariables())
-    }, 500)
-  })
-}
-
-/**
- * Save flow variable
- * @param flowId Flow ID
- * @param variable Variable data
- */
-export async function saveFlowVariable(
-  flowId: string,
-  variable: FlowVariable,
-): Promise<FlowVariable> {
-  // TODO: Call actual API
-  // const response = await http.post(`/api/flow/${flowId}/variables`, variable)
-  // return response.data
-
-  // Mock data for development
-  return new Promise((resolve) => {
-    setTimeout(() => {
-      console.log('Variable saved:', variable)
-      resolve(variable)
-    }, 500)
-  })
-}
-
-/**
- * Update flow variable
- * @param flowId Flow ID
- * @param variableId Variable ID
- * @param variable Variable data
- */
-export async function updateFlowVariable(
-  flowId: string,
-  variableId: string,
-  variable: FlowVariable,
-): Promise<FlowVariable> {
-  // TODO: Call actual API
-  // const response = await http.put(`/api/flow/${flowId}/variables/${variableId}`, variable)
-  // return response.data
-
-  // Mock data for development
-  return new Promise((resolve) => {
-    setTimeout(() => {
-      console.log('Variable updated:', variable)
-      resolve(variable)
-    }, 500)
-  })
-}
-
-/**
- * Update variable order
- * @param flowId Flow ID
- * @param category Variable category
- * @param group Group name
- * @param variableIds Array of variable IDs in new order
- */
-export async function updateVariableOrder(
-  flowId: string,
-  category: JobCategory,
-  group: string,
-  variableIds: string[],
-): Promise<void> {
-  // TODO: Call actual API
-  // await http.put(`/api/flow/${flowId}/variables/order`, {
-  //   category,
-  //   group,
-  //   variableIds
-  // })
-
-  // Mock data for development
-  return new Promise((resolve) => {
-    setTimeout(() => {
-      console.log('Variable order updated:', { flowId, category, group, variableIds })
-      resolve()
-    }, 300)
-  })
-}
-
-/**
- * Delete flow variable
- * @param flowId Flow ID
- * @param variableId Variable ID
- */
-export async function deleteFlowVariable(flowId: string, variableId: string): Promise<void> {
-  // TODO: Call actual API
-  // await http.delete(`/api/flow/${flowId}/variables/${variableId}`)
-
-  // Mock data for development
-  return new Promise((resolve) => {
-    setTimeout(() => {
-      console.log('Variable deleted:', variableId)
-      resolve()
-    }, 500)
-  })
-}
-
-/**
- * Get mock variables for development
- */
-function getMockVariables(): FlowVariable[] {
-  return [
-    {
-      id: 'input_param1',
-      name: 'Input Parameter 1',
-      type: VariableType.STRING,
-      category: VariableCategory.INPUT,
-      defaultValue: '',
-      desc: 'This is an input parameter',
-      required: true,
-      valueNotEmpty: true,
-      groupLabel: 'Input Group',
-      order: 0,
-    },
-    {
-      id: 'input_param2',
-      name: 'Input Parameter 2',
-      type: VariableType.BOOLEAN,
-      category: VariableCategory.INPUT,
-      defaultValue: false,
-      desc: 'Boolean input parameter',
-      required: true,
-      groupLabel: 'Input Group',
-      order: 1,
-    },
-    {
-      id: 'MAX_COUNT',
-      name: 'Maximum Count',
-      type: VariableType.STRING,
-      category: VariableCategory.CONSTANT,
-      defaultValue: '100',
-      desc: 'Maximum count constant',
-      groupLabel: 'Configuration',
-      order: 0,
-    },
-    {
-      id: 'API_ENDPOINT',
-      name: 'API Endpoint',
-      type: VariableType.STRING,
-      category: VariableCategory.CONSTANT,
-      defaultValue: 'https://api.example.com',
-      desc: 'API endpoint URL',
-      groupLabel: 'Configuration',
-      order: 1,
-    },
-    {
-      id: 'other_var1',
-      name: 'Other Variable 1',
-      type: VariableType.STRING,
-      category: VariableCategory.OTHER,
-      defaultValue: 'default value',
-      desc: 'Other variable example',
-      groupLabel: 'Miscellaneous',
-      order: 0,
-    },
-    {
-      id: 'other_var2',
-      name: 'Other Variable 2',
-      type: VariableType.ENUM,
-      category: VariableCategory.OTHER,
-      defaultValue: 'option1',
-      desc: 'Enum variable example',
-      options: [
-        { id: 'option1', label: 'Option 1' },
-        { id: 'option2', label: 'Option 2' },
-        { id: 'option3', label: 'Option 3' },
-      ],
-      groupLabel: 'Miscellaneous',
-      order: 1,
-    },
-  ]
-}
+const PROCESS_API_URL_PREFIX = '/process/api'
+const STORE_API_URL_PREFIX = '/store/api'
 
 /**
  * Get system variables (grouped)
+ * Reference: devops-pipeline/src/store/modules/atom/actions.js requestCommonParams
  */
 export async function getSystemVariables(): Promise<ReadOnlyVariableGroup[]> {
-  // TODO: Call actual API to get system variables
-  // const response = await http.get('/api/system/variables')
-  // return response.data
-
-  // Mock data for development
-  return new Promise((resolve) => {
-    setTimeout(() => {
-      resolve(getMockSystemVariableGroups())
-    }, 300)
-  })
+  try {
+    const data = await post<ReadOnlyVariableGroup[]>(
+      `/${PROCESS_API_URL_PREFIX}/user/buildParam/common`,
+    )
+    return data || []
+  } catch (error) {
+    console.error('Failed to get system variables:', error)
+    // Fallback to mock data for development
+    return getMockSystemVariableGroups()
+  }
 }
 
 /**
- * Get flow variables from flow model
- * Variables are stored in the trigger stage (index 0) container's params
+ * Update flow model's trigger stage container params with variables
  * @param model Flow model
+ * @param variables Flow variables
  */
-export function getFlowVariablesFromModel(model: FlowModel | null): FlowVariable[] {
+export function updateFlowModelParams(model: FlowModel | null, variables: Param[]): void {
   if (!model || !model.stages || model.stages.length === 0) {
-    return []
+    return
   }
 
   // Get trigger stage (first stage)
   const triggerStage = model.stages[0]
-  if (!triggerStage || !triggerStage.containers || triggerStage.containers.length === 0) {
-    return []
+  if (!triggerStage) {
+    return
   }
 
-  // Get params from trigger container
+  // Ensure containers array exists
+  if (!triggerStage.containers) {
+    triggerStage.containers = []
+  }
+
+  // Update params in the first container
   const triggerContainer = triggerStage.containers[0]
-  if (!triggerContainer || !triggerContainer.params) {
-    return []
+  if (!triggerContainer) {
+    return
   }
-
-  // Convert params to FlowVariable format
-  const variables: FlowVariable[] = triggerContainer.params.map((param, index) => {
-    // Map param type to VariableType
-    let variableType: VariableType = VariableType.STRING
-    if (param.type === 'ENUM' || param.type === 'MULTIPLE') {
-      variableType = param.type === 'ENUM' ? VariableType.ENUM : VariableType.MULTIPLE
-    } else if (param.type === 'BOOLEAN') {
-      variableType = VariableType.BOOLEAN
-    } else if (param.type === 'TEXTAREA') {
-      variableType = VariableType.TEXTAREA
-    }
-
-    // Convert options format if needed
-    let options: VariableOption[] | undefined
-    if (param.options && Array.isArray(param.options)) {
-      options = param.options.map((opt: any) => {
-        // Handle different option formats
-        if (typeof opt === 'string') {
-          return { id: opt, label: opt }
-        } else if (opt.id && opt.label) {
-          return { id: opt.id, label: opt.label }
-        } else if (opt.key && opt.value) {
-          return { id: opt.key, label: opt.value }
-        }
-        return { id: String(opt), label: String(opt) }
-      })
-    }
-
-    // Determine category based on constant flag
-    const category = param.constant ? VariableCategory.CONSTANT : VariableCategory.INPUT
-
-    // Convert defaultValue
-    let defaultValue: string | boolean | string[] = ''
-    if (param.defaultValue !== undefined && param.defaultValue !== null) {
-      if (typeof param.defaultValue === 'boolean') {
-        defaultValue = param.defaultValue
-      } else if (Array.isArray(param.defaultValue)) {
-        defaultValue = param.defaultValue.map(String)
-      } else {
-        defaultValue = String(param.defaultValue)
-      }
-    }
-
-    return {
-      id: param.id,
-      name: param.name || param.id,
-      type: variableType,
-      category,
-      defaultValue,
-      desc: param.desc,
-      required: param.required ?? false,
-      readOnly: param.readOnly ?? false,
-      options,
-      valueNotEmpty: param.valueNotEmpty ?? false,
-      groupLabel: param.category || undefined,
-      order: index,
-    }
-  })
-
-  return variables
+  triggerContainer.params = variables
 }
 
 /**
- * Get plugin output variables from flow model
- * @param model Flow model
+ * Get plugin output variables from API
+ * Reference: devops-pipeline/src/store/modules/atom/actions.js fetchAtomsOutput
+ * @param elements Array of elements from flow model to get atom codes and versions
  */
-export function getPluginOutputVariablesFromModel(
-  model: FlowModel | null,
-): ReadOnlyVariableGroup[] {
-  if (!model || !model.stages) {
-    return []
+export async function getPluginOutputVariables(
+  elements: Array<{ atomCode?: string; version?: string }>,
+): Promise<Record<string, any>> {
+  try {
+    // Extract unique atom codes with versions
+    const arr = elements
+      .filter((ele) => ele.atomCode && ele.version)
+      .map((ele) => `${ele.atomCode}@${ele.version}`)
+    const data = Array.from(new Set(arr))
+
+    if (data.length === 0) {
+      return {}
+    }
+
+    const response = await post<Record<string, string>>(
+      `${STORE_API_URL_PREFIX}/user/pipeline/atom/output/info/list`,
+      data,
+    )
+
+    // Parse JSON strings in response
+    const map: Record<string, any> = {}
+    for (const item in response) {
+      try {
+        const value = response[item]
+        if (value && typeof value === 'string') {
+          map[item] = JSON.parse(value)
+        } else {
+          map[item] = value
+        }
+      } catch (e) {
+        console.error('Failed to parse output for', item, e)
+      }
+    }
+
+    return map
+  } catch (error) {
+    console.error('Failed to get plugin output variables:', error)
+    return {}
   }
-
-  const pluginVariables: ReadOnlyVariableGroup[] = []
-
-  // Iterate through stages (skip trigger stage at index 0)
-  model.stages.slice(1).forEach((stage) => {
-    stage.containers.forEach((container) => {
-      container.elements.forEach((element) => {
-        pluginVariables.push({
-          hasStepId: element.stepId && typeof element.stepId !== 'undefined' ? true : false,
-          name: element.name,
-          params: element.data?.output ?? [],
-        })
-      })
-    })
-  })
-  console.log(pluginVariables)
-  return pluginVariables
 }
-
 /**
  * Mock system variables (grouped)
  */
