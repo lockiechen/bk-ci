@@ -103,3 +103,50 @@ export function getMaterialIconByType(type: string) {
   }
   return materialIconMap[type as keyof MaterialIconMap] ?? 'CODE_GIT'
 }
+
+/**
+ * 转换文件大小
+ * @param size 文件大小（字节）
+ * @param unit 单位 'B' | 'KB' | 'MB' | 'GB'
+ * @returns 格式化后的文件大小字符串
+ */
+export function convertFileSize(size: number, unit: string = 'B'): string {
+  const arr = ['B', 'KB', 'MB', 'GB', 'TB']
+  const calcSize = size / 1024
+  let index = 0
+
+  arr.some((item, _index) => {
+    if (unit === item) {
+      index = _index
+      return true
+    }
+    return false
+  })
+
+  const next = arr[index + 1]
+
+  if (calcSize > 1024) {
+    if (!next) {
+      return `${calcSize.toFixed(2)}${unit}`
+    } else {
+      return convertFileSize(calcSize, next)
+    }
+  } else {
+    return `${calcSize.toFixed(2)} ${next || unit}`
+  }
+}
+
+/**
+ * 生成随机字符串
+ * @param len 随机字符串长度
+ * @returns 
+ */
+export function randomString(len: number) {
+    const chars = 'ABCDEFGHJKLMNPQRSTWXYZabcdefhijklmnprstwxyz012345678'
+    const tempLen = chars.length
+    let tempStr = ''
+    for (let i = 0; i < len; ++i) {
+        tempStr += chars.charAt(Math.floor(Math.random() * tempLen))
+    }
+    return tempStr
+}

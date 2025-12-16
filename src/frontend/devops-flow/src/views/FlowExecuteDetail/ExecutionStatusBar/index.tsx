@@ -4,7 +4,7 @@ import { convertTime } from '@/utils/util'
 import { Tag } from 'bkui-vue'
 import Summary from '@/components/Summary'
 import { SvgIcon } from '@/components/SvgIcon'
-import { type ExecuteDetailData } from '@/api/flowInfo'
+import { type ExecuteDetailData } from '@/types/flow'
 import { mapThemeOfStatus } from '@/utils/flowStatus'
 import styles from './ExecutionStatusBar.module.css'
 
@@ -42,7 +42,7 @@ export default defineComponent({
     })
 
     const recordList = computed(() => {
-      const list = [...props.execDetail.recordList]
+      const list = [...(props.execDetail.recordList || [])]
       return (
         list.reverse().map((record, index) => ({
           id: index + 1,

@@ -115,6 +115,7 @@
   flex-shrink: 0;
   position: sticky;
   top: 40px;
+  margin-bottom: var(--spacing-xs);
   z-index: 8;
 }
 .summaryCollapsedHandler {

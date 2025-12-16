@@ -23,7 +23,8 @@ export default defineComponent({
     const projectId = route.params.projectId as string
     const flowId = route.params.flowId as string
     const btnLoading = ref(false)
-    const { flowInfo, stopExecute, requestRePlayFlow, requestRetryFlow } = useExecuteDetail()
+    const { flowInfo, isRunning, isDebugExec, stopExecute, requestRePlayFlow, requestRetryFlow } =
+      useExecuteDetail()
     const isCurPipelineLocked = computed(() => flowInfo.value?.locked)
 
     const handleFlowDetail = () => {
@@ -150,7 +151,8 @@ export default defineComponent({
     // 编辑
     const handleEdit = () => {
       router.push({
-        name: ROUTE_NAMES.FLOW_DETAIL_EDIT,
+        name: ROUTE_NAMES.FLOW_EDIT_WORKFLOW_ORCHESTRATION,
+        params: { flowId },
       })
     }
 
@@ -169,68 +171,76 @@ export default defineComponent({
             ),
             actions: () => (
               <>
-                <Dropdown trigger="click" disabled={btnLoading.value || isCurPipelineLocked.value}>
-                  {{
-                    default: () => (
-                      <div class={styles.rebuildDropdownTrigger}>
-                        {btnLoading.value && (
-                          <SvgIcon name="circle-2-1" class={['spinIcon', styles.spin]} />
-                        )}
-                        <span>{t('flow.execute.reBuild')}</span>
-                        <SvgIcon name="angle-down" />
-                      </div>
-                    ),
-                    content: () => (
-                      <ul class={styles.rebuildDropdownContent}>
-                        <li
-                          class={[
-                            styles.dropdownItem,
-                            btnLoading.value || isCurPipelineLocked.value ? styles.disabled : '',
-                          ]}
-                          onClick={() => handleClick('reBuild')}
-                        >
-                          {t('flow.execute.reBuild')}
-                          <Popover zIndex={3000} width={300} placement="bottom">
-                            {{
-                              default: () => <SvgIcon name="info-line" class={styles.infoIcon} />,
-                              content: () => (
-                                <>
-                                  <p>{t('flow.execute.reBuildTips1')}</p>
-                                  <p>{t('flow.execute.reBuildTips2')}</p>
-                                  <p>{t('flow.execute.reBuildTips3')}</p>
-                                </>
-                              ),
-                            }}
-                          </Popover>
-                        </li>
-                        <li
-                          class={[
-                            styles.dropdownItem,
-                            btnLoading.value || isCurPipelineLocked.value ? styles.disabled : '',
-                          ]}
-                          onClick={() => handleClick('rePlay')}
-                        >
-                          {t('flow.execute.rePlay')}
-                          <Popover zIndex={3000} width={300} placement="bottom">
-                            {{
-                              default: () => <SvgIcon name="info-line" class={styles.infoIcon} />,
-                              content: () => (
-                                <>
-                                  <p>{t('flow.execute.rePlayTips1')}</p>
-                                  <p>{t('flow.execute.rePlayTips2')}</p>
-                                  <p>{t('flow.execute.rePlayTips3')}</p>
-                                </>
-                              ),
-                            }}
-                          </Popover>
-                        </li>
-                      </ul>
-                    ),
-                  }}
-                </Dropdown>
-                <Button onClick={handleCancel} outline theme="warning" loading={btnLoading.value}>
-                  {t('flow.common.cancel')}
-                </Button>
+                {!isDebugExec.value ? (
+                  <Dropdown
+                    trigger="click"
+                    disabled={btnLoading.value || isCurPipelineLocked.value}
+                  >
+                    {{
+                      default: () => (
+                        <div class={styles.rebuildDropdownTrigger}>
+                          {btnLoading.value && (
+                            <SvgIcon name="circle-2-1" class={['spinIcon', styles.spin]} />
+                          )}
+                          <span>{t('flow.execute.reBuild')}</span>
+                          <SvgIcon name="angle-down" />
+                        </div>
+                      ),
+                      content: () => (
+                        <ul class={styles.rebuildDropdownContent}>
+                          <li
+                            class={[
+                              styles.dropdownItem,
+                              btnLoading.value || isCurPipelineLocked.value ? styles.disabled : '',
+                            ]}
+                            onClick={() => handleClick('reBuild')}
+                          >
+                            {t('flow.execute.reBuild')}
+                            <Popover zIndex={3000} width={300} placement="bottom">
+                              {{
+                                default: () => <SvgIcon name="info-line" class={styles.infoIcon} />,
+                                content: () => (
+                                  <>
+                                    <p>{t('flow.execute.reBuildTips1')}</p>
+                                    <p>{t('flow.execute.reBuildTips2')}</p>
+                                    <p>{t('flow.execute.reBuildTips3')}</p>
+                                  </>
+                                ),
+                              }}
+                            </Popover>
+                          </li>
+                          <li
+                            class={[
+                              styles.dropdownItem,
+                              btnLoading.value || isCurPipelineLocked.value ? styles.disabled : '',
+                            ]}
+                            onClick={() => handleClick('rePlay')}
+                          >
+                            {t('flow.execute.rePlay')}
+                            <Popover zIndex={3000} width={300} placement="bottom">
+                              {{
+                                default: () => <SvgIcon name="info-line" class={styles.infoIcon} />,
+                                content: () => (
+                                  <>
+                                    <p>{t('flow.execute.rePlayTips1')}</p>
+                                    <p>{t('flow.execute.rePlayTips2')}</p>
+                                    <p>{t('flow.execute.rePlayTips3')}</p>
+                                  </>
+                                ),
+                              }}
+                            </Popover>
+                          </li>
+                        </ul>
+                      ),
+                    }}
+                  </Dropdown>
+                ) : null}
+                {isRunning.value ? (
+                  <Button onClick={handleCancel} outline theme="warning" loading={btnLoading.value}>
+                    {t('flow.common.cancel')}
+                  </Button>
+                ) : null}
+
                 <Button onClick={handleEdit}>{t('flow.content.edit')}</Button>
                 <Button theme="primary" onClick={handleExecute}>
                   {t('flow.execute.exec')}

@@ -28,7 +28,7 @@ export interface HttpRequestConfig<TData = unknown>
 
 export type HttpResponse<T = unknown> = AxiosResponse<T>
 
-export type HttpMethod = 'GET' | 'POST' | 'PUT' | 'DELETE' | 'PATCH'
+export type HttpMethod = 'GET' | 'POST' | 'PUT' | 'DELETE' | 'PATCH' | 'HEAD'
 
 export interface BusinessErrorPayload {
   code: number | string
