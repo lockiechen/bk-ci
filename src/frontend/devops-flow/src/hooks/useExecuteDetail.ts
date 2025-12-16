@@ -23,6 +23,12 @@ export function useExecuteDetail() {
     latestBuildNum: executeDetail.value?.latestBuildNum ?? 1,
   }))
 
+  const isRunning = computed(() => {
+    const status = executeDetail.value?.status
+    return status ? ['RUNNING', 'QUEUE'].indexOf(status) > -1 : false
+  })
+  const isDebugExec = computed(() => executeDetail.value?.debug ?? false)
+
   return {
     // Store状态
     loading,
@@ -31,6 +37,8 @@ export function useExecuteDetail() {
 
     // 本地状态
     executeInfo,
+    isRunning,
+    isDebugExec,
 
     // 方法
     initExecuteDetail: store.initExecuteDetail,
