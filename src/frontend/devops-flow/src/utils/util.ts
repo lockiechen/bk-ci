@@ -135,3 +135,18 @@ export function convertFileSize(size: number, unit: string = 'B'): string {
     return `${calcSize.toFixed(2)} ${next || unit}`
   }
 }
+
+/**
+ * 生成随机字符串
+ * @param len 随机字符串长度
+ * @returns 
+ */
+export function randomString(len: number) {
+    const chars = 'ABCDEFGHJKLMNPQRSTWXYZabcdefhijklmnprstwxyz012345678'
+    const tempLen = chars.length
+    let tempStr = ''
+    for (let i = 0; i < len; ++i) {
+        tempStr += chars.charAt(Math.floor(Math.random() * tempLen))
+    }
+    return tempStr
+}

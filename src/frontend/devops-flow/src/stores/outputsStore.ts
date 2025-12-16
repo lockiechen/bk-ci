@@ -10,8 +10,15 @@ import {
   requestOutputs,
   requestFileInfo,
   requestMetadataLabels,
+  requestDownloadUrl,
+  requestCustomDirTree,
+  requestCopyFile,
   type Output,
   type GetFileInfoParams,
+  type GetDownloadUrlParams,
+  type ArtifactoryType,
+  type GetCustomDirTreeParams,
+  type CopyFileParams,
 } from '@/api/outputs'
 
 /**
@@ -221,6 +228,39 @@ export const useOutputsStore = defineStore('outputs', () => {
     }
   }
 
+  /**
+   *  获取制品下载URL
+   */
+  async function fetchDownloadUrl(artifactoryType: ArtifactoryType, path: string) {
+    try {
+      const params: GetDownloadUrlParams = {
+        projectId: route.params.projectId as string,
+        artifactoryType,
+        path,
+      }
+      const res = await requestDownloadUrl(params)
+      return res.url2
+    } catch (error) {
+      console.log('error:', error)
+    }
+  }
+
+  async function requestCustomFolder(path: string) {
+    try {
+      const params: GetCustomDirTreeParams = {
+        projectId: route.params.projectId as string,
+        path,
+      }
+      return await requestCustomDirTree(params)
+    } catch (error) {
+      console.log('error:', error)
+    }
+  }
+
+  async function requestCopyArtifactories(params: CopyFileParams): Promise<boolean> {
+    return await requestCopyFile(params)
+  }
+
   return {
     // State
     executeDetail,
@@ -240,5 +280,8 @@ export const useOutputsStore = defineStore('outputs', () => {
     setActiveOutput,
     isArtifact,
     getValuesByKey,
+    fetchDownloadUrl,
+    requestCustomFolder,
+    requestCopyArtifactories,
   }
 })

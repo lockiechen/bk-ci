@@ -1,6 +1,5 @@
-import { ref, computed } from 'vue'
+import { computed } from 'vue'
 import { storeToRefs } from 'pinia'
-import { useRoute } from 'vue-router'
 import { useExecuteDetailStore } from '@/stores/executeDetail'
 
 export type ExecuteInfo = {
@@ -39,5 +38,6 @@ export function useExecuteDetail() {
     requestRePlayFlow: store.requestRePlayFlow,
     requestRetryFlow: store.requestRetryFlow,
     requestUpdateRemark: store.requestUpdateRemark,
+    getStartupParams: store.getStartupParams,
   }
 }

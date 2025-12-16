@@ -173,7 +173,7 @@ const router = createRouter({
           ],
         },
         {
-          path: '/flow/:flowId/execute/:buildNo/:type?/:executeCount?',
+          path: 'flow/:flowId/execute/:buildNo/:type?/:executeCount?',
           name: ROUTE_NAMES.FLOW_DETAIL_EXECUTION_DETAIL,
           component: () => import('../views/FlowExecuteDetail/index'),
         },

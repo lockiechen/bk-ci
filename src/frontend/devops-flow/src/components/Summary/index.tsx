@@ -47,7 +47,7 @@ export default defineComponent({
       return []
     })
     const instanceFromTemplate = computed(() => {
-      return props.execDetail?.model.instanceFromTemplate ?? false
+      return props.execDetail?.model?.instanceFromTemplate ?? false
     })
     const isConstraintTemplate = computed(() => {
       return (

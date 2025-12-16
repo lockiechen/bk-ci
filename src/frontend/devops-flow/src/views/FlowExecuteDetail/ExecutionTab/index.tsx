@@ -100,7 +100,7 @@ export default defineComponent({
             const Component = panel.component
             return (
               <Tab.TabPanel name={panel.name} label={panel.label} key={panel.name}>
-                {Component && <Component {...panel.bindData} />}
+                {Component && curItemTab.value === panel.name && <Component {...panel.bindData} />}
               </Tab.TabPanel>
             )
           })}

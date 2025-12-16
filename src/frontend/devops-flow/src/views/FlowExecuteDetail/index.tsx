@@ -1,4 +1,4 @@
-import { defineComponent, onMounted } from 'vue'
+import { defineComponent, onMounted, computed } from 'vue'
 import { useRoute } from 'vue-router'
 import { Loading } from 'bkui-vue'
 import DetailHeader from './DetailHeader'
@@ -14,24 +14,24 @@ export default defineComponent({
     // 获取执行历史详情数据
     const { executeDetail, loading, executeInfo, initExecuteDetail } = useExecuteDetail()
 
+    const showContent = computed(() => !loading.value && !!executeDetail.value)
+
     onMounted(async () => {
       await initExecuteDetail()
     })
 
     return () => (
       <Loading loading={loading.value} class={styles.executionDetail}>
-        <DetailHeader executeInfo={executeInfo.value} />
+        {showContent.value && <DetailHeader executeInfo={executeInfo.value} />}
 
         {/* 执行状态栏 - 仅在数据加载完成后渲染 */}
-        {executeDetail.value && <ExecutionStatusBar execDetail={executeDetail.value} />}
+        {(showContent.value && executeDetail.value) && <ExecutionStatusBar execDetail={executeDetail.value} />}
 
-        <div class={styles.contentWrapper}>
-          <ExecutionTab
-          // basicInfo={basicInfo.value}
-          // executeDetailData={executeDetailData.value}
-          // loading={loading.value}
-          />
-        </div>
+        {showContent.value && (
+          <div class={styles.contentWrapper}>
+            <ExecutionTab />
+          </div>
+        )}
       </Loading>
     )
   },

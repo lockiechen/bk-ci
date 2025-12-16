@@ -219,6 +219,7 @@ export default defineComponent({
               router.push({
                 name: ROUTE_NAMES.FLOW_DETAIL_EXECUTION_DETAIL,
                 params: {
+                  projectId: route.params.projectId,
                   type: 'executeDetail',
                   flowId,
                   buildNo: (row as ExecutionRecord).buildNumber,

@@ -1,6 +1,6 @@
 .pipelineExecOutputs {
   display: flex;
-  height: calc(100% - 50px);
+  height: 100%;
 }
 
 .pipelineExecOutputsAside {
@@ -111,6 +111,7 @@
   display: flex;
   align-items: center;
   grid-gap: 6px;
+  line-height: 1;
 }
 
 .outputHoverIconBox:hover {
@@ -133,6 +134,7 @@
 .pipelineExecOutputsSection {
   height: 100%;
   display: flex;
+  flex: 1;
   flex-direction: column;
   overflow: hidden;
 }
@@ -147,7 +149,7 @@
 .pipelineExecOutputHeaderName {
   display: flex;
   max-width: 60%;
-  align-items: baseline;
+  align-items: center;
   font-size: var(--font-size-md);
   color: var(--color-text-primary);
   padding-right: var(--spacing-lg);
@@ -166,7 +168,7 @@
   display: grid;
   grid-gap: var(--spacing-lg);
   grid-auto-flow: column;
-  align-items: baseline;
+  align-items: center;
   justify-self: flex-end;
   margin-left: auto;
 }

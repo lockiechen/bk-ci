@@ -138,7 +138,7 @@ export function useOutputs(currentTab: string) {
   const artifactMoreActions = computed(() => [
     {
       text: t('flow.execute.copyTo'),
-      handler: copyToDialogRef.value.show,
+      handler: () => copyToDialogRef.value?.show?.(),
     },
   ])
 
@@ -221,6 +221,7 @@ export function useOutputs(currentTab: string) {
    * 更新搜索条件
    */
   function updateSearchKey(value: FilterItem[]) {
+    artifactValue.value = value
     const metadataKey = route.query.metadataKey
     const hasMetadataKey = value.some((item) => item.id === metadataKey)
     const query = { ...route.query }
@@ -258,6 +259,19 @@ export function useOutputs(currentTab: string) {
     store.init()
   }
 
+  function getFolderSize(payload: any) {
+    if (!payload.folder) return '0'
+    return getValuesByKey(payload.properties, 'size')
+  }
+
+  function getValuesByKey(data: Array<{ key: string; value: any }>, key: string) {
+    for (const item of data) {
+      if (key.includes(item.key)) {
+        return item.value
+      }
+    }
+  }
+
   return {
     // Store 状态
     outputs,
@@ -293,9 +307,13 @@ export function useOutputs(currentTab: string) {
     init: store.init,
     getArtifactDate: store.getArtifactDate,
     setActiveOutput: store.setActiveOutput,
+    requestDownloadUrl: store.fetchDownloadUrl,
+    requestCustomFolder: store.requestCustomFolder,
+    requestCopyArtifactories: store.requestCopyArtifactories,
 
     fullScreenViewReport,
     updateSearchKey,
     initializeArtifactValue,
+    getFolderSize,
   }
 }

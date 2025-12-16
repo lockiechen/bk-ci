@@ -2,6 +2,10 @@
  * Outputs 相关 API 接口定义
  */
 
+import { get, post } from '@/utils/http'
+
+const ARTIFACTORY_API_URL_PREFIX = '/artifactory/api'
+
 /**
  * 制品/报告类型
  */
@@ -143,6 +147,54 @@ export interface GetMetadataLabelsParams {
   projectId: string // 项目ID
   pipelineId: string // 流水线ID
   debug?: boolean // 是否为调试模式
+}
+
+/**
+ * 获取产出制品下载 URL 请求参数
+ */
+export interface GetDownloadUrlParams {
+  projectId: string // 项目ID
+  artifactoryType: ArtifactoryType // 制品仓库类型
+  path: string // 文件路径
+}
+
+/**
+ * 获取产出制品下载 URL 响应数据
+ */
+export interface GetDownloadUrlResponse {
+  url: string // 下载链接
+  url2: string // 备用下载链接
+}
+
+/**
+ * 自定义文件夹树节点
+ */
+export interface CustomDirTreeNode {
+  name: string // 文件夹名称
+  fullPath: string // 完整路径
+  children: CustomDirTreeNode[] // 子节点列表
+  isOpen?: boolean // 是否展开
+  loading?: boolean // 是否加载中
+  leaf?: boolean // 是否为叶子节点，默认 false，接口返回空 children 后置为 true
+}
+
+/**
+ * 获取自定义文件夹树请求参数
+ */
+export interface GetCustomDirTreeParams {
+  projectId: string // 项目ID
+  [key: string]: any // 其他查询参数
+}
+
+/**
+ * 复制文件请求参数
+ */
+export interface CopyFileParams {
+  projectId: string // 项目ID
+  srcArtifactoryType: string // 源制品仓库类型
+  srcFileFullPaths: string[] // 源文件路径列表
+  dstArtifactoryType: ArtifactoryType // 目标制品仓库类型
+  dstDirFullPath: string // 目标目录路径
 }
 
 /**
@@ -524,5 +576,102 @@ export function requestMetadataLabels(params: GetMetadataLabelsParams): Promise<
         },
       ])
     }, 500)
+  })
+}
+
+/**
+ * 获取产出制品下载 URL
+ * @param params 请求参数
+ * @returns 下载 URL
+ */
+export function requestDownloadUrl(params: GetDownloadUrlParams): Promise<GetDownloadUrlResponse> {
+  const { projectId, artifactoryType, path } = params
+
+  // TODO: 调用实际接口
+  // return http.post(`/user/artifactories/${projectId}/${artifactoryType}/downloadUrl`, {
+  //   path
+  // }).then(res => res.data)
+
+  // Mock 数据
+  return new Promise((resolve) => {
+    setTimeout(() => {
+      resolve({
+        url: '/bkrepo/api/user/generic/test-01/pipeline/p-585162853b474062a7227c69fd0ac050/b-b4d32cf3d5dd4de294c8537724f72a80/devops_app1.apk?download=true',
+        url2: '/bkrepo/api/user/generic/test-01/pipeline/p-585162853b474062a7227c69fd0ac050/b-b4d32cf3d5dd4de294c8537724f72a80/devops_app1.apk?download=true',
+      })
+    }, 300)
+  })
+}
+
+/**
+ * 获取自定义文件夹树
+ * @param params 请求参数
+ * @returns 文件夹树
+ */
+export function requestCustomDirTree(params: GetCustomDirTreeParams): Promise<CustomDirTreeNode> {
+  const { projectId, ...restParams } = params
+
+  // return get<CustomDirTreeNode>(`${ARTIFACTORY_API_URL_PREFIX}/user/custom-repo/${projectId}/dir/tree`, {
+  //   params: restParams,
+  // })
+  return new Promise((resolve) => {
+    setTimeout(() => {
+      resolve({
+        name: '',
+        fullPath: '/',
+        children: [
+          {
+            name: 'ABCv',
+            fullPath: '/ABCv',
+            children: [],
+          },
+          {
+            name: 'TestFile',
+            fullPath: '/TestFile',
+            children: [],
+          },
+          {
+            name: '_from_pipeline',
+            fullPath: '/_from_pipeline',
+            children: [],
+          },
+          {
+            name: 'aaa1',
+            fullPath: '/aaa1',
+            children: [],
+          },
+          {
+            name: 'file',
+            fullPath: '/file',
+            children: [],
+          },
+          {
+            name: 'files',
+            fullPath: '/files',
+            children: [],
+          },
+          {
+            name: 'haha',
+            fullPath: '/haha',
+            children: [],
+          },
+        ],
+      })
+    }, 300)
+  })
+}
+
+/**
+ * 复制文件
+ * @param params 请求参数
+ * @returns 是否成功
+ */
+export function requestCopyFile(params: CopyFileParams): Promise<boolean> {
+  // return post<boolean>(`${ARTIFACTORY_API_URL_PREFIX}/user/artifactories/file/copy`, params)
+  // Mock 数据
+  return new Promise((resolve) => {
+    setTimeout(() => {
+      resolve(true)
+    }, 300)
   })
 }

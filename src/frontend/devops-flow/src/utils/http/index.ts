@@ -82,3 +82,10 @@ export function del<T>(
 ): Promise<T> {
   return request<T>('DELETE', url, config)
 }
+
+export function head<T = unknown>(
+  url: string,
+  config?: HttpRequestConfig,
+): Promise<T> {
+  return request<T>('HEAD', url, config)
+}

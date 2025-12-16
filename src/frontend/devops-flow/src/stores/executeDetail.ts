@@ -9,6 +9,8 @@ import {
   requestPipelineExecDetail,
   requestTerminatePipeline,
   retryFlow,
+  requestBuildParams,
+  requestBuildParamCombination,
 } from '@/api/executeDetail'
 
 export const useExecuteDetailStore = defineStore('executeDetail', () => {
@@ -152,6 +154,23 @@ export const useExecuteDetailStore = defineStore('executeDetail', () => {
       })
     } catch (error) {}
   }
+
+  /**
+   * 获取启动参数及当前参数组合
+   * @param urlParams 
+   * @returns 
+   */
+  async function getStartupParams(urlParams: { projectId: string; pipelineId: string; buildId: string }) {
+    const [buildParams, paramProperties] = await Promise.all([
+      requestBuildParams(urlParams),
+      requestBuildParamCombination(urlParams),
+    ])
+    return {
+      buildParams,
+      paramProperties,
+    }
+  }
+
   return {
     loading,
     executeDetail,
@@ -162,5 +181,6 @@ export const useExecuteDetailStore = defineStore('executeDetail', () => {
     requestRePlayFlow,
     requestRetryFlow,
     requestUpdateRemark,
+    getStartupParams
   }
 })

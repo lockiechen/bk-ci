@@ -93,6 +93,7 @@ export default defineComponent({
       () => props.currentTab,
       () => {
         keyWord.value = ''
+        activeOutputDetail.value = null
         artifactValue.value = []
         nextTick(init)
       },
@@ -128,177 +129,188 @@ export default defineComponent({
     })
 
     return () => (
-      <Loading loading={isLoading.value} class={styles.pipelineExecOutputs}>
-        {/* 侧边栏 */}
-        <aside
-          class={styles.pipelineExecOutputsAside}
-          style={{ width: props.currentTab === 'reports' ? '300px' : '30%' }}
-        >
-          <div class={styles.pipelineExecOutputsFilterInput}>
-            {props.currentTab === 'artifacts' && (
-              <div class={styles.artifactSearch}>
-                <p>{t('flow.execute.metaData')}</p>
-                <SearchSelect
-                  class={styles.searchInput}
-                  uniqueSelect
-                  data={artifactFilterData.value}
-                  placeholder={t('flow.execute.itemPlaceholder')}
-                  modelValue={artifactValue.value}
-                  onUpdate:modelValue={updateSearchKey}
-                />
-              </div>
-            )}
-            <Input
-              class={styles.inputSearch}
-              clearable
-              type="search"
-              placeholder={t(`flow.execute.${props.currentTab}FilterPlaceholder`)}
-              v-model={keyWord.value}
-            />
-          </div>
-
-          {visibleOutputs.value.length > 0 ? (
-            <ul class={styles.pipelineExecOutputsList}>
-              {visibleOutputs.value.map((output: any) => (
-                <li
-                  key={output.id}
-                  class={[output.id === activeOutput.value?.id ? styles.active : '']}
-                  onClick={() => setActiveOutput(output)}
-                >
-                  <i class={['devops-icon', `icon-${output.icon}`]} />
-                  <span class={styles.outputName} title={output.name}>
-                    {output.name}
-                  </span>
-                  <span class={styles.outputSize}>{output.size}</span>
-                  <p class={styles.outputHoverIconBox}>
-                    {output.downloadable && (
-                      <ArtifactDownloadButton
-                        output={output}
-                        download-icon
-                        path={output.fullPath}
-                        name={output.name}
-                        artifactory-type={output.artifactoryType}
-                      />
-                    )}
-                    {output.isReportOutput && (
-                      <span
-                        onClick={(e: Event) => {
-                          e.stopPropagation()
-                          fullScreenViewReport(output)
-                        }}
-                        class={styles.fullScreen}
-                      >
-                        <SvgIcon name="full-screen" size={14} />
-                      </span>
-                    )}
-                  </p>
-                </li>
-              ))}
-            </ul>
-          ) : (
-            <div class={styles.noOutputsPlaceholder}>
-              <EmptyPage />
-            </div>
-          )}
-        </aside>
-
-        {/* 主内容区 */}
-        <section class={styles.pipelineExecOutputsSection}>
-          {isCustomizeReport.value ? (
-            <IframeReport
-              ref={iframeReportRef}
-              report-name={activeOutput.value?.name}
-              index-file-url={activeOutput.value?.indexFileUrl}
-            />
-          ) : isActiveThirdReport.value ? (
-            <ThirdPartyReport report-list={thirdPartyReportList.value} />
-          ) : activeOutputDetail.value ? (
+      <>
+        <Loading loading={isLoading.value} class={styles.pipelineExecOutputs}>
+          {!isLoading.value && (
             <>
-              <div class={styles.pipelineExecOutputHeader}>
-                <span class={styles.pipelineExecOutputHeaderName}>
-                  <SvgIcon name={activeOutputDetail.value.icon} />
-                  <span title={activeOutputDetail.value.name} class={styles.outputDetailName}>
-                    {activeOutputDetail.value.name}
-                  </span>
-                </span>
-                <Tag theme="info">{t(activeOutputDetail.value.artifactoryTypeTxt)}</Tag>
-                <p class={styles.pipelineExecOutputActions}>
-                  {activeOutput.value?.downloadable && (
-                    <ArtifactDownloadButton
-                      output={activeOutput.value.value}
-                      path={activeOutput.value.fullPath}
-                      name={activeOutput.value.name}
-                      artifactory-type={activeOutput.value.artifactoryType}
-                    />
+              {/* 侧边栏 */}
+              <aside
+                class={styles.pipelineExecOutputsAside}
+                style={{ width: props.currentTab === 'reports' ? '300px' : '30%' }}
+              >
+                <div class={styles.pipelineExecOutputsFilterInput}>
+                  {props.currentTab === 'artifacts' && (
+                    <div class={styles.artifactSearch}>
+                      <p>{t('flow.execute.metaData')}</p>
+                      <SearchSelect
+                        class={styles.searchInput}
+                        uniqueSelect
+                        data={artifactFilterData.value}
+                        placeholder={t('flow.execute.itemPlaceholder')}
+                        modelValue={artifactValue.value}
+                        onUpdate:modelValue={updateSearchKey}
+                      />
+                    </div>
                   )}
-                  {btns.value.map((btn) => (
-                    <Button text theme="primary" key={btn.text} onClick={btn.handler}>
-                      {btn.text}
-                    </Button>
-                  ))}
-                  {!activeOutputDetail.value.folder && (
-                    <ExtMenu data={activeOutputDetail.value} config={artifactMoreActions.value} />
-                  )}
-                </p>
-              </div>
+                  <Input
+                    class={styles.inputSearch}
+                    clearable
+                    type="search"
+                    placeholder={t(`flow.execute.${props.currentTab}FilterPlaceholder`)}
+                    v-model={keyWord.value}
+                  />
+                </div>
 
-              <div class={styles.pipelineExecOutputArtifact}>
-                {infoBlocks.value.map((block) => (
-                  <div key={block.title} class={styles.pipelineExecOutputBlock}>
-                    <h6 class={styles.pipelineExecOutputBlockTitle}>{block.title}</h6>
-                    {block.key === 'meta' ? (
-                      <Table
-                        data={block.value}
-                        border="outer"
-                        columns={columns as any}
-                        class={styles.triggerTable}
+                {visibleOutputs.value.length > 0 ? (
+                  <ul class={styles.pipelineExecOutputsList}>
+                    {visibleOutputs.value.map((output: any) => (
+                      <li
+                        key={output.id}
+                        class={[output.id === activeOutput.value?.id ? styles.active : '']}
+                        onClick={() => setActiveOutput(output)}
                       >
-                        {{
-                          empty: () => (
-                            <div class={styles.emptyState}>{t('flow.common.noData')}</div>
-                          ),
-                        }}
-                      </Table>
-                    ) : (
-                      <ul class={styles.pipelineExecOutputBlockContent}>
-                        {'block' in block &&
-                          block.block?.map((row: any) => (
-                            <li
-                              key={row.key}
-                              style={{
-                                alignItems: row.key === 'fullName' ? 'baseline' : 'center',
+                        <SvgIcon name={output.icon} size={12} />
+                        <span class={styles.outputName} title={output.name}>
+                          {output.name}
+                        </span>
+                        <span class={styles.outputSize}>{output.size}</span>
+                        <p class={styles.outputHoverIconBox}>
+                          {output.downloadable && (
+                            <ArtifactDownloadButton
+                              output={output}
+                              downloadIcon
+                              path={output.fullPath}
+                              name={output.name}
+                              artifactoryType={output.artifactoryType}
+                            />
+                          )}
+                          {output.isReportOutput && (
+                            <span
+                              onClick={(e: Event) => {
+                                e.stopPropagation()
+                                fullScreenViewReport(output)
                               }}
+                              class={styles.fullScreen}
                             >
-                              <span class={styles.pipelineExecOutputBlockRowLabel}>
-                                {row.name}：
-                              </span>
-                              {row.key === 'fullName' ? (
-                                <span class={styles.pipelineExecOutputBlockRowFullName}>
-                                  {block.value[row.key] || '--'}
-                                </span>
-                              ) : (
-                                <span class={styles.pipelineExecOutputBlockRowValue}>
-                                  {block.value[row.key] || '--'}
-                                </span>
-                              )}
-                            </li>
-                          ))}
-                      </ul>
-                    )}
+                              <SvgIcon name="full-screen" size={14} />
+                            </span>
+                          )}
+                        </p>
+                      </li>
+                    ))}
+                  </ul>
+                ) : (
+                  <div class={styles.noOutputsPlaceholder}>
+                    <EmptyPage />
                   </div>
-                ))}
-              </div>
+                )}
+              </aside>
+
+              {/* 主内容区 */}
+              <section class={styles.pipelineExecOutputsSection}>
+                {isCustomizeReport.value ? (
+                  <IframeReport
+                    ref={iframeReportRef}
+                    report-name={activeOutput.value?.name}
+                    index-file-url={activeOutput.value?.indexFileUrl}
+                  />
+                ) : isActiveThirdReport.value ? (
+                  <ThirdPartyReport report-list={thirdPartyReportList.value} />
+                ) : activeOutputDetail.value ? (
+                  <>
+                    <div class={styles.pipelineExecOutputHeader}>
+                      <span class={styles.pipelineExecOutputHeaderName}>
+                        <SvgIcon name={activeOutputDetail.value.icon} />
+                        <span title={activeOutputDetail.value.name} class={styles.outputDetailName}>
+                          {activeOutputDetail.value.name}
+                        </span>
+                      </span>
+                      <p class="flex-center">
+                        <Tag theme="info">{t(activeOutputDetail.value.artifactoryTypeTxt)}</Tag>
+                      </p>
+                      <p class={styles.pipelineExecOutputActions}>
+                        {activeOutput.value?.downloadable && (
+                          <ArtifactDownloadButton
+                            output={activeOutput.value}
+                            path={activeOutput.value.fullPath}
+                            name={activeOutput.value.name}
+                            artifactoryType={activeOutput.value.artifactoryType}
+                          />
+                        )}
+                        {btns.value.map((btn) => (
+                          <Button text theme="primary" key={btn.text} onClick={btn.handler}>
+                            {btn.text}
+                          </Button>
+                        ))}
+                        {!activeOutputDetail.value.folder && (
+                          <ExtMenu
+                            data={activeOutputDetail.value}
+                            config={artifactMoreActions.value}
+                          />
+                        )}
+                      </p>
+                    </div>
+
+                    <div class={styles.pipelineExecOutputArtifact}>
+                      {infoBlocks.value.map((block) => (
+                        <div key={block.title} class={styles.pipelineExecOutputBlock}>
+                          <h6 class={styles.pipelineExecOutputBlockTitle}>{block.title}</h6>
+                          {block.key === 'meta' ? (
+                            <Table
+                              data={block.value}
+                              border="outer"
+                              columns={columns as any}
+                              class={styles.triggerTable}
+                            >
+                              {{
+                                empty: () => (
+                                  <div class={styles.emptyState}>{t('flow.common.noData')}</div>
+                                ),
+                              }}
+                            </Table>
+                          ) : (
+                            <ul class={styles.pipelineExecOutputBlockContent}>
+                              {'block' in block &&
+                                block.block?.map((row: any) => (
+                                  <li
+                                    key={row.key}
+                                    style={{
+                                      alignItems: row.key === 'fullName' ? 'baseline' : 'center',
+                                    }}
+                                  >
+                                    <span class={styles.pipelineExecOutputBlockRowLabel}>
+                                      {row.name}：
+                                    </span>
+                                    {row.key === 'fullName' ? (
+                                      <span class={styles.pipelineExecOutputBlockRowFullName}>
+                                        {block.value[row.key] || '--'}
+                                      </span>
+                                    ) : (
+                                      <span class={styles.pipelineExecOutputBlockRowValue}>
+                                        {block.value[row.key] || '--'}
+                                      </span>
+                                    )}
+                                  </li>
+                                ))}
+                            </ul>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  </>
+                ) : (
+                  <div class={styles.noOutputsPlaceholder}>
+                    <EmptyPage />
+                  </div>
+                )}
+              </section>
             </>
-          ) : (
-            <div class={styles.noOutputsPlaceholder}>
-              <EmptyPage />
-            </div>
           )}
-        </section>
-        {/* {activeOutput.value && (
+        </Loading>
+        {activeOutput.value && (
           <CopyToCustomRepoDialog ref={copyToDialogRef} artifact={activeOutput.value} />
-        )} */}
-      </Loading>
+        )}
+      </>
     )
   },
 })

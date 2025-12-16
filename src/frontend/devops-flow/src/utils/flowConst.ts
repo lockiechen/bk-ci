@@ -20,7 +20,7 @@ export const VERSION_STATUS_ENUM = {
 
 export const repoTypeMap = {
   CUSTOM_DIR: 'flow.execute.customRepo',
-  PIPELINE: 'flow.execute.pipelineRepo',
+  PIPELINE: 'flow.execute.flowRepo',
   IMAGE: 'flow.execute.imageRepo',
   REPORT: 'flow.execute.reportRepo',
 }
@@ -53,3 +53,5 @@ export function extForFile(name: string) {
   }
   return defaultIcon
 }
+
+export const allVersionKeyList = ['BK_CI_MAJOR_VERSION', 'BK_CI_MINOR_VERSION', 'BK_CI_FIX_VERSION']
