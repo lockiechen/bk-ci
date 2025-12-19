@@ -151,3 +151,4 @@ export function useYamlHighlight(options: UseYamlHighlightOptions = {}) {
 export type { HighlightRange, UseYamlHighlightOptions };
 
 
+

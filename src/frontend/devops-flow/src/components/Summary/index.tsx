@@ -1,13 +1,13 @@
-import { defineComponent, ref, computed, type PropType } from 'vue'
+import ArtifactQuality from '@/components/ArtifactQuality'
+import MaterialItem from '@/components/MaterialItem'
+import { SvgIcon } from '@/components/SvgIcon'
+import { ROUTE_NAMES } from '@/constants/routes'
+import { useExecuteDetail } from '@/hooks/useExecuteDetail'
+import { type ExecuteDetailData } from '@/types/flow'
+import { Button, Input, Message, Popover } from 'bkui-vue'
+import { computed, defineComponent, ref, type PropType } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useRoute, useRouter } from 'vue-router'
-import { Button, Input, Popover, Message } from 'bkui-vue'
-import { SvgIcon } from '@/components/SvgIcon'
-import MaterialItem from '@/components/MaterialItem'
-import ArtifactQuality from '@/components/ArtifactQuality'
-import { ROUTE_NAMES } from '@/constants/routes'
-import { type ExecuteDetailData } from '@/types/flow'
-import { useExecuteDetail } from '@/hooks/useExecuteDetail'
 import styles from './Summary.module.css'
 
 export default defineComponent({
@@ -125,12 +125,8 @@ export default defineComponent({
 
     const goOutputs = (values: any) => {
       router.push({
-        name: ROUTE_NAMES.FLOW_DETAIL_EXECUTION_DETAIL,
-        params: {
-          ...route.params,
-          ...route.query,
-          type: 'outputs',
-        },
+        name: ROUTE_NAMES.FLOW_DETAIL_OUTPUTS,
+        params: route.params,
         query: {
           metadataKey: values[0].labelKey,
           metadataValues: values.map((item: any) => item.value).join(','),

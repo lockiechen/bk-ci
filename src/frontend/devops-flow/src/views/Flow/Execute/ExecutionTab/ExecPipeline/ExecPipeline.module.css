@@ -1,0 +1,354 @@
+:root {
+  --track-bottom: 0;
+  --error-popup-height: 0px;
+}
+
+.execPipelineWrapper {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
+}
+
+.constantWidthNum {
+  font-family: "Microsoft Yahei";
+}
+
+.pipelineExecSummary {
+  display: flex;
+  align-items: center;
+  padding: 16px 24px;
+  font-size: 12px;
+  width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
+  z-index: 9;
+}
+
+.pipelineExecCount {
+  display: flex;
+  align-items: center;
+  flex-shrink: 0;
+  font-size: 12px;
+  font-weight: bold;
+}
+
+.pipelineExecCountSelect {
+  width: 88px;
+  flex-shrink: 0;
+  margin: 0 8px;
+}
+
+.execStatusLabel {
+  display: grid;
+  align-items: center;
+  grid-auto-flow: column;
+  grid-gap: 6px;
+  margin-right: 8px;
+}
+
+.pipelineExecTimeline {
+  width: 666px;
+  max-width: calc(100% - 108px);
+  min-width: 0;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  top: 11px;
+  margin-left: 108px;
+  flex-shrink: 1;
+  box-sizing: border-box;
+}
+
+@media (max-width: 1200px) {
+  .pipelineExecTimeline {
+    width: auto;
+    max-width: calc(100% - 108px);
+    margin-left: 24px;
+  }
+}
+
+.pipelineExecTimelineItem {
+  position: relative;
+  padding-left: 20px;
+  font-size: 12px;
+}
+
+.pipelineExecTimelineItem > span {
+  position: relative;
+  background: white;
+  padding: 0 4px 0 0;
+  z-index: 2;
+  color: #979ba5;
+  display: inline-block;
+  margin-bottom: 8px;
+}
+
+.pipelineExecTimelineItem:before {
+  position: absolute;
+  content: "";
+  left: 0;
+  top: 2px;
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  background: white;
+  border: 2px solid #d8d8d8;
+}
+
+.pipelineExecTimelineItem:not(:last-child) .titleItem {
+  display: flex;
+}
+
+.timeStepDivider {
+  flex: 1;
+  height: 16px;
+  cursor: pointer;
+}
+
+.timeStepDivider:hover p {
+  background: #3a84ff;
+}
+
+.timeStepDivider p {
+  position: relative;
+  top: 8px;
+  left: 4px;
+  width: 96%;
+  height: 1px;
+  background: #d8d8d8;
+}
+
+.titleItem {
+  display: flex;
+}
+
+.pipelineExecContent {
+  flex: 1;
+  position: relative;
+  background: #fafbfd;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
+}
+
+.pipelineStyleSettingHeader {
+  display: flex;
+  align-items: center;
+  font-size: 12px;
+  padding: 16px 24px;
+  flex-shrink: 0;
+}
+
+.hideSkipPipelineTask {
+  padding: 0 16px 0 0;
+  position: relative;
+}
+
+.hideSkipPipelineTask:after {
+  content: "";
+  position: absolute;
+  width: 1px;
+  height: 16px;
+  right: 7px;
+  top: 1px;
+  background: #dcdee5;
+}
+
+.expandJobCheckbox {
+  margin-right: 16px;
+}
+
+.execPipelineScrollBox {
+  flex: 1;
+  overflow: auto;
+  width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
+}
+
+.execPipelineUiWrapper {
+  padding: 0 24px;
+  padding-bottom: calc(42px + var(--error-popup-height, 0px));
+  height: 100%;
+  width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
+  min-height: 0;
+}
+
+.execPipelineUiWrapper :global(.bk-pipeline) {
+  width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
+  overflow-x: auto;
+}
+
+.execErrorsPopup {
+  position: fixed;
+  bottom: 0;
+  left: 24px;
+  right: 24px;
+  overflow: hidden;
+  will-change: auto;
+  max-height: 30vh;
+  transition: all 0.5s ease;
+  transform: translateY(calc(100% - 42px));
+  box-shadow: 0 -2px 20px 0 rgba(0, 0, 0, 0.15);
+  background: white;
+  z-index: 6;
+  width: calc(100% - 48px);
+  max-width: calc(100% - 48px);
+  box-sizing: border-box;
+}
+
+.execErrorsPopup.visible {
+  transform: translateY(0);
+}
+
+.execErrorsPopup.visible .toggleErrorPopupIcon {
+  transition: transform 0.6s ease;
+  transform: rotate(180deg);
+}
+
+.dragDot {
+  position: absolute;
+  left: 50%;
+  top: 0;
+  z-index: 2;
+}
+
+.toggleErrorPopupIcon {
+  display: flex;
+  align-items: center;
+  transform-origin: center;
+  transition: transform 0.6s ease;
+}
+
+.toggleErrorPopupIcon.rotated {
+  transform: rotate(180deg);
+}
+
+.errorContent {
+  padding: 16px 24px;
+}
+
+.execCountSelectOption {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.execCountTimeCost {
+  margin: 0 8px;
+}
+
+.execCountSelectOptionUser {
+  color: #979ba5;
+}
+
+.queueTimeDetailPopup,
+.timeDetailPopup {
+  font-size: 12px;
+  width: 160px;
+  padding: 8px;
+}
+
+.pipelineTimeDetailSum {
+  display: flex;
+}
+
+.pipelineTimeDetailSum > span {
+  color: #63656e;
+  text-align: left;
+  font-weight: 600;
+}
+
+.pipelineTimeDetailSum > span:first-child {
+  color: #979ba5;
+  font-weight: normal;
+  width: 60px;
+  flex-shrink: 0;
+}
+
+.timeDetailPopup .pipelineTimeDetailSum {
+  border-bottom: 1px solid #dcdee5;
+  padding: 0 0 6px 0;
+  margin-bottom: 6px;
+}
+
+.pipelineTimeDetailSumList {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.pipelineTimeDetailSumList > li {
+  display: flex;
+  margin-bottom: 8px;
+}
+
+.pipelineTimeDetailSumList > li > span {
+  color: #63656e;
+  text-align: left;
+}
+
+.pipelineTimeDetailSumList > li > span:first-child {
+  color: #979ba5;
+  width: 60px;
+  flex-shrink: 0;
+}
+
+.pipelineTimeDetailSumList > li:last-child {
+  margin-bottom: 0;
+}
+
+.pipelineModelScrollViewport {
+  left: 0;
+  top: 0;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  position: absolute;
+  z-index: -2;
+}
+
+.completeLogWrapper {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 80%;
+  max-width: 1200px;
+  max-height: 80vh;
+  background: white;
+  box-shadow: 0 2px 20px 0 rgba(0, 0, 0, 0.15);
+  z-index: 1000;
+  display: flex;
+  flex-direction: column;
+}
+
+.completeLogHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 16px 24px;
+  border-bottom: 1px solid #dcdee5;
+}
+
+.completeLogContent {
+  flex: 1;
+  overflow: auto;
+  padding: 24px;
+}
+
+.emptyState {
+  padding: 24px;
+  text-align: center;
+  color: #979ba5;
+}

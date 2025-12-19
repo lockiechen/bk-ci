@@ -1,11 +1,11 @@
-import { storeToRefs } from 'pinia'
-import { h, withDirectives, computed } from 'vue'
+import type { TriggerRecordItem } from '@/api/triggerRecord'
+import { type StatusType } from '@/types/flow'
+import { statusColorMap } from '@/utils/flowStatus'
+import { formatDate } from '@/utils/util'
 import { Button } from 'bkui-vue'
 import { overflowTitle } from 'bkui-vue/lib/directives'
-import { formatDate } from '@/utils/util'
-import { statusColorMap } from '@/utils/flowStatus'
-import { type StatusType } from '@/api/flowContentList'
-import type { TriggerRecordItem } from '@/api/triggerRecord'
+import { storeToRefs } from 'pinia'
+import { computed, h, withDirectives } from 'vue'
 import { useTriggerRecordStore } from '../stores/triggerRecord'
 
 export interface Styles {

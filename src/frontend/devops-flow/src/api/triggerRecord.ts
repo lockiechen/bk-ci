@@ -1,4 +1,4 @@
-import { type StatusType } from "@/api/flowContentList";
+import { STATUS, type StatusType } from '@/types/flow'
 /**
  * 触发记录相关 API
  */
@@ -76,7 +76,7 @@ export async function getTriggerRecords(
             eventDesc:
               '[bk-ci-pipeline-p-83acfad57b0f49709e052abffed8f0c0-20] 提交 [<a href="http://git.woa.com/bkdevops-plugins-test/pythondemolint/commit/bac270b11383fb69d7f8122d90863d74a475c604" target="_blank">bac270b1</a>] 由 <span class="trigger-user">lockiechen</span> 推送 ',
             eventTime: 1713321835000,
-            status: 'SUCCEED',
+            status: STATUS.SUCCEED,
             pipelineId: 'p-83acfad57b0f49709e052abffed8f0c0',
             pipelineName: '0314验收',
             buildId: 'b-9a5d1c06a6c14c41b0caa60a49e71419',
@@ -95,7 +95,7 @@ export async function getTriggerRecords(
             eventDesc:
               '合并请求 [<a href="http://git.woa.com/bk-ci-test/test/yamlv3/merge_requests/3" target="_blank">!3</a>] 由 <span class="trigger-user">fayewang</span> 重新打开',
             eventTime: 1736740197000,
-            status: 'FAILED',
+            status: STATUS.FAILED,
             pipelineId: 'p-50b0216d616c4d8181e83c394dd008ef',
             pipelineName: 'trigger/t-mr.yml',
             reason: '触发器不匹配',
@@ -112,7 +112,7 @@ export async function getTriggerRecords(
             eventDesc:
               '[bk-ci-pipeline-p-83acfad57b0f49709e052abffed8f0c0-20] 提交 [<a href="http://git.woa.com/bkdevops-plugins-test/pythondemolint/commit/b93702c9cca0f0856701ea280dbe92701e7eaab2" target="_blank">b93702c9</a>] 由 <span class="trigger-user">lockiechen</span> 推送 ',
             eventTime: 1713321834000,
-            status: 'SUCCEED',
+            status: STATUS.SUCCEED,
             pipelineId: 'p-83acfad57b0f49709e052abffed8f0c0',
             pipelineName: '0314验收',
             buildId: 'b-fc9b5e5d372e4ccf8eafe131c383b340',
@@ -131,7 +131,7 @@ export async function getTriggerRecords(
             eventDesc:
               '[master] 提交 [<a href="http://git.woa.com/bkdevops-plugins-test/pythondemolint/commit/b93702c9cca0f0856701ea280dbe92701e7eaab2" target="_blank">b93702c9</a>] 由 <span class="trigger-user">lockiechen</span> 推送 ',
             eventTime: 1713321816000,
-            status: 'SUCCEED',
+            status: STATUS.SUCCEED,
             pipelineId: 'p-83acfad57b0f49709e052abffed8f0c0',
             pipelineName: '0314验收',
             buildId: 'b-85381254369044a0a0d7cd623ed14f5a',
@@ -150,7 +150,7 @@ export async function getTriggerRecords(
             eventDesc:
               '[master] 提交 [<a href="http://git.woa.com/bkdevops-plugins-test/pythondemolint/commit/0fa0d7be132378277950950fa4a35cbf5b3d6cbf" target="_blank">0fa0d7be</a>] 由 <span class="trigger-user">lockiechen</span> 推送 ',
             eventTime: 1713255775000,
-            status: 'SUCCEED',
+            status: STATUS.SUCCEED,
             pipelineId: 'p-83acfad57b0f49709e052abffed8f0c0',
             pipelineName: '0314验收',
             buildId: 'b-12be614d465a4df8a585c7037f10314d',
@@ -169,7 +169,7 @@ export async function getTriggerRecords(
             eventDesc:
               '[bk-ci-pipeline-p-83acfad57b0f49709e052abffed8f0c0-17] 提交 [<a href="http://git.woa.com/bkdevops-plugins-test/pythondemolint/commit/353a10133c5cc5b3a7d24762033b1dfe470954da" target="_blank">353a1013</a>] 由 <span class="trigger-user">lockiechen</span> 推送 ',
             eventTime: 1713255734000,
-            status: 'SUCCEED',
+            status: STATUS.SUCCEED,
             pipelineId: 'p-83acfad57b0f49709e052abffed8f0c0',
             pipelineName: '0314验收',
             buildId: 'b-113dcbd4e6cb4e90a2b47690cde51440',
@@ -188,7 +188,7 @@ export async function getTriggerRecords(
             eventDesc:
               '[bk-ci-pipeline-p-83acfad57b0f49709e052abffed8f0c0-17] 提交 [<a href="http://git.woa.com/bkdevops-plugins-test/pythondemolint/commit/aa7b0a9262e23d3222bdffb99678404708cfba72" target="_blank">aa7b0a92</a>] 由 <span class="trigger-user">lockiechen</span> 推送 ',
             eventTime: 1713255733000,
-            status: 'SUCCEED',
+            status: STATUS.SUCCEED,
             pipelineId: 'p-83acfad57b0f49709e052abffed8f0c0',
             pipelineName: '0314验收',
             buildId: 'b-deeae45e4abf4df7a8d1eeb43b0cab8f',
@@ -207,7 +207,7 @@ export async function getTriggerRecords(
             eventDesc:
               '[bk-ci-pipeline-p-83acfad57b0f49709e052abffed8f0c0-16] 提交 [<a href="http://git.woa.com/bkdevops-plugins-test/pythondemolint/commit/9fc41bed1baf7c481fb27c81c88c23d4b6655030" target="_blank">9fc41bed</a>] 由 <span class="trigger-user">lockiechen</span> 推送 ',
             eventTime: 1713254286000,
-            status: 'SUCCEED',
+            status: STATUS.SUCCEED,
             pipelineId: 'p-83acfad57b0f49709e052abffed8f0c0',
             pipelineName: '0314验收',
             buildId: 'b-b07f420ad99d47b9b3e040f1a0864efd',
@@ -226,7 +226,7 @@ export async function getTriggerRecords(
             eventDesc:
               '[bk-ci-pipeline-p-83acfad57b0f49709e052abffed8f0c0-16] 提交 [<a href="http://git.woa.com/bkdevops-plugins-test/pythondemolint/commit/aa7b0a9262e23d3222bdffb99678404708cfba72" target="_blank">aa7b0a92</a>] 由 <span class="trigger-user">lockiechen</span> 推送 ',
             eventTime: 1713254285000,
-            status: 'SUCCEED',
+            status: STATUS.SUCCEED,
             pipelineId: 'p-83acfad57b0f49709e052abffed8f0c0',
             pipelineName: '0314验收',
             buildId: 'b-072e78943a35485eb1f0a824ea6e36ca',
@@ -245,7 +245,7 @@ export async function getTriggerRecords(
             eventDesc:
               '[bk-ci-pipeline-p-83acfad57b0f49709e052abffed8f0c0-15] 提交 [<a href="http://git.woa.com/bkdevops-plugins-test/pythondemolint/commit/aa7b0a9262e23d3222bdffb99678404708cfba72" target="_blank">aa7b0a92</a>] 由 <span class="trigger-user">lockiechen</span> 推送 ',
             eventTime: 1713250199000,
-            status: 'SUCCEED',
+            status: STATUS.SUCCEED,
             pipelineId: 'p-83acfad57b0f49709e052abffed8f0c0',
             pipelineName: '0314验收',
             buildId: 'b-94539c2205bf4f62baedb1d61a1c8131',
@@ -264,7 +264,7 @@ export async function getTriggerRecords(
             eventDesc:
               '[bk-ci-pipeline-p-83acfad57b0f49709e052abffed8f0c0-15] 提交 [<a href="http://git.woa.com/bkdevops-plugins-test/pythondemolint/commit/183333e574d7672e4811c355455c436a200b70ba" target="_blank">183333e5</a>] 由 <span class="trigger-user">lockiechen</span> 推送 ',
             eventTime: 1713250199000,
-            status: 'SUCCEED',
+            status: STATUS.SUCCEED,
             pipelineId: 'p-83acfad57b0f49709e052abffed8f0c0',
             pipelineName: '0314验收',
             buildId: 'b-7893f28e71bf486ea91772977627c280',
@@ -283,7 +283,7 @@ export async function getTriggerRecords(
             eventDesc:
               '[bk-ci-pipeline-p-83acfad57b0f49709e052abffed8f0c0-14] 提交 [<a href="http://git.woa.com/bkdevops-plugins-test/pythondemolint/commit/5e92343bd5e627e004c1fdc772de0cda0b5a4680" target="_blank">5e92343b</a>] 由 <span class="trigger-user">lockiechen</span> 推送 ',
             eventTime: 1713249941000,
-            status: 'SUCCEED',
+            status: STATUS.SUCCEED,
             pipelineId: 'p-83acfad57b0f49709e052abffed8f0c0',
             pipelineName: '0314验收',
             buildId: 'b-1040f996979349e1b9e02f04d23bb17d',
@@ -302,7 +302,7 @@ export async function getTriggerRecords(
             eventDesc:
               '[bk-ci-pipeline-p-83acfad57b0f49709e052abffed8f0c0-13] 提交 [<a href="http://git.woa.com/bkdevops-plugins-test/pythondemolint/commit/7047c77f6ec173a21b3ff17ded70da64527f48ac" target="_blank">7047c77f</a>] 由 <span class="trigger-user">lockiechen</span> 推送 ',
             eventTime: 1713249686000,
-            status: 'SUCCEED',
+            status: STATUS.SUCCEED,
             pipelineId: 'p-83acfad57b0f49709e052abffed8f0c0',
             pipelineName: '0314验收',
             buildId: 'b-d66f8bd1dba64125b9c50b186ba9c264',

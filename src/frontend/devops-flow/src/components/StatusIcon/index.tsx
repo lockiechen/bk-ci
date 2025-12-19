@@ -1,7 +1,7 @@
-import { defineComponent, computed } from 'vue'
-import { statusIconMap, statusAlias, statusColorMap } from '@/utils/flowStatus'
 import { SvgIcon } from '@/components/SvgIcon'
-import { type StatusType } from "@/api/flowContentList";
+import { type StatusType } from '@/types/flow'
+import { statusAlias, statusColorMap, statusIconMap } from '@/utils/flowStatus'
+import { computed, defineComponent } from 'vue'
 import styles from './StatusIcon.module.css'
 
 type StatusKey = keyof typeof statusIconMap

@@ -776,11 +776,15 @@ onBeforeUnmount(() => {
     top: -9px;
     right: 10px;
     color: $primaryColor;
+
     .atom-retry-indicate-icon {
       width: 18px;
       height: 18px;
       background-color: white;
       border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
     }
   }
 

@@ -584,6 +584,7 @@ $entryBtnWidth: 80px;
   padding: 0;
   background: $stageBGColor;
   margin: 0 $StageMargin 0 0;
+  flex-shrink: 0;
 
   .pipeline-stage-entry {
     position: relative;

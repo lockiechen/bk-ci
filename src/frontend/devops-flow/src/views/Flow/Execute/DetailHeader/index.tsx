@@ -1,12 +1,12 @@
-import { computed, defineComponent, ref, h, type PropType } from 'vue'
-import { useI18n } from 'vue-i18n'
-import { Button, Message, Dropdown, Popover, InfoBox } from 'bkui-vue'
-import { useRouter, useRoute } from 'vue-router'
-import { ROUTE_NAMES } from '@/constants/routes'
 import { CommonHeader } from '@/components/CommonHeader'
-import { useExecuteDetail, type ExecuteInfo } from '@/hooks/useExecuteDetail'
-import styles from './DetailHeader.module.css'
 import { SvgIcon } from '@/components/SvgIcon'
+import { ROUTE_NAMES } from '@/constants/routes'
+import { useExecuteDetail, type ExecuteInfo } from '@/hooks/useExecuteDetail'
+import { Button, Dropdown, InfoBox, Message, Popover } from 'bkui-vue'
+import { computed, defineComponent, h, ref, type PropType } from 'vue'
+import { useI18n } from 'vue-i18n'
+import { useRoute, useRouter } from 'vue-router'
+import styles from './DetailHeader.module.css'
 
 export default defineComponent({
   name: 'DetailHeader',
@@ -74,14 +74,19 @@ export default defineComponent({
           type: 'executeDetail',
         }
 
+        const query: Record<string, any> = {
+          ...route.query,
+        }
+
         // 只有重试（reBuild）时才有 executeCount
         if (type === 'reBuild' && 'executeCount' in res) {
-          params.executeCount = res.executeCount
+          query.executeCount = String(res.executeCount)
         }
 
         router.replace({
           name: ROUTE_NAMES.FLOW_DETAIL_EXECUTION_DETAIL,
           params,
+          query,
         })
 
         Message({

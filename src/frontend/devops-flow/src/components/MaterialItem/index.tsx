@@ -1,7 +1,7 @@
-import { defineComponent, computed } from 'vue'
-import { Link, Popover } from 'bkui-vue'
 import { SvgIcon } from '@/components/SvgIcon'
 import { getMaterialIconByType } from '@/utils/util'
+import { Link, Popover } from 'bkui-vue'
+import { computed, defineComponent } from 'vue'
 import styles from './MaterialItem.module.css'
 
 interface MaterialInfoKey {

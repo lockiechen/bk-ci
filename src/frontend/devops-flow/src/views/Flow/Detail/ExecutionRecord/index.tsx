@@ -200,10 +200,8 @@ export default defineComponent({
             class={styles.buildNo}
             onClick={() => {
               router.push({
-                name: ROUTE_NAMES.FLOW_DETAIL_EXECUTION_DETAIL,
+                name: ROUTE_NAMES.FLOW_DETAIL_EXECUTION_DETAIL_TAB,
                 params: {
-                  projectId: route.params.projectId,
-                  type: 'executeDetail',
                   flowId,
                   buildNo: (row as ExecutionRecord).buildNo,
                 },

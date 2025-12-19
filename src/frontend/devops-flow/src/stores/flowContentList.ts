@@ -1,32 +1,32 @@
-import { useI18n } from 'vue-i18n'
-import { computed, ref } from 'vue'
-import { defineStore } from 'pinia'
-import { statusAlias } from '@/utils/flowStatus'
-import { ROUTE_NAMES } from '@/constants/routes'
 import {
-  getContentTableData,
+  addToFlowGroup,
+  copyContent,
   createContent,
   deleteContent,
   disableContent,
-  copyContent,
-  saveAsTemplate,
-  addToFlowGroup,
-  importContent,
   getContentDetail,
+  getContentTableData,
   getMatchDynamicView,
   getProjectTags,
+  importContent,
+  saveAsTemplate,
   toggleFlowFavorite,
+  type BuildStageStatus,
   type ContentTableItem,
   type ContentTableParams,
+  type CopyFlowParams,
   type CreateContentParams,
   type ImportContentParams,
-  type SaveAsTemplateParams,
-  type CopyFlowParams,
   type MatchDynamicViewParams,
-  type BuildStageStatus,
+  type SaveAsTemplateParams,
 } from '@/api/flowContentList'
+import { ROUTE_NAMES } from '@/constants/routes'
+import { STATUS } from '@/types/flow'
 import { VERSION_STATUS_ENUM } from '@/utils/flowConst'
 import { convertTime } from '@/utils/util'
+import { defineStore } from 'pinia'
+import { computed, ref } from 'vue'
+import { useI18n } from 'vue-i18n'
 
 // 操作列弹窗类型枚举
 export enum DialogType {
@@ -94,9 +94,8 @@ export const useFlowHomeContentStore = defineStore('flowContentList', () => {
     return {
       ...content,
       latestBuildRoute: {
-        name: ROUTE_NAMES.FLOW_DETAIL_EXECUTION_DETAIL,
+        name: ROUTE_NAMES.FLOW_DETAIL_EXECUTION_DETAIL_TAB,
         params: {
-          type: 'executeDetail',
           projectId: content.id,
           flowId: content.id,
           buildNo: content.latestBuildId,
@@ -159,7 +158,7 @@ export const useFlowHomeContentStore = defineStore('flowContentList', () => {
     currentTimestamp,
     latestBuildStartTime,
   }: ContentTableItem) {
-    if (latestBuildStatus === statusAlias.RUNNING) {
+    if (latestBuildStatus === STATUS.RUNNING) {
       return `${t('flow.content.execedTimes')}${convertMStoStringByRule(currentTimestamp - latestBuildStartTime)}(${Math.floor((lastBuildFinishCount / lastBuildTotalCount) * 100)}%)`
     }
     return ''
@@ -274,9 +273,9 @@ export const useFlowHomeContentStore = defineStore('flowContentList', () => {
     switch (true) {
       case !!stage.elapsed:
         return `${stage.name}: ${convertMStoString(stage.elapsed)}`
-      case stage.status === 'PAUSE':
+      case stage.status === STATUS.PAUSE:
         return t('flow.content.toCheck')
-      case stage.status === 'SKIP':
+      case stage.status === STATUS.SKIP:
         return t('flow.content.skipStageDesc')
     }
   }
@@ -288,12 +287,12 @@ export const useFlowHomeContentStore = defineStore('flowContentList', () => {
     return item.latestBuildStageStatus
       ? item.latestBuildStageStatus.slice(1).map((stage: BuildStageStatus) => {
           const supportedStatuses = [
-            'SUCCEED',
-            'FAILED',
-            'RUNNING',
-            'PAUSE',
-            'SKIP',
-            'CANCELED',
+            STATUS.SUCCEED,
+            STATUS.FAILED,
+            STATUS.RUNNING,
+            STATUS.PAUSE,
+            STATUS.SKIP,
+            STATUS.CANCELED,
           ] as const
           const icon = supportedStatuses.includes(stage.status as any)
             ? statusIconMap.value[stage.status as keyof IconMap]

@@ -1,7 +1,7 @@
-import { defineComponent } from 'vue'
-import { useRoute } from 'vue-router'
-import { useI18n } from 'vue-i18n'
 import { SvgIcon } from '@/components/SvgIcon'
+import { STATUS } from '@/types/flow'
+import { defineComponent } from 'vue'
+import { useI18n } from 'vue-i18n'
 import styles from './StageSteps.module.css'
 
 export default defineComponent({
@@ -22,7 +22,7 @@ export default defineComponent({
   setup(props) {
     const { t } = useI18n()
     const getRunningCls = (statusCls: string) => {
-      return statusCls === 'RUNNING' ? 'spinIcon' : ''
+      return statusCls === STATUS.RUNNING ? 'spinIcon' : ''
     }
     // TODO RUNNING时的tooltips
 
@@ -53,7 +53,7 @@ export default defineComponent({
                 <SvgIcon {...logoProps} />
               </span>
             )
-          } else if (step.status === 'RUNNING') {
+          } else if (step.status === STATUS.RUNNING) {
             return (
               <span data-stageId={step.stageId} class={stepClassNames} key={step.stageId}>
                 <SvgIcon {...logoProps} />

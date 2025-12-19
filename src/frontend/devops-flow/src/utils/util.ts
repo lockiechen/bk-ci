@@ -79,6 +79,35 @@ export function convertTime(ms: number) {
   return `${time.getFullYear()}-${prezero(time.getMonth() + 1)}-${prezero(time.getDate())} ${prezero(time.getHours())}:${prezero(time.getMinutes())}:${prezero(time.getSeconds())}`
 }
 
+/**
+ * 将毫秒值转换成时:分:秒的形式
+ * @param ms 毫秒数
+ * @param full 是否完整显示（包含小时，即使为0）
+ * @returns 格式化后的时间字符串
+ */
+export function convertMillSec(ms: number | undefined | null, full: boolean = false): string {
+  if (ms === undefined || ms === null || !Number.isInteger(ms)) return '--'
+  const millseconds = ms % 1000 > 0 ? `.${`${ms % 1000}`.padStart(3, '0')}` : ''
+  const day = Math.floor(ms / (24 * 60 * 60 * 1000))
+  let remainingMs = ms
+  if (day > 0) {
+    // 先减去天数，再计算小时
+    remainingMs -= day * (24 * 60 * 60 * 1000)
+  }
+  const seconds = Math.floor(remainingMs / 1000) % 60
+  const minutes = Math.floor(remainingMs / 1000 / 60) % 60
+  const hours = Math.floor(remainingMs / 1000 / 60 / 60) % 24
+
+  const dayStr = day > 0 ? `${day}天` : ''
+  const timeParts = [
+    ...(hours > 0 ? [hours] : [full ? '00' : '']),
+    prezero(minutes),
+    prezero(seconds),
+  ].filter(Boolean)
+  
+  return `${dayStr} ${timeParts.join(':')}${full ? '' : millseconds}`.trim()
+}
+
 interface MaterialIconMap {
   CODE_SVN: string
   CODE_GIT: string

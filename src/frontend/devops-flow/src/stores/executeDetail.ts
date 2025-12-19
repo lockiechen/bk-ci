@@ -1,17 +1,16 @@
-import { ref } from 'vue'
-import { defineStore } from 'pinia'
-import { useI18n } from 'vue-i18n'
-import { useRoute } from 'vue-router'
-import { fetchFlowInfo, updateRemark } from '@/api/flowInfo'
-import type { ExecuteDetailData, FlowInfo } from '@/types/flow'
 import {
   replayFlow,
+  requestBuildParamCombination,
+  requestBuildParams,
   requestPipelineExecDetail,
   requestTerminatePipeline,
   retryFlow,
-  requestBuildParams,
-  requestBuildParamCombination,
 } from '@/api/executeDetail'
+import { fetchFlowInfo, updateRemark } from '@/api/flowInfo'
+import type { ExecuteDetailData, FlowInfo } from '@/types/flow'
+import { defineStore } from 'pinia'
+import { ref } from 'vue'
+import { useRoute } from 'vue-router'
 
 export const useExecuteDetailStore = defineStore('executeDetail', () => {
   const route = useRoute()
@@ -24,11 +23,14 @@ export const useExecuteDetailStore = defineStore('executeDetail', () => {
   const flowInfo = ref<FlowInfo | null>(null)
 
   async function getExecuteDetail() {
-    // TODO: 从路由参数获取实际值
+    // 从路由参数获取实际值，包括 executeCount（从 query 中获取）
     const params = {
-      projectId: projectId.value,
-      buildNo: buildNo.value,
-      flowId: flowId.value,
+      projectId: projectId.value || (route.params.projectId as string),
+      buildNo: buildNo.value || (route.params.buildNo as string),
+      flowId: flowId.value || (route.params.flowId as string),
+      executeCount: route.query.executeCount
+        ? Number(route.query.executeCount)
+        : undefined,
     }
     return await requestPipelineExecDetail(params)
   }

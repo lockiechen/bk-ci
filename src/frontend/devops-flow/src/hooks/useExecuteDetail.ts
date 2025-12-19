@@ -1,6 +1,7 @@
-import { computed } from 'vue'
-import { storeToRefs } from 'pinia'
 import { useExecuteDetailStore } from '@/stores/executeDetail'
+import { storeToRefs } from 'pinia'
+import { computed } from 'vue'
+import { isRunning } from '../utils/flowStatus'
 
 export type ExecuteInfo = {
   id: string
@@ -14,6 +15,15 @@ export type ExecuteInfo = {
 export function useExecuteDetail() {
   const store = useExecuteDetailStore()
   const { loading, executeDetail, flowInfo } = storeToRefs(store)
+  
+  // 计算执行详情的相关状态
+  const isRunningOrNot = computed(() => isRunning(executeDetail.value?.status))
+  
+  const isLatestBuild = computed(
+    () =>
+      executeDetail.value?.buildNum === executeDetail.value?.latestBuildNum &&
+      executeDetail.value?.curVersion === executeDetail.value?.latestVersion,
+  )
 
   // 使用 computed 使 executeInfo 响应式更新
   const executeInfo = computed<ExecuteInfo>(() => ({
@@ -23,10 +33,6 @@ export function useExecuteDetail() {
     latestBuildNum: executeDetail.value?.latestBuildNum ?? 1,
   }))
 
-  const isRunning = computed(() => {
-    const status = executeDetail.value?.status
-    return status ? ['RUNNING', 'QUEUE'].indexOf(status) > -1 : false
-  })
   const isDebugExec = computed(() => executeDetail.value?.debug ?? false)
 
   return {
@@ -35,9 +41,10 @@ export function useExecuteDetail() {
     executeDetail,
     flowInfo,
 
-    // 本地状态
+    // 计算状态
     executeInfo,
-    isRunning,
+    isRunning: isRunningOrNot,
+    isLatestBuild,
     isDebugExec,
 
     // 方法

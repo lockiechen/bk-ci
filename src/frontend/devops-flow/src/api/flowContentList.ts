@@ -1,3 +1,5 @@
+import { STATUS, type StatusType } from '@/types/flow';
+
 /**
  * 创作流首页内容表格相关 API
  */
@@ -19,11 +21,8 @@ interface PromiseObj {
   canShare: boolean;
   canArchive: boolean;
 }
-export type StatusType = 'SUCCEED' | 'FAILED' | 'CANCELED' | 'RUNNING' | 'TERMINATE' | 'REVIEWING'
-  | 'REVIEW_ABORT' | 'REVIEW_PROCESSED' | 'HEARTBEAT_TIMEOUT' | 'PREPARE_ENV' | 'UNEXEC' | 'SKIP' 
-  | 'QUALITY_CHECK_FAIL' | 'QUEUE' | 'QUEUE_CACHE' | 'LOOP_WAITING' | 'CALL_WAITING' | 'TRY_FINALLY'
-  | 'QUEUE_TIMEOUT' | 'EXEC_TIMEOUT' | 'RETRY' | 'PAUSE' | 'STAGE_SUCCESS' | 'QUOTA_FAILED'
-  | 'DEPENDENT_WAITING' | 'QUALITY_CHECK_PASS' | 'QUALITY_CHECK_WAIT' | 'UNKNOWN'
+// 统一从 types/flow 导入状态类型（已在上方导入）
+export type { StatusType };
 
 type TriggerType = 'manualTrigger' | 'timerTrigger' | 'codeGitWebHookTrigger' | 'remoteTrigger'
 
@@ -271,7 +270,7 @@ export async function getContentTableData(params: ContentTableParams): Promise<C
           startType: "manualTrigger",
           viewNames: ['personal-1', 'personal-4'],
           latestBuildStartTime: 1760690426000,
-          latestBuildStatus: 'SUCCEED',
+          latestBuildStatus: STATUS.SUCCEED,
           latestBuildUserId: 'zhangsan',
           latestVersionStatus: 'RELEASED',
           webhookAliasName: 'aa-test/test/yamlv3',
@@ -354,20 +353,20 @@ export async function getContentTableData(params: ContentTableParams): Promise<C
             {
               stageId: 'stage-1',
               name: '代码编译',
-              status: 'RUNNING',
+              status: STATUS.RUNNING,
               elapsed: 120,
               showMsg: '编译中...'
             },
             {
               stageId: 'stage-2',
               name: '单元测试',
-              status: 'RUNNING',
+              status: STATUS.RUNNING,
               startEpoch: 1760689426000
             }
           ],
           viewNames: ['监控组', '告警组'],
           latestBuildStartTime: 1760689426000,
-          latestBuildStatus: 'RUNNING',
+          latestBuildStatus: STATUS.RUNNING,
           latestBuildUserId: 'lisi',
           latestVersionStatus: 'DRAFT',
           webhookAliasName: 'backend/monitor/v1',
@@ -431,7 +430,7 @@ export async function getContentTableData(params: ContentTableParams): Promise<C
             }
           ],
           latestBuildStartTime: 1760688008000,
-          latestBuildStatus: 'FAILED',
+          latestBuildStatus: STATUS.FAILED,
           latestBuildUserId: 'wangwu',
           latestVersionStatus: 'ARCHIVED',
           trigger: '定时'
@@ -469,7 +468,7 @@ export async function getContentTableData(params: ContentTableParams): Promise<C
             {
               stageId: 'stage-1',
               name: '代码扫描',
-              status: 'CANCELED',
+              status: STATUS.CANCELED,
               elapsed: 300,
               showMsg: '用户手动取消'
             }
@@ -564,7 +563,7 @@ export async function copyContent(flowId: string, params: CopyFlowParams): Promi
           {
             stageId: 'stage-1',
             name: '备份检查',
-            status: 'FAILED',
+            status: STATUS.FAILED,
             elapsed: 45,
             showMsg: '备份文件校验失败'
           }

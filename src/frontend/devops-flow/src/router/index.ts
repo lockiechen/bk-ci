@@ -173,9 +173,51 @@ const router = createRouter({
           ],
         },
         {
-          path: 'flow/:flowId/execute/:buildNo/:type?/:executeCount?',
-          name: ROUTE_NAMES.FLOW_DETAIL_EXECUTION_DETAIL,
-          component: () => import('../views/FlowExecuteDetail/index'),
+          path: 'flow/:flowId/execute/:buildNo',
+          component: () => import('../views/Flow/Execute/index'),
+          children: [
+            {
+              path: '',
+              redirect: (to) => ({
+                name: ROUTE_NAMES.FLOW_DETAIL_EXECUTION_DETAIL_TAB
+              }),
+            },
+            {
+              path: 'execute-detail',
+              component: () => import('../views/Flow/Execute/ExecutionTab/ExecPipeline'),
+              name: ROUTE_NAMES.FLOW_DETAIL_EXECUTION_DETAIL_TAB
+            },
+            {
+              path: 'artifacts',
+              component: () => import('../views/Flow/Execute/ExecutionTab/Outputs'),
+              name: ROUTE_NAMES.FLOW_DETAIL_ARTIFACTS
+            },
+            {
+              path: 'outputs',
+              component: () => import('../views/Flow/Execute/ExecutionTab/Outputs'),
+              name: ROUTE_NAMES.FLOW_DETAIL_OUTPUTS
+            },
+            {
+              path: 'start-params',
+              component: () => import('../views/Flow/Execute/ExecutionTab/StartParams'),
+              name: ROUTE_NAMES.FLOW_DETAIL_START_PARAMS
+            },
+            // 兜底路由：处理非法的 tab
+            {
+              path: ':invalidTab',
+              redirect: (to) => {
+                return {
+                  name: ROUTE_NAMES.FLOW_DETAIL_EXECUTION_DETAIL_TAB,
+                  params: {
+                    projectId: to.params.projectId,
+                    flowId: to.params.flowId,
+                    buildNo: to.params.buildNo,
+                  },
+                  query: to.query,
+                }
+              },
+            },
+          ],
         },
         {
           path: 'template',
