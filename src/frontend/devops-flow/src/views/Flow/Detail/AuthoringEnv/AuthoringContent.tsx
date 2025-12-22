@@ -40,14 +40,14 @@ export default defineComponent({
     const { t } = useI18n()
     const selectRef = ref()
     const isPopoverVisible = ref(false)
-    const authoringEnv = ref(props.modelValue)
+    const envName = ref(props.modelValue)
     const trigger = ref<'default' | 'manual'>('manual')
 
     watch(
       () => props.modelValue,
       (newValue) => {
-        if (newValue !== authoringEnv.value) {
-          authoringEnv.value = newValue
+        if (newValue !== envName.value) {
+          envName.value = newValue
         }
       },
     )
@@ -86,7 +86,7 @@ export default defineComponent({
     }
 
     function handleChange() {
-      emit('update:modelValue', authoringEnv.value)
+      emit('update:modelValue', envName.value)
     }
 
     function handlePopoverHide(value: boolean) {
@@ -103,7 +103,7 @@ export default defineComponent({
           {props.isEdit ? (
             <Select
               ref={selectRef}
-              v-model={authoringEnv.value}
+              v-model={envName.value}
               filterable
               loading={props.envLoading}
               trigger={trigger.value}
@@ -113,14 +113,14 @@ export default defineComponent({
               onChange={handleChange}
             >
               {props.envList.map((i: any) => (
-                <Select.Option key={i.value} id={i.value} name={i.label}></Select.Option>
+                <Select.Option key={i.value} id={i.label} name={i.label}></Select.Option>
               ))}
             </Select>
           ) : (
             <span class={styles.headerText}>{t('flow.content.myAuthoringEnv')}</span>
           )}
         </p>
-        {authoringEnv.value ? (
+        {envName.value ? (
           <Loading loading={props.nodeLoading} size="small" class="p-lg">
             <div class={styles.envItem}>
               <p class={styles.envItemTit}>
@@ -133,8 +133,8 @@ export default defineComponent({
               </p>
               <div class={styles.nodeTag}>
                 {props.nodeList.length > 0
-                  ? props.nodeList.map((node: any) => <Tag key={node.id}>{node.displayName}</Tag>)
-                  : null}
+                  ? props.nodeList.map((node: any) => <Tag key={node.nodeId}>{node.displayName}</Tag>)
+                  : '--'}
               </div>
             </div>
             <div class={styles.envItem}>

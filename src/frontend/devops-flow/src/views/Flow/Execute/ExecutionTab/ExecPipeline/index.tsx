@@ -239,7 +239,6 @@ export default defineComponent({
 
     // ==================== Methods: Pipeline Operations ====================
     const expandAllMatrix = () => {
-      debugger
       if (!bkPipelineRef.value || !executeDetail.value?.model?.stages) return
       try {
         for (let i = 0; i < executeDetail.value.model.stages.length; i++) {

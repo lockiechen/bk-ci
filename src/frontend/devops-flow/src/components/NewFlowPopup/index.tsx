@@ -77,7 +77,6 @@ export default defineComponent({
     async function onConfirm() {
       try {
         await handleConfirm()
-        onClose()
       } catch (error) {
         Message({
           message: t('flow.content.createFailed'),
