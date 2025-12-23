@@ -18,13 +18,6 @@ export function useFlowGroupData() {
   // 从 store 获取原始数据
   
   /**
-   * 全部创作流的数量（所有组的数量）
-   */
-  const allFlowsCount = computed(() => {
-    return flowGroups.value.length;
-  });
-  
-  /**
    * 我的创作流组总数（组的数量）
    * 收藏(1) + 我创建的(1) + 个人组的数量
    */
@@ -49,14 +42,14 @@ export function useFlowGroupData() {
         id: FLOW_GROUP_TYPES.MY_FAVORITES,
         icon: 'star',
         name: t('flow.sidebar.myFavorites'),
-        count: counts.value.myFavoriteCount,
+        pipelineCount: counts.value.myFavoriteCount,
         showAction: false,
       },
       {
         id: FLOW_GROUP_TYPES.MY_CREATED,
         icon: 'user',
         name: t('flow.sidebar.myCreated'),
-        count: counts.value.myFlowCount,
+        pipelineCount: counts.value.myPipelineCount,
         showAction: false,
       },
       ...personalFlowGroups.value,
@@ -72,7 +65,6 @@ export function useFlowGroupData() {
       loading,
       
       // 二次加工的数据
-      allFlowsCount,
       myFlowGroupsTotal,
       projectFlowGroupsTotal,
       myFlowGroupMenuItems,

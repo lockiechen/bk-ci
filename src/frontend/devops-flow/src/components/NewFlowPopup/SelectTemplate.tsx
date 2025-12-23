@@ -1,8 +1,10 @@
 import { computed, defineComponent, onMounted, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
+import { useRoute } from 'vue-router'
 import { Radio, Checkbox, Popover, Tab, Loading } from 'bkui-vue'
 import { SvgIcon } from '@/components/SvgIcon'
 import { useNewFlow } from '@/hooks/useNewFlow'
+import { templateTypeEnum } from '@/utils/flowConst'
 import EmptyPage from '@/components/EmptyPage/index'
 import FlowModel from '@/views/Flow/Detail/FlowModel'
 import AuthoringEnv from '@/views/Flow/Detail/AuthoringEnv'
@@ -33,7 +35,7 @@ export default defineComponent({
       type: Object,
       default: () => ({
         activeTemplate: { name: '', logoUrl: '', desc: '' },
-        currentModel: 'freedomMode',
+        currentModel: templateTypeEnum.FREEDOM,
         cloneTemplateSet: [],
         activeMenuItem: 'flowModel',
       }),
@@ -42,6 +44,8 @@ export default defineComponent({
   emits: ['update:modelValue'],
   setup(props, { emit }) {
     const { t } = useI18n()
+    const route = useRoute()
+    const projectId = ref(route.params.projectId as string)
     const {
       projectModelList,
       storeModelList,
@@ -55,10 +59,77 @@ export default defineComponent({
 
     const templateInfoData = ref({
       activeTemplate: props.modelValue?.activeTemplate,
-      currentModel: props.modelValue?.currentModel || 'freedomMode',
+      currentModel: props.modelValue?.currentModel || templateTypeEnum.FREEDOM,
       cloneTemplateSet: props.modelValue?.cloneTemplateSet || [],
       activeMenuItem: props.modelValue?.activeMenuItem || 'flowModel',
     })
+
+    const tplTypes = computed(() => {
+      const types = [
+        {
+          label: t('flow.content.freeMode'),
+          value: templateTypeEnum.FREEDOM,
+        },
+      ]
+      const currentType = templateInfoData.value.activeTemplate.templateType || ''
+      if (currentType !== templateTypeEnum.PUBLIC) {
+        types.push({
+          label: t('flow.content.constraintMode'),
+          value: templateTypeEnum.CONSTRAIN,
+        })
+      }
+      return types
+    })
+
+    const settingItems = computed(() => {
+      const cloneTemplateSettingExist =
+        templateInfoData.value.activeTemplate?.cloneTemplateSettingExist
+      return [
+        {
+          label: t('flow.content.notificationSettings'),
+          value: 'useSubscriptionSettings',
+          disabled: !cloneTemplateSettingExist?.notifySettingExist,
+        },
+        {
+          label: t('flow.content.concurrencyPolicy'),
+          value: 'useConcurrencyGroup',
+          disabled: !cloneTemplateSettingExist?.concurrencySettingExist,
+        },
+        {
+          label: t('flow.content.tag'),
+          value: 'useLabelSettings',
+          disabled: !cloneTemplateSettingExist?.labelSettingExist,
+        },
+      ]
+    })
+
+    // 监听模板类型变化，自动切换到自由模式（如果是公共模板）
+    watch(
+      () => templateInfoData.value.activeTemplate.templateType,
+      (newType) => {
+        if (newType === templateTypeEnum.PUBLIC) {
+          templateInfoData.value.currentModel = templateTypeEnum.FREEDOM
+          templateInfoData.value.cloneTemplateSet = []
+        }
+      },
+      {
+        immediate: true,
+      },
+    )
+
+    watch(
+      () => settingItems.value,
+      (val) => {
+        if (val) {
+          templateInfoData.value.cloneTemplateSet = val.reduce<string[]>((acc, item) => {
+            if (!item.disabled) {
+              acc.push(item.value)
+            }
+            return acc
+          }, [])
+        }
+      },
+    )
 
     // 监听store中formData.templateInfo的变化，确保组件状态与store同步
     watch(
@@ -73,7 +144,7 @@ export default defineComponent({
 
     onMounted(() => {
       if (!templateInfoData.value.activeTemplate.name) {
-        fetchProjectTemplates('default-project')
+        fetchProjectTemplates(projectId.value)
       }
     })
 
@@ -156,7 +227,7 @@ export default defineComponent({
 
       if (tabName === 'storeModel' && storeModelList.value.length === 0) {
         // 切换到storeModel时获取商店模板列表
-        fetchStoreTemplates('default-project')
+        fetchStoreTemplates(projectId.value)
       }
     }
 
@@ -182,6 +253,7 @@ export default defineComponent({
               class={`${styles.templateItem} ${isTemplateActive(template) ? styles.templateItemActive : ''}`}
               onClick={() => {
                 templateInfoData.value.activeTemplate = {
+                  ...template,
                   name: template.name,
                   logoUrl: template.logoUrl,
                   desc: template.desc,
@@ -232,6 +304,7 @@ export default defineComponent({
               class={`${styles.templateItem} ${isTemplateActive(template) ? styles.templateItemActive : ''}`}
               onClick={() => {
                 templateInfoData.value.activeTemplate = {
+                  ...template,
                   name: template.name,
                   logoUrl: template.logoUrl,
                   desc: template.desc,
@@ -349,28 +422,24 @@ export default defineComponent({
                 size="small"
                 onChange={handleChange}
               >
-                <Radio label="freedomMode">{t('flow.content.freeMode')}</Radio>
-                <Radio label="constraintMode" disabled={true}>
-                  {t('flow.content.constraintMode')}
-                </Radio>
+                {tplTypes.value.map((item) => (
+                  <Radio label={item.value} key={item.value}>
+                    {item.label}
+                  </Radio>
+                ))}
               </Radio.Group>
             </div>
             <div class={styles.cloneTemplateSet}>
               <p class={styles.settingLabel}>{t('flow.content.cloneTemplateSettings')}</p>
               <Checkbox.Group
                 v-model={templateInfoData.value.cloneTemplateSet}
-                disabled={true}
                 onChange={handleChange}
               >
-                <Checkbox label="freedomMode" size="small">
-                  {t('flow.content.notificationSettings')}
-                </Checkbox>
-                <Checkbox label="constraintMode" size="small">
-                  {t('flow.content.concurrencyPolicy')}
-                </Checkbox>
-                <Checkbox label="constraintMode" size="small">
-                  {t('flow.content.tag')}
-                </Checkbox>
+                {settingItems.value.map((item) => (
+                  <Checkbox label={item.value} size="small" disabled={item.disabled}>
+                    {item.label}
+                  </Checkbox>
+                ))}
               </Checkbox.Group>
             </div>
           </div>

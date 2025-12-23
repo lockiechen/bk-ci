@@ -54,6 +54,10 @@
       "createTime": "Creation Time",
       "actions": "Actions",
       "execute": "Execute",
+      "nonManual": "Non-manual",
+      "disabled": "Disabled",
+      "pipelineLockTips": "The pipeline is disabled and cannot be triggered in any way",
+      "pipelineManualDisable": "This pipeline is not configured for manual triggering",
       "orderByAlpha": "Order by Name A-Z",
       "orderByCreateTime": "Order by Creation Time",
       "orderByUpdateTime": "Order by Update Time",
@@ -454,6 +458,7 @@
         "groupName": "Creation Flow Group Name",
         "groupNamePlaceholder": "Please enter creation flow group name",
         "groupNameRequired": "Creation flow group name cannot be empty",
+        "addPipelineGroupSuc": "Pipeline group created successfully",
         "visibilityScope": "Visibility Scope",
         "personalVisible": "Personal Visible",
         "projectVisible": "Project Visible"

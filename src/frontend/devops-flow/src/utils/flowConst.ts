@@ -4,8 +4,8 @@ export const ORDER_ENUM = {
 }
 export const FLOW_SORT_FILED = {
   flowName: 'NAME',
-  createDate: 'CREATE_DATE',
-  latestBuildStartDate: 'LATEST_BUILD_START_DATA',
+  createDate: 'CREATE_TIME',
+  latestBuildStartDate: 'LAST_EXEC_TIME',
   updateTime: 'UPDATE_TIME',
 }
 export const UI_MODE = 'MODEL'
@@ -55,3 +55,10 @@ export function extForFile(name: string) {
 }
 
 export const allVersionKeyList = ['BK_CI_MAJOR_VERSION', 'BK_CI_MINOR_VERSION', 'BK_CI_FIX_VERSION']
+
+export const templateTypeEnum = {
+    CONSTRAIN: 'CONSTRAIN',
+    FREEDOM: 'FREEDOM',
+    PUBLIC: 'PUBLIC',
+    CUSTOMIZE: 'CUSTOMIZE'
+}

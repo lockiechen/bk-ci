@@ -22,6 +22,7 @@ export default defineComponent({
       currentStep,
       formData,
       isLoading,
+      projectModelLoading,
       baseInfoRef,
       resetForm,
       clearFormValidation,
@@ -77,7 +78,6 @@ export default defineComponent({
     async function onConfirm() {
       try {
         await handleConfirm()
-        onClose()
       } catch (error) {
         Message({
           message: t('flow.content.createFailed'),
@@ -149,7 +149,7 @@ export default defineComponent({
               {currentStep.value === 2 ? (
                 <Button
                   class={styles.btn}
-                  loading={isLoading.value}
+                  loading={projectModelLoading.value}
                   theme="primary"
                   onClick={onConfirm}
                 >

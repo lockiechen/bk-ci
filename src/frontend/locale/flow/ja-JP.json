@@ -53,6 +53,10 @@
       "createTime": "作成時間",
       "actions": "操作",
       "execute": "実行",
+      "nonManual": "手動以外",
+      "disabled": "無効",
+      "pipelineLockTips": "パイプラインは無効化されており、いかなる方法でもトリガーできません",
+      "pipelineManualDisable": "このパイプラインは手動トリガーの設定がされていません",
       "orderByAlpha": "名前順 A-Z",
       "orderByCreateTime": "作成時間順",
       "orderByUpdateTime": "更新時間順",
@@ -440,6 +444,7 @@
         "groupName": "作成フローグループ名",
         "groupNamePlaceholder": "作成フローグループ名を入力してください",
         "groupNameRequired": "作成フローグループ名は空にできません",
+        "addPipelineGroupSuc": "パイプライングループが正常に作成されました",
         "visibilityScope": "可視範囲",
         "personalVisible": "個人に見える",
         "projectVisible": "プロジェクトに見える"

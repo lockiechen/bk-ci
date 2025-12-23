@@ -1,6 +1,7 @@
 import { defineComponent, ref, onMounted, onUnmounted, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { Select, Tag, Loading } from 'bkui-vue'
+import { useNewFlow } from '@/hooks/useNewFlow'
 import { SvgIcon } from '@/components/SvgIcon'
 import styles from './AuthoringEnv.module.css'
 
@@ -40,14 +41,16 @@ export default defineComponent({
     const { t } = useI18n()
     const selectRef = ref()
     const isPopoverVisible = ref(false)
-    const authoringEnv = ref(props.modelValue)
+    const envName = ref(props.modelValue)
     const trigger = ref<'default' | 'manual'>('manual')
+
+    const { goEnvironment } = useNewFlow()
 
     watch(
       () => props.modelValue,
       (newValue) => {
-        if (newValue !== authoringEnv.value) {
-          authoringEnv.value = newValue
+        if (newValue !== envName.value) {
+          envName.value = newValue
         }
       },
     )
@@ -86,15 +89,11 @@ export default defineComponent({
     }
 
     function handleChange() {
-      emit('update:modelValue', authoringEnv.value)
+      emit('update:modelValue', envName.value)
     }
 
     function handlePopoverHide(value: boolean) {
       isPopoverVisible.value = value
-    }
-
-    function goEnvironment() {
-      console.log('点击，新窗口打开「环境管理」- 对应创作环境的详情页')
     }
 
     return () => (
@@ -103,7 +102,7 @@ export default defineComponent({
           {props.isEdit ? (
             <Select
               ref={selectRef}
-              v-model={authoringEnv.value}
+              v-model={envName.value}
               filterable
               loading={props.envLoading}
               trigger={trigger.value}
@@ -113,28 +112,30 @@ export default defineComponent({
               onChange={handleChange}
             >
               {props.envList.map((i: any) => (
-                <Select.Option key={i.value} id={i.value} name={i.label}></Select.Option>
+                <Select.Option key={i.value} id={i.label} name={i.label}></Select.Option>
               ))}
             </Select>
           ) : (
             <span class={styles.headerText}>{t('flow.content.myAuthoringEnv')}</span>
           )}
         </p>
-        {authoringEnv.value ? (
+        {envName.value ? (
           <Loading loading={props.nodeLoading} size="small" class="p-lg">
             <div class={styles.envItem}>
               <p class={styles.envItemTit}>
                 {t('flow.content.creationNode')}
                 {props.isEdit ? (
-                  <span onClick={goEnvironment}>
+                  <span onClick={() => goEnvironment(envName.value)}>
                     <SvgIcon name="set-line" size={12} class={`cursor-pointer ${styles.setLine}`} />
                   </span>
                 ) : null}
               </p>
               <div class={styles.nodeTag}>
                 {props.nodeList.length > 0
-                  ? props.nodeList.map((node: any) => <Tag key={node.id}>{node.displayName}</Tag>)
-                  : null}
+                  ? props.nodeList.map((node: any) => (
+                      <Tag key={node.nodeId}>{node.displayName}</Tag>
+                    ))
+                  : '--'}
               </div>
             </div>
             <div class={styles.envItem}>

@@ -58,14 +58,6 @@ export enum BuildCancelPolicy {
   RESTRICTED = 'RESTRICTED',
 }
 
-export interface TimeCost {
-  systemCost: number // 系统耗时（毫秒）
-  executeCost: number // 执行耗时（毫秒）
-  waitCost: number // 等待耗时（毫秒）
-  queueCost: number // 排队耗时（毫秒）
-  totalCost: number // 总耗时（毫秒）
-}
-
 // Stage 状态信息
 export interface StageStatusInfo {
   stageId: string
@@ -97,6 +89,9 @@ export interface StageStatusInfo {
   status: StatusType
   startEpoch?: number
   elapsed?: number
+  tag?: string[]
+  timeCost?: TimeCost
+  showMsg?: string
 }
 
 // 执行记录

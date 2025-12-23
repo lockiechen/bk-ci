@@ -11,7 +11,6 @@ import {
   importContent,
   saveAsTemplate,
   toggleFlowFavorite,
-  type BuildStageStatus,
   type ContentTableItem,
   type ContentTableParams,
   type CopyFlowParams,
@@ -21,7 +20,7 @@ import {
   type SaveAsTemplateParams,
 } from '@/api/flowContentList'
 import { ROUTE_NAMES } from '@/constants/routes'
-import { STATUS } from '@/types/flow'
+import { STATUS, type StageStatusInfo } from '@/types/flow'
 import { VERSION_STATUS_ENUM } from '@/utils/flowConst'
 import { convertTime } from '@/utils/util'
 import { defineStore } from 'pinia'
@@ -96,12 +95,11 @@ export const useFlowHomeContentStore = defineStore('flowContentList', () => {
       latestBuildRoute: {
         name: ROUTE_NAMES.FLOW_DETAIL_EXECUTION_DETAIL_TAB,
         params: {
-          projectId: content.id,
-          flowId: content.id,
+          projectId: content.projectId,
+          flowId: content.pipelineId,
           buildNo: content.latestBuildId,
         },
       },
-      updater: content.lastModifyUser,
       updateDate: convertTime(content.updateTime),
       createDate: convertTime(content.createTime),
       duration: calcDuration(content),
@@ -112,10 +110,12 @@ export const useFlowHomeContentStore = defineStore('flowContentList', () => {
         ? convertTime(content.latestBuildStartTime)
         : '--',
       latestBuildStageStatus: getLatestBuildStageStatus(content),
-      handleExecute: (row: ContentTableItem) => handleExecute(row),
+      released: content.latestVersionStatus === VERSION_STATUS_ENUM.RELEASED,
+      disabled: isDisabledPipeline(content),
+      tooltips: disabledTips(content),
       flowAction: [
         {
-          text: !content.enable ? t('flow.content.enable') : t('flow.content.disable'),
+          text: !content.lock ? t('flow.content.enable') : t('flow.content.disable'),
           handler: (data: ContentTableItem) => {
             if (enableActionCallback) {
               enableActionCallback(data)
@@ -269,7 +269,7 @@ export const useFlowHomeContentStore = defineStore('flowContentList', () => {
     return time ? getDays(Math.floor(time / 1000)) : `0${t('flow.content.timeMap.seconds')}`
   }
 
-  function getStageTooltip(stage: BuildStageStatus) {
+  function getStageTooltip(stage: StageStatusInfo) {
     switch (true) {
       case !!stage.elapsed:
         return `${stage.name}: ${convertMStoString(stage.elapsed)}`
@@ -280,12 +280,21 @@ export const useFlowHomeContentStore = defineStore('flowContentList', () => {
     }
   }
 
+  function isDisabledPipeline(item: ContentTableItem) {
+    return item.lock || !item.canManualStartup
+  }
+
+  function disabledTips(item: ContentTableItem): string | { disabled: boolean } | undefined {
+    if (!isDisabledPipeline(item)) return { disabled: true }
+    return t(item.lock ? 'flow.content.pipelineLockTips' : 'flow.content.pipelineManualDisable')
+  }
+
   /**
    * 获取最近执行stage进度数据
    */
   function getLatestBuildStageStatus(item: ContentTableItem) {
     return item.latestBuildStageStatus
-      ? item.latestBuildStageStatus.slice(1).map((stage: BuildStageStatus) => {
+      ? item.latestBuildStageStatus.slice(1).map((stage: StageStatusInfo) => {
           const supportedStatuses = [
             STATUS.SUCCEED,
             STATUS.FAILED,
@@ -413,13 +422,18 @@ export const useFlowHomeContentStore = defineStore('flowContentList', () => {
     // TODO
   }
 
+  function goEdit(row: ContentTableItem) {
+    console.log('编辑创作流', row)
+    // TODO
+  }
+
   /**
    * 删除创作流
    */
   async function removeContent(flowId: string) {
     try {
       await deleteContent(flowId)
-      const index = flowTableList.value.findIndex((content) => content.id === flowId)
+      const index = flowTableList.value.findIndex((content) => content.pipelineId === flowId)
       if (index > -1) {
         flowTableList.value.splice(index, 1)
       }
@@ -432,16 +446,16 @@ export const useFlowHomeContentStore = defineStore('flowContentList', () => {
   /**
    * 禁用创作流
    */
-  async function confirmEnableAction(flowId: string, enable: boolean) {
+  async function confirmEnableAction(flowId: string, lock: boolean) {
     try {
-      await disableContent(flowId, enable)
-      const index = flowTableList.value.findIndex((content) => content.id === flowId)
+      await disableContent(flowId, lock)
+      const index = flowTableList.value.findIndex((content) => content.pipelineId === flowId)
       if (index > -1) {
         const currentItem = flowTableList.value[index]
         if (currentItem) {
           const updatedItem: ContentTableItem = {
             ...currentItem,
-            enable,
+            lock,
           }
           flowTableList.value[index] = processContentItem(updatedItem)
         }
@@ -486,7 +500,7 @@ export const useFlowHomeContentStore = defineStore('flowContentList', () => {
   async function addContentToFlowGroup(flowId: string, groupId: string) {
     try {
       await addToFlowGroup(flowId, groupId)
-      const index = flowTableList.value.findIndex((content) => content.id === flowId)
+      const index = flowTableList.value.findIndex((content) => content.pipelineId === flowId)
       if (index > -1) {
         const currentItem = flowTableList.value[index]
         if (currentItem) {
@@ -546,6 +560,8 @@ export const useFlowHomeContentStore = defineStore('flowContentList', () => {
     isShowSaveAsTemplateDialog,
     currentActionData,
     // Actions
+    goEdit,
+    handleExecute,
     convertMStoString,
     closeAllDialogs,
     fetchFlowList,

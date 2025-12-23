@@ -3,14 +3,16 @@ import {
     apiGetAuthoringNodeList,
     apiGetProjectTemplates,
     apiGetStoreTemplates,
-    apiSaveBaseInfo,
     createContent,
     type AuthoringEnvItem,
     type AuthoringNodeItem,
     type CreateContentParams,
+    type CreateContentFormData,
 } from '@/api/flowContentList'
 import { defineStore } from 'pinia'
 import { ref } from 'vue'
+import { useRoute } from 'vue-router'
+import { templateTypeEnum } from "@/utils/flowConst";
 import { useI18n } from 'vue-i18n'
 
 /**
@@ -21,18 +23,19 @@ import { useI18n } from 'vue-i18n'
  */
 export const useNewFlowStore = defineStore('newFlow', () => {
   const { t } = useI18n()
+  const route = useRoute()
 
   // 状态定义
   const currentStep = ref(1)
-  const formData = ref<CreateContentParams>({
+  const formData = ref<CreateContentFormData>({
     baseInfo: {
-      flowName: '',
-      desc: '',
-      authoringEnv: '',
+      pipelineName: '',
+      pipelineDesc: '',
+      envName: '',
     },
     templateInfo: {
       activeTemplate: { name: '', logoUrl: '', desc: '' },
-      currentModel: 'freedomMode',
+      currentModel: templateTypeEnum.FREEDOM,
       cloneTemplateSet: [],
       activeMenuItem: 'flowModel',
     },
@@ -54,7 +57,7 @@ export const useNewFlowStore = defineStore('newFlow', () => {
   /**
    * 获取项目模板列表
    */
-  async function fetchProjectTemplates(projectId: string = 'default-project'): Promise<void> {
+  async function fetchProjectTemplates(projectId: string): Promise<void> {
     try {
       projectModelLoading.value = true
       const response = await apiGetProjectTemplates(projectId)
@@ -84,7 +87,7 @@ export const useNewFlowStore = defineStore('newFlow', () => {
   /**
    * 获取商店模板列表
    */
-  async function fetchStoreTemplates(projectId: string = 'default-project'): Promise<void> {
+  async function fetchStoreTemplates(projectId: string): Promise<void> {
     try {
       storeModelLoading.value = true
       const res = await apiGetStoreTemplates(projectId)
@@ -106,17 +109,18 @@ export const useNewFlowStore = defineStore('newFlow', () => {
   /**
    * 获取创作环境列表
    */
-  async function fetchAuthoringEnvList(
-    projectId: string = 'default-project',
-    envType: string = 'CREATE',
-  ): Promise<void> {
+  async function fetchAuthoringEnvList(): Promise<void> {
     try {
       envListLoading.value = true
-      const envList = await apiGetAuthoringEnvList(projectId, envType)
+      const params = {
+        projectId: route.params.projectId as string,
+        envType: 'CREATE',
+      }
+      const envList = await apiGetAuthoringEnvList(params)
       authoringEnvList.value = envList.map((item) => ({
         ...item,
-        value: item.id,
-        label: item.displayName,
+        value: item.envHashId,
+        label: item.name,
       }))
     } catch (error) {
       console.error('获取创作环境列表失败:', error)
@@ -129,10 +133,7 @@ export const useNewFlowStore = defineStore('newFlow', () => {
   /**
    * 获取创作节点列表
    */
-  async function fetchAuthoringNodeList(
-    envName: string,
-    projectId: string = 'default-project',
-  ): Promise<void> {
+  async function fetchAuthoringNodeList(envName: string): Promise<void> {
     if (!envName) {
       authoringNodeList.value = []
       return
@@ -140,10 +141,13 @@ export const useNewFlowStore = defineStore('newFlow', () => {
 
     try {
       nodeListLoading.value = true
-      const nodeList = await apiGetAuthoringNodeList(projectId, envName)
-      authoringNodeList.value = nodeList
+      const params = {
+        projectId: route.params.projectId as string,
+        envName: 'CREATE',
+      }
+      const res = await apiGetAuthoringNodeList(params)
+      authoringNodeList.value = res.records
     } catch (error) {
-      console.error('获取创作节点列表失败:', error)
       authoringNodeList.value = []
     } finally {
       nodeListLoading.value = false
@@ -151,39 +155,18 @@ export const useNewFlowStore = defineStore('newFlow', () => {
   }
 
   /**
-   * 保存新建创作流基础设置数据
-   */
-  async function saveBaseInfoData(projectId: string = 'default-project'): Promise<boolean> {
-    try {
-      const baseInfo = formData.value.baseInfo
-
-      await apiSaveBaseInfo({
-        flowName: baseInfo.flowName,
-        desc: baseInfo.desc,
-        authoringEnv: baseInfo.authoringEnv,
-        projectId: projectId,
-      })
-
-      return true
-    } catch (error) {
-      console.error('保存基础设置失败:', error)
-      return false
-    }
-  }
-
-  /**
    * 初始化表单数据
    */
-  function initFormData(): CreateContentParams {
+  function initFormData(): CreateContentFormData {
     return {
       baseInfo: {
-        flowName: '',
-        desc: '',
-        authoringEnv: '',
+        pipelineName: '',
+        pipelineDesc: '',
+        envName: '',
       },
       templateInfo: {
         activeTemplate: { name: '', logoUrl: '', desc: '' },
-        currentModel: 'freedomMode',
+        currentModel: templateTypeEnum.FREEDOM,
         cloneTemplateSet: [],
         activeMenuItem: 'flowModel',
       },
@@ -206,7 +189,7 @@ export const useNewFlowStore = defineStore('newFlow', () => {
   /**
    * 更新基础信息
    */
-  function updateBaseInfo(data: { flowName: string; desc: string; authoringEnv: string }) {
+  function updateBaseInfo(data: { pipelineName: string; pipelineDesc: string; envName: string }) {
     formData.value.baseInfo = { ...formData.value.baseInfo, ...data }
   }
 
@@ -221,10 +204,10 @@ export const useNewFlowStore = defineStore('newFlow', () => {
    * 创建创作流
    * 直接调用 API，避免循环依赖
    */
-  async function createNewFlow(): Promise<any> {
+  async function createNewFlow(params: CreateContentParams): Promise<any> {
     isLoading.value = true
     try {
-      const result = await createContent(formData.value)
+      const result = await createContent(params)
       resetForm()
       return result
     } catch (error) {
@@ -256,7 +239,6 @@ export const useNewFlowStore = defineStore('newFlow', () => {
     createNewFlow,
     fetchAuthoringEnvList,
     fetchAuthoringNodeList,
-    saveBaseInfoData,
     fetchProjectTemplates,
     fetchStoreTemplates,
   }

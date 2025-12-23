@@ -75,22 +75,22 @@ export function useFlowListData(styles?: Styles) {
   // 搜索选择器的数据配置
   const searchData = computed(() => [
     {
-      id: 'name',
+      id: 'filterByPipelineName',
       name: t('flow.content.name'),
     },
     {
-      id: 'viewNames',
-      name: t('flow.content.searchFieldGroupName'),
+      id: 'filterByCreator',
+      name: t('flow.content.creator'),
     },
     {
-      id: 'latestBuildStatus',
-      name: t('flow.content.searchFieldExecutionStatus'),
-      children: [
-        { id: 'success', name: t('flow.common.success') },
-        { id: 'failed', name: t('flow.common.failed') },
-        { id: 'running', name: t('flow.content.executionStatusRunning') },
-        { id: 'pending', name: t('flow.content.executionStatusPending') },
-      ],
+      id: 'filterByViewIds',
+      name: t('flow.content.flowGroup'),
+      children: allGroups.value.filter(item => item.viewType !== -1),
+    },
+    {
+      id: 'filterByLabels',
+      name: t('flow.content.creationEnvironment'),
+      children: [],
     },
   ])
 
@@ -155,12 +155,15 @@ export function useFlowListData(styles?: Styles) {
    * 加载表格数据
    */
   async function loadContentData(groupId?: string) {
+    // TODO 使用 groupId
     const params = {
+      projectId: route.params.projectId as string,
       page: pagination.value.current,
       pageSize: pagination.value.limit,
       sortType: currentSortType.value as SortType,
-      collation: currentCollation.value as Collation,
-      groupId: groupId || (route.params.groupId as string) || '',
+      collation: currentCollation.value === 'null' ? 'DEFAULT' :  currentCollation.value.toLocaleUpperCase() as Collation,
+      // viewId: groupId || (route.params.groupId as string) || 'allPipeline',
+      viewId: 'allPipeline',
     }
     await store.fetchFlowList(params)
   }
@@ -288,7 +291,7 @@ export function useFlowListData(styles?: Styles) {
       if (res) {
         // TODO
         // loadContentData()
-        const currentRow = flowTableList.value.find(i=>i.id === flowId)
+        const currentRow = flowTableList.value.find(i=>i.pipelineId === flowId)
         currentRow ? currentRow.hasCollect = !hasCollect : null
       }
     } catch (error) {
@@ -342,7 +345,7 @@ export function useFlowListData(styles?: Styles) {
 
   async function handleRestore(row: ContentTableItem) {
     showDeleteConfirm({
-      message: t('flow.restore.restoreFlowConfirm', [row.name]),
+      message: t('flow.restore.restoreFlowConfirm', [row.pipelineName]),
       cancelText: t('flow.common.cancel'),
       theme: 'primary',
       confirmText: t('flow.common.confirm'),
@@ -396,6 +399,8 @@ export function useFlowListData(styles?: Styles) {
     rowMouseLeave,
     
     // 操作方法（直接暴露 store 的方法）
+    goEdit: store.goEdit,
+    handleExecute: store.handleExecute,
     closeAllDialogs: store.closeAllDialogs,
     createNewContent: store.createNewContent,
     importNewContent: store.importNewContent,

@@ -1,5 +1,6 @@
 import { ref, computed } from 'vue';
 import { defineStore } from 'pinia';
+import { useRoute } from "vue-router";
 import {
   getFlowGroups,
   getFlowGroupsCount,
@@ -8,16 +9,19 @@ import {
   renameFlowGroup as apiRenameFlowGroup,
   pinFlowGroup as apiPinFlowGroup,
   type FlowGroupItem,
+  type EditGroupParams,
   type FlowGroupCounts,
 } from '../api/flowGroup';
 import { FLOW_GROUP_TYPES } from '../constants/flowGroup';
 
 export const useFlowGroupStore = defineStore('flowGroup', () => {
+  const route = useRoute()
+  const projectId = computed(() => route.params.projectId as string)
   // 数量统计
   const counts = ref<FlowGroupCounts>({
     totalCount: 0,
     myFavoriteCount: 0,
-    myFlowCount: 0,
+    myPipelineCount: 0,
     recycleCount: 0,
     recentUseCount: 0,
   });
@@ -59,8 +63,8 @@ export const useFlowGroupStore = defineStore('flowGroup', () => {
     try {
       // 并发加载数据
       const [groups, countsData] = await Promise.all([
-        getFlowGroups(),
-        getFlowGroupsCount(),
+        getFlowGroups(projectId.value),
+        getFlowGroupsCount(projectId.value),
       ]);
       
       // 前置数据处理：为每个组添加图标等
@@ -77,13 +81,10 @@ export const useFlowGroupStore = defineStore('flowGroup', () => {
   /**
    * 创建创作流组
    */
-  async function createFlowGroup(name: string, projected: boolean = false) {
+  async function createFlowGroup(params: EditGroupParams) {
     try {
-      const newGroup = await apiCreateFlowGroup(name, projected);
-      // 前置处理后再添加
-      const processedGroup = processFlowGroup(newGroup);
-      flowGroups.value.push(processedGroup);
-      return processedGroup;
+      const newGroup = await apiCreateFlowGroup(projectId.value, params);
+      return newGroup;
     } catch (error) {
       console.error('Failed to create flow group:', error);
       throw error;
@@ -95,10 +96,9 @@ export const useFlowGroupStore = defineStore('flowGroup', () => {
    */
   async function removeFlowGroup(id: string) {
     try {
-      await apiDeleteFlowGroup(id);
-      const index = flowGroups.value.findIndex(g => g.id === id);
-      if (index > -1) {
-        flowGroups.value.splice(index, 1);
+      const res = await apiDeleteFlowGroup(projectId.value, id);
+      if (res) {
+        loadAllData()
       }
     } catch (error) {
       console.error('Failed to remove flow group:', error);
@@ -164,7 +164,7 @@ export const useFlowGroupStore = defineStore('flowGroup', () => {
     counts.value = {
       totalCount: 0,
       myFavoriteCount: 0,
-      myFlowCount: 0,
+      myPipelineCount: 0,
       recycleCount: 0,
       recentUseCount: 0,
     };

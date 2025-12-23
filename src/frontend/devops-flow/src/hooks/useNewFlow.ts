@@ -1,11 +1,18 @@
 import { ref } from 'vue'
 import { storeToRefs } from 'pinia'
+import { type CreateContentParams } from '@/api/flowContentList'
+import { templateTypeEnum } from "@/utils/flowConst";
+
+import { useRouter, useRoute } from "vue-router";
+import { ROUTE_NAMES } from '@/constants/routes'
 import { useNewFlowStore } from '@/stores/createFlowStore'
 
 /**
  * NewFlowPopup组件业务逻辑 Hook
  */
 export function useNewFlow() {
+  const router = useRouter()
+  const route = useRoute()
   const store = useNewFlowStore()
   const {
     currentStep,
@@ -57,12 +64,6 @@ export function useNewFlow() {
     const isValid = await validateCurrentStep()
     if (!isValid) return
 
-    // 如果是下一步且当前是第一步，保存基础设置
-    if (targetStep > currentStep.value && currentStep.value === 1) {
-      const saveSuccess = await store.saveBaseInfoData()
-      if (!saveSuccess) return
-    }
-
     currentStep.value = targetStep
   }
 
@@ -72,10 +73,6 @@ export function useNewFlow() {
   async function handleNextStep(): Promise<void> {
     const isValid = await validateCurrentStep()
     if (!isValid) return
-
-    // 保存基础设置
-    const saveSuccess = await store.saveBaseInfoData()
-    if (!saveSuccess) return
 
     currentStep.value++
   }
@@ -93,8 +90,38 @@ export function useNewFlow() {
   async function handleConfirm(): Promise<void> {
     const isValid = await validateCurrentStep()
     if (!isValid) return
+    try {
+      const params: CreateContentParams = {
+        projectId: route.params.projectId as string,
+        ...formData.value.baseInfo,
+        templateId: formData.value.templateInfo.activeTemplate.templateId,
+        templateVersion: formData.value.templateInfo.activeTemplate.version,
+        ...formData.value.templateInfo.cloneTemplateSet.reduce((result, item) => {
+          result[item] = true
+          return result
+        }, {} as Record<string, boolean>),
+        instanceType: formData.value.templateInfo.currentModel,
+        emptyTemplate: formData.value.templateInfo.activeTemplate.templateType === templateTypeEnum.PUBLIC,
+      }
+  
+      const res = await store.createNewFlow(params)
+      if (res) {
+        router.push({
+          name: ROUTE_NAMES.FLOW_EDIT_WORKFLOW_ORCHESTRATION,
+          params: { flowId: res.pipelineId },
+        })
+      }
+    } catch (error) {
+      console.log("error:", error)
+    }
+  }
 
-    await store.createNewFlow()
+  function goEnvironment(envName?: string) {
+    let url = `${location.origin}/console/environment/${route.params.projectId}`
+    if (envName) {
+      url += `/envDetail/${envName}`
+    }
+    window.open(url, '_blank')
   }
 
   return {
@@ -121,6 +148,7 @@ export function useNewFlow() {
     handleNextStep,
     handlePrevStep,
     handleConfirm,
+    goEnvironment,
     resetForm: store.resetForm,
     updateBaseInfo: store.updateBaseInfo,
     updateTemplateInfo: store.updateTemplateInfo,

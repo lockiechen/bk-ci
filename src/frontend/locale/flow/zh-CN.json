@@ -53,6 +53,10 @@
       "createTime": "创建时间",
       "actions": "操作",
       "execute": "执行",
+      "nonManual": "非手动",
+      "disabled": "已禁用",
+      "pipelineLockTips": "流水线已禁用，任何方式都不可触发流水线",
+      "pipelineManualDisable": "该流水线未配置手动触发",
       "orderByAlpha": "按名称A-Z",
       "orderByCreateTime": "按创建时间",
       "orderByUpdateTime": "按修改时间",
@@ -455,6 +459,7 @@
         "groupName": "创作流组名称",
         "groupNamePlaceholder": "请输入创作流组名称",
         "groupNameRequired": "创作流组名称不能为空",
+        "addPipelineGroupSuc": "创建流水线组成功",
         "visibilityScope": "可见范围",
         "personalVisible": "个人可见",
         "projectVisible": "项目可见"

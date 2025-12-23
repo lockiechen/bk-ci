@@ -16,9 +16,9 @@ export default defineComponent({
     modelValue: {
       type: Object,
       default: () => ({
-        flowName: '',
-        desc: '',
-        authoringEnv: '',
+        pipelineName: '',
+        pipelineDesc: '',
+        envName: '',
       }),
     },
   },
@@ -32,6 +32,7 @@ export default defineComponent({
       authoringNodeList,
       envListLoading,
       nodeListLoading,
+      goEnvironment,
       fetchAuthoringEnvList,
       fetchAuthoringNodeList,
     } = useNewFlow()
@@ -51,17 +52,15 @@ export default defineComponent({
      * 监听创作环境变化，获取对应的创作节点列表
      */
     watch(
-      () => baseInfoData.value.authoringEnv,
+      () => baseInfoData.value.envName,
       (newEnv) => {
         if (newEnv) {
-          const selectedEnv = authoringEnvList.value.find((env) => env.id === newEnv)
-          if (selectedEnv) {
-            fetchAuthoringNodeList(selectedEnv.name)
-          }
+          fetchAuthoringNodeList(newEnv)
         } else {
           authoringNodeList.value = []
         }
       },
+      { immediate: true }
     )
 
     onMounted(() => {
@@ -73,7 +72,7 @@ export default defineComponent({
     }
 
     function updateAuthoringEnv(env: string) {
-      baseInfoData.value.authoringEnv = env
+      baseInfoData.value.envName = env
       handleChange()
     }
 
@@ -83,19 +82,19 @@ export default defineComponent({
           <p class={styles.baseTitle}>{t('flow.content.basicInfo')}</p>
           <Form.FormItem
             label={t('flow.content.name')}
-            property="flowName"
+            property="pipelineName"
             required
             maxlength={128}
           >
             <Input
-              v-model={baseInfoData.value.flowName}
+              v-model={baseInfoData.value.pipelineName}
               onChange={handleChange}
               placeholder={t('flow.content.inputFlowName')}
             ></Input>
           </Form.FormItem>
-          <Form.FormItem label={t('flow.content.description')} property="desc">
+          <Form.FormItem label={t('flow.content.description')} property="pipelineDesc">
             <Input
-              v-model={baseInfoData.value.desc}
+              v-model={baseInfoData.value.pipelineDesc}
               onChange={handleChange}
               type="textarea"
             ></Input>
@@ -104,7 +103,7 @@ export default defineComponent({
         <div class={styles.baseItem}>
           <p class={styles.baseTitle}>
             <span>{t('flow.content.creationEnvironment')}</span>
-            <span class={styles.titleSet}>
+            <span class={styles.titleSet} onClick={() => goEnvironment()}>
               <SvgIcon name="jump" size={12} class={styles.jumpIcon} />
               {t('flow.content.environmentManagement')}
             </span>
@@ -113,7 +112,7 @@ export default defineComponent({
             isEdit={true}
             envLoading={envListLoading.value}
             nodeLoading={nodeListLoading.value}
-            modelValue={baseInfoData.value.authoringEnv}
+            modelValue={baseInfoData.value.envName}
             onUpdate:modelValue={updateAuthoringEnv}
             envList={authoringEnvList.value}
             nodeList={authoringNodeList.value}

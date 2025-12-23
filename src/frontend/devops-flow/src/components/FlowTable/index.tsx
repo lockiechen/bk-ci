@@ -79,6 +79,8 @@ export const FlowTable = defineComponent({
       searchPlaceHolder,
       currentGroup,
 
+      goEdit,
+      handleExecute,
       rowMouseEnter,
       rowMouseLeave,
       collectHandler,
@@ -125,7 +127,7 @@ export const FlowTable = defineComponent({
     })
 
     const fieldToSortTypeMap: Record<string, string> = {
-      name: FLOW_SORT_FILED.flowName,
+      pipelineName: FLOW_SORT_FILED.flowName,
       latestBuildStartDate: FLOW_SORT_FILED.latestBuildStartDate,
       updateTime: FLOW_SORT_FILED.updateTime,
       createDate: FLOW_SORT_FILED.createDate,
@@ -140,7 +142,7 @@ export const FlowTable = defineComponent({
           text
           class={[styles.iconStarBtn, row.hasCollect ? styles.isCollect : '']}
           theme={row.hasCollect ? 'warning' : ''}
-          onClick={() => collectHandler(row.hasCollect, row.id)}
+          onClick={() => collectHandler(row.hasCollect, row.pipelineId)}
         >
           <SvgIcon name={!row.hasCollect ? 'star-line' : 'star-shape'} size={14} />
         </Button>
@@ -160,12 +162,12 @@ export const FlowTable = defineComponent({
               router.push({
                 name: ROUTE_NAMES.FLOW_DETAIL_EXECUTION_RECORD,
                 params: {
-                  flowId: row.id,
+                  flowId: row.pipelineId,
                 },
               })
             }}
           >
-            {row.name}
+            {row.pipelineName}
           </span>
           {row.onlyDraftVersion ? (
             <Tag theme="success" class="draft-tag">
@@ -182,7 +184,7 @@ export const FlowTable = defineComponent({
     }
 
     const renderTags = (row: ContentTableItem) => {
-      const tags = row.tags
+      const tags = row.viewNames
 
       if (row.delete) {
         return <span class="text-disabled">{t('flow.content.deleteAlready')}</span>
@@ -208,7 +210,7 @@ export const FlowTable = defineComponent({
           ))}
 
           {showMore ? (
-            <Popover theme="light" maxWidth={250} placement="bottom-end">
+            <Popover theme="light" maxWidth={280} placement="bottom-end">
               {{
                 default: () => <Tag class={styles.tag}>+{remainingCount}</Tag>,
                 content: () => (
@@ -348,14 +350,30 @@ export const FlowTable = defineComponent({
             </Button>
           ) : (
             <div class={styles.actions}>
-              <Button
-                text
-                theme="primary"
-                disabled={!row.enable}
-                onClick={() => row.handleExecute?.(row)}
-              >
-                {t('flow.content.execute')}
-              </Button>
+              {
+                !(row.released || row.onlyBranchVersion) ? (
+                  <Button
+                    text
+                    theme="primary"
+                    onClick={() => goEdit(row)}
+                  >
+                    {t('flow.content.edit')}
+                  </Button>
+                ) : (
+                  <Button
+                    text
+                    theme="primary"
+                    disabled={row.disabled}
+                    onClick={() => handleExecute(row)}
+                    v-bk-tooltips={{
+                      content: row.tooltips,
+                      disabled: !row.disabled,
+                    }}
+                  >
+                    {row.lock ? t('flow.content.disabled') : row.canManualStartup ? t('flow.content.execute') : t('flow.content.nonManual') }
+                  </Button>
+                )
+              }
               <ExtMenu data={row} config={row.flowAction} />
             </div>
           )}
@@ -382,7 +400,7 @@ export const FlowTable = defineComponent({
               },
               {
                 label: t('flow.content.name'),
-                field: 'name',
+                field: 'pipelineName',
                 fixed: 'left',
                 minWidth: 192,
                 sort: sortConfig(FLOW_SORT_FILED.flowName),
@@ -391,7 +409,7 @@ export const FlowTable = defineComponent({
               {
                 label: t('flow.content.groupName'),
                 field: 'viewNames',
-                minWidth: 200,
+                minWidth: 280,
                 render: ({ row }: { row: ContentTableItem }) => renderTags(row),
               },
               {
@@ -490,22 +508,22 @@ export const FlowTable = defineComponent({
 
     // 处理删除操作
     function handleDeleteAction(data: any) {
-      const objectName = data?.name || data?.id
+      const objectName = data?.name || data?.pipelineId
       showDeleteConfirm({
         message: () => [
           `${t('flow.content.confirmDeleteFlow')}\n${t('flow.content.operationObject')}: `,
           h('strong', { style: 'font-weight: 700; color: var(--color-text-primary);' }, objectName),
         ],
         onConfirm: async () => {
-          await removeContent(data?.id)
+          await removeContent(data?.pipelineId)
         },
       })
     }
 
     // 处理启用/禁用操作
     function handleEnableAction(data: any) {
-      const isEnable = data?.enable
-      const objectName = data?.name || data?.id
+      const isEnable = data?.lock
+      const objectName = data?.name || data?.pipelineId
       showDeleteConfirm({
         message: () => [
           `${isEnable ? t('flow.content.confirmDisableFlow') : t('flow.content.confirmEnableFlow')}\n${t('flow.content.operationObject')}: `,
@@ -514,7 +532,7 @@ export const FlowTable = defineComponent({
         theme: 'primary',
         confirmText: t('flow.common.confirm'),
         onConfirm: async () => {
-          await confirmEnableAction(data?.id, !data.enable)
+          await confirmEnableAction(data?.pipelineId, !data.lock)
         },
       })
     }
