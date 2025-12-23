@@ -6,6 +6,7 @@ import styles from './CreateGroupDialog.module.css';
 interface Props {
   isShow: boolean;
   projected: boolean;
+  isLoading?: boolean;
 }
 
 export const CreateGroupDialog = defineComponent({
@@ -19,6 +20,10 @@ export const CreateGroupDialog = defineComponent({
       type: Boolean,
       required: true,
     },
+    isLoading: {
+      type: Boolean,
+      default: false,
+    }
   },
   emits: ['update:isShow', 'confirm'],
   setup(props: Props, { emit }) {
@@ -28,10 +33,17 @@ export const CreateGroupDialog = defineComponent({
       projected: props.projected,
     });
 
+    watch(
+      () => props.projected,
+      (newValue) => {
+        group.projected = newValue;
+      }
+    );
+
     // 重置表单
     const resetForm = () => {
       group.name = '';
-      group.projected = false;
+      group.projected = props.projected;
     };
 
     // 关闭弹窗
@@ -55,6 +67,7 @@ export const CreateGroupDialog = defineComponent({
         isShow={props.isShow}
         title={t('flow.dialog.createGroup.title')}
         width={480}
+        isLoading={props.isLoading}
         onCancel={handleClose}
         onClosed={handleClose}
         onConfirm={handleConfirm}

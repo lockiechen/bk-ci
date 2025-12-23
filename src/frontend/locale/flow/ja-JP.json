@@ -444,6 +444,7 @@
         "groupName": "作成フローグループ名",
         "groupNamePlaceholder": "作成フローグループ名を入力してください",
         "groupNameRequired": "作成フローグループ名は空にできません",
+        "addPipelineGroupSuc": "パイプライングループが正常に作成されました",
         "visibilityScope": "可視範囲",
         "personalVisible": "個人に見える",
         "projectVisible": "プロジェクトに見える"

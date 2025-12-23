@@ -116,6 +116,14 @@ export function useNewFlow() {
     }
   }
 
+  function goEnvironment(envName?: string) {
+    let url = `${location.origin}/console/environment/${route.params.projectId}`
+    if (envName) {
+      url += `/envDetail/${envName}`
+    }
+    window.open(url, '_blank')
+  }
+
   return {
     // Store状态
     currentStep,
@@ -140,6 +148,7 @@ export function useNewFlow() {
     handleNextStep,
     handlePrevStep,
     handleConfirm,
+    goEnvironment,
     resetForm: store.resetForm,
     updateBaseInfo: store.updateBaseInfo,
     updateTemplateInfo: store.updateTemplateInfo,

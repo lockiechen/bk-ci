@@ -459,6 +459,7 @@
         "groupName": "创作流组名称",
         "groupNamePlaceholder": "请输入创作流组名称",
         "groupNameRequired": "创作流组名称不能为空",
+        "addPipelineGroupSuc": "创建流水线组成功",
         "visibilityScope": "可见范围",
         "personalVisible": "个人可见",
         "projectVisible": "项目可见"

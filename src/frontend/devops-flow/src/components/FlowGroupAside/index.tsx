@@ -10,7 +10,7 @@ import { GroupActionMenu } from './GroupActionMenu'
 import { useFlowGroupData } from '../../hooks/useFlowGroupData'
 import { useDeleteConfirm } from '../../hooks/useDeleteConfirm'
 import { FLOW_GROUP_TYPES } from '../../constants/flowGroup'
-import type { FlowGroupItem } from '../../api/flowGroup'
+import type { FlowGroupItem, EditGroupParams } from '../../api/flowGroup'
 
 export enum GroupSectionType {
   MY_FLOWS = 'myFlowGroups',
@@ -37,11 +37,13 @@ export const FlowGroupAside = defineComponent({
     })
     const collapsed = ref({
       myFlowGroups: false,
-      projectFlowGroups: true,
+      projectFlowGroups: false,
     })
 
     const showDialog = ref(false)
     const currentGroupType = ref<GroupSectionType>(GroupSectionType.MY_FLOWS)
+
+    const dialogLoading = ref(false)
 
     // 重命名弹窗状态
     const showRenameDialog = ref(false)
@@ -59,9 +61,9 @@ export const FlowGroupAside = defineComponent({
      */
     onMounted(() => {
       if (flowGroupData.flowGroups.value.length === 0 && !flowGroupData.loading.value) {
-        flowGroupData.loadAllData();
+        flowGroupData.loadAllData()
       }
-    });
+    })
 
     const handleItemClick = (key: string) => {
       router.push({
@@ -83,9 +85,23 @@ export const FlowGroupAside = defineComponent({
 
     const handleDialogConfirm = async (data: { name: string; projected: boolean }) => {
       try {
-        await flowGroupData.createFlowGroup(data.name, data.projected)
+        dialogLoading.value = true
+        const params: EditGroupParams = {
+          ...data,
+          viewType: 2,
+          logic: 'AND',
+          filters: [],
+          pipelineIds: [],
+        }
+        const res = await flowGroupData.createFlowGroup(params)
+        if (res.id) {
+          flowGroupData.loadAllData()
+          Message({ theme: 'success', message: t('flow.dialog.createGroup.addPipelineGroupSuc')})
+        }
       } catch (error) {
         console.error('Failed to create flow group:', error)
+      } finally {
+        dialogLoading.value = false
       }
     }
 
@@ -194,7 +210,7 @@ export const FlowGroupAside = defineComponent({
 
     const renderMenuItem = (item: FlowGroupItem) => {
       // 判断是否为配置对象还是分组项
-      const { id, name, icon, count, showAction = false } = item
+      const { id, name, icon, pipelineCount, showAction = false } = item
       const sticky = id === FLOW_GROUP_TYPES.ALL_FLOWS
       const isTrash = id === FLOW_GROUP_TYPES.RECYCLE_BIN
       const operations = showAction ? getOperations(item) : []
@@ -213,9 +229,9 @@ export const FlowGroupAside = defineComponent({
           {icon && <SvgIcon name={icon} class={styles.icon} />}
           <span class={styles.text}>{name}</span>
           <div class={styles.countContainer}>
-            {count !== undefined && (
+            {pipelineCount !== undefined && (
               <Tag class={styles.countTag} radius="round" size="small">
-                {count}
+                {pipelineCount}
               </Tag>
             )}
             {showAction && operations.length > 0 ? (
@@ -278,7 +294,7 @@ export const FlowGroupAside = defineComponent({
               id: FLOW_GROUP_TYPES.ALL_FLOWS,
               icon: 'all',
               name: t('flow.common.allFlows'),
-              count: flowGroupData.allFlowsCount.value,
+              pipelineCount: flowGroupData.counts.value.totalCount,
             })}
             <div class={[styles.divider, styles.sticky]}></div>
             {/* 我的创作流 header - sticky，直接子元素 */}
@@ -312,7 +328,7 @@ export const FlowGroupAside = defineComponent({
               id: FLOW_GROUP_TYPES.RECYCLE_BIN,
               icon: 'trash-bin',
               name: t('flow.sidebar.recycleBin'),
-              count: flowGroupData.counts.value.recycleCount,
+              pipelineCount: flowGroupData.counts.value.recycleCount,
               showAction: false, // 回收站不需要操作按钮，但需要保留空间以对齐
             })}
           </div>
@@ -320,6 +336,7 @@ export const FlowGroupAside = defineComponent({
           {/* 创建分组弹窗 */}
           <CreateGroupDialog
             isShow={showDialog.value}
+            isLoading={dialogLoading.value}
             projected={currentGroupType.value === GroupSectionType.PROJECT_FLOWS}
             onUpdate:isShow={(val: boolean) => {
               showDialog.value = val

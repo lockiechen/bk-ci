@@ -32,6 +32,7 @@ export default defineComponent({
       authoringNodeList,
       envListLoading,
       nodeListLoading,
+      goEnvironment,
       fetchAuthoringEnvList,
       fetchAuthoringNodeList,
     } = useNewFlow()
@@ -102,7 +103,7 @@ export default defineComponent({
         <div class={styles.baseItem}>
           <p class={styles.baseTitle}>
             <span>{t('flow.content.creationEnvironment')}</span>
-            <span class={styles.titleSet}>
+            <span class={styles.titleSet} onClick={() => goEnvironment()}>
               <SvgIcon name="jump" size={12} class={styles.jumpIcon} />
               {t('flow.content.environmentManagement')}
             </span>

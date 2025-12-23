@@ -1,6 +1,7 @@
 import { defineComponent, ref, onMounted, onUnmounted, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { Select, Tag, Loading } from 'bkui-vue'
+import { useNewFlow } from '@/hooks/useNewFlow'
 import { SvgIcon } from '@/components/SvgIcon'
 import styles from './AuthoringEnv.module.css'
 
@@ -42,6 +43,8 @@ export default defineComponent({
     const isPopoverVisible = ref(false)
     const envName = ref(props.modelValue)
     const trigger = ref<'default' | 'manual'>('manual')
+
+    const { goEnvironment } = useNewFlow()
 
     watch(
       () => props.modelValue,
@@ -93,10 +96,6 @@ export default defineComponent({
       isPopoverVisible.value = value
     }
 
-    function goEnvironment() {
-      console.log('点击，新窗口打开「环境管理」- 对应创作环境的详情页')
-    }
-
     return () => (
       <div class={styles.authoringContent}>
         <p class={styles.authoringHeader} onClick={showPopover}>
@@ -126,14 +125,16 @@ export default defineComponent({
               <p class={styles.envItemTit}>
                 {t('flow.content.creationNode')}
                 {props.isEdit ? (
-                  <span onClick={goEnvironment}>
+                  <span onClick={() => goEnvironment(envName.value)}>
                     <SvgIcon name="set-line" size={12} class={`cursor-pointer ${styles.setLine}`} />
                   </span>
                 ) : null}
               </p>
               <div class={styles.nodeTag}>
                 {props.nodeList.length > 0
-                  ? props.nodeList.map((node: any) => <Tag key={node.nodeId}>{node.displayName}</Tag>)
+                  ? props.nodeList.map((node: any) => (
+                      <Tag key={node.nodeId}>{node.displayName}</Tag>
+                    ))
                   : '--'}
               </div>
             </div>

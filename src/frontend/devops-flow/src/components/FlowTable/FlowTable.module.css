@@ -59,10 +59,10 @@
 .searchBox {
   display: flex;
   align-items: center;
-  width: 320px;
-  margin-left: auto;
+  margin-left: 20%;
   padding: var(--spacing-md) 0;
   gap: var(--spacing-sm);
+  flex: 1;
 }
 
 /* 搜索输入框 */

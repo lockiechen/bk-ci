@@ -27,7 +27,7 @@
 }
 
 .tabContent,
-:global(.bk-tab-content) {
+.mainContent :global(.bk-tab-content) {
   position: relative;
   background: var(--bg-primary);
   flex: 1;

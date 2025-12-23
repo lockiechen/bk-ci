@@ -458,6 +458,7 @@
         "groupName": "Creation Flow Group Name",
         "groupNamePlaceholder": "Please enter creation flow group name",
         "groupNameRequired": "Creation flow group name cannot be empty",
+        "addPipelineGroupSuc": "Pipeline group created successfully",
         "visibilityScope": "Visibility Scope",
         "personalVisible": "Personal Visible",
         "projectVisible": "Project Visible"
