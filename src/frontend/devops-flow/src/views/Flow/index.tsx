@@ -1,12 +1,12 @@
-import { defineComponent, ref, computed } from 'vue'
-import styles from './index.module.css'
-import { RouterView, useRoute, useRouter } from 'vue-router'
-import { FlowHeader } from '@/components/FlowHeader'
 import { EditHeader } from '@/components/EditHeader'
-import layoutStyles from '@/styles/layout.module.css'
+import { FlowHeader } from '@/components/FlowHeader'
 import { ROUTE_NAMES } from '@/constants/routes'
 import { useFlowInfo } from '@/hooks/useFlowInfo'
+import layoutStyles from '@/styles/layout.module.css'
 import type { FlowInfo, FlowVersion } from '@/types/flow'
+import { computed, defineComponent } from 'vue'
+import { RouterView, useRoute, useRouter } from 'vue-router'
+import styles from './index.module.css'
 
 export default defineComponent({
   setup() {
@@ -36,8 +36,10 @@ export default defineComponent({
     }
 
     const handleExecute = () => {
-      // TODO: 处理执行逻辑
-      console.log('执行')
+      router.push({
+        name: ROUTE_NAMES.FLOW_PREVIEW,
+        params: { flowId, version: flowInfo.value?.releaseVersion },
+      })
     }
 
     return () => (

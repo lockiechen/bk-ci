@@ -1,7 +1,7 @@
+import * as apiFlowInfo from '@/api/flowInfo'
+import type { FlowInfo, FlowVersion } from '@/types/flow'
 import { defineStore } from 'pinia'
 import { onMounted, ref } from 'vue'
-import type { FlowInfo, FlowVersion } from '@/types/flow'
-import * as apiFlowInfo from '@/api/flowInfo'
 import { useRoute } from 'vue-router'
 
 export const useFlowInfoStore = defineStore('flowInfo', () => {

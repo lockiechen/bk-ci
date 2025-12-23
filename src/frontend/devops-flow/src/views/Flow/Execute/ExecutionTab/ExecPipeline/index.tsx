@@ -62,14 +62,24 @@ export default defineComponent({
       return executeDetail.value?.model || null
     })
 
-    // 根据 hideSkipExecTask 过滤跳过的步骤
+    // 根据 hideSkipExecTask 过滤跳过的步骤，同时过滤掉第一个stage
     const filteredPipeline = computed<FlowModel | null>(() => {
-      if (!curPipeline.value || !hideSkipExecTask.value) {
-        return curPipeline.value
+      if (!curPipeline.value) {
+        return null
       }
 
-      const stages = curPipeline.value.stages
-        ?.filter((stage) => !isSkip(stage.status))
+      // 过滤掉第一个stage
+      const stagesWithoutFirst = curPipeline.value.stages?.slice(1) || []
+
+      if (!hideSkipExecTask.value) {
+        return {
+          ...curPipeline.value,
+          stages: stagesWithoutFirst,
+        }
+      }
+
+      const stages = stagesWithoutFirst
+        .filter((stage) => !isSkip(stage.status))
         .map((stage) => {
           const containers = stage.containers
             ?.filter((container) => !isSkip(container.status))
@@ -216,15 +226,6 @@ export default defineComponent({
       })
     }
 
-    const handleHideSkipChange = (val: boolean) => {
-      hideSkipExecTask.value = val
-    }
-
-    const handleExpandJobChange = (val: boolean) => {
-      isExpandAllMatrix.value = val
-      expandAllMatrix()
-    }
-
     const toggleErrorPopup = () => {
       showErrors.value = !showErrors.value
     }
@@ -238,14 +239,16 @@ export default defineComponent({
     }
 
     // ==================== Methods: Pipeline Operations ====================
-    const expandAllMatrix = () => {
-      debugger
-      if (!bkPipelineRef.value || !executeDetail.value?.model?.stages) return
+    const expandAllMatrix = async (expand: boolean) => {
+    
       try {
-        for (let i = 0; i < executeDetail.value.model.stages.length; i++) {
-          const stage = executeDetail.value.model.stages[i]
+        // 使用 filteredPipeline 而不是 executeDetail.value.model，因为已经过滤了第一个stage
+        const stages = filteredPipeline.value?.stages || []
+        
+        for (let i = 0; i < stages.length; i++) {
+          const stage = stages[i]
           if (!stage) continue
-          for (let j = 0; j < stage.containers.length; j++) {
+          for (let j = 0; j < (stage.containers?.length || 0); j++) {
             const matrix = stage.containers[j]
             if (!matrix) continue
             if (matrix.matrixGroupFlag && matrix.groupContainers) {
@@ -256,17 +259,17 @@ export default defineComponent({
                     stage.id,
                     matrix.id,
                     container.id,
-                    isExpandAllMatrix.value,
+                    expand,
                   )
                 }
               }
             } else {
-              bkPipelineRef.value?.expandJob?.(stage.id, matrix.id, isExpandAllMatrix.value)
+              bkPipelineRef.value?.expandJob?.(stage.id, matrix.id, expand)
             }
           }
         }
       } catch (error) {
-        console.log('expand error', error)
+        console.error('expandAllMatrix error', error)
       }
     }
 
@@ -395,15 +398,14 @@ export default defineComponent({
       return (
         <header class={styles.pipelineStyleSettingHeader}>
           <Checkbox
-            modelValue={hideSkipExecTask.value}
-            onChange={handleHideSkipChange}
+            v-model={hideSkipExecTask.value}
             class={styles.hideSkipPipelineTask}
           >
             {t('flow.execute.hideSkipStep')}
           </Checkbox>
           <Checkbox
-            modelValue={isExpandAllMatrix.value}
-            onChange={handleExpandJobChange}
+            v-model={isExpandAllMatrix.value}
+            onChange={expandAllMatrix}
             class={styles.expandJobCheckbox}
           >
             {t('flow.execute.isExpandJob')}
@@ -467,15 +469,6 @@ export default defineComponent({
       })
     })
 
-    watch(
-      () => executeDetail.value?.model,
-      () => {
-        nextTick(() => {
-          expandAllMatrix()
-        })
-      },
-    )
-
     watch(showErrors, () => {
       nextTick(() => {
         updateErrorPopupHeight()
@@ -491,8 +484,13 @@ export default defineComponent({
     // ==================== Lifecycle ====================
     onMounted(() => {
       nextTick(() => {
-        expandAllMatrix()
-        updateErrorPopupHeight()
+        // 延迟展开，确保组件完全渲染
+        setTimeout(() => {
+          if (isExpandAllMatrix.value && bkPipelineRef.value && filteredPipeline.value) {
+            expandAllMatrix(true)
+          }
+          updateErrorPopupHeight()
+        }, 500)
       })
     })
 

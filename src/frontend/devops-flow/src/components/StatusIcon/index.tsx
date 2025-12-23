@@ -1,6 +1,6 @@
 import { SvgIcon } from '@/components/SvgIcon'
-import { type StatusType } from '@/types/flow'
-import { statusAlias, statusColorMap, statusIconMap } from '@/utils/flowStatus'
+import { STATUS, type StatusType } from '@/types/flow'
+import { statusIconMap } from '@/utils/flowStatus'
 import { computed, defineComponent } from 'vue'
 import styles from './StatusIcon.module.css'
 
@@ -26,7 +26,7 @@ export default defineComponent({
   },
   setup(props) {
     const logoName = computed(() => {
-      const status = props.status || statusAlias.UNEXEC
+      const status = props.status || STATUS.UNEXEC
       return isValidStatus(status) ? statusIconMap[status] : statusIconMap.UNKNOWN
     })
     const isRunning = computed(() => logoName.value === 'circle-2-1')
@@ -39,7 +39,7 @@ export default defineComponent({
           isRunning.value ? 'spinIcon' : '',
           isEnqueue.value ? styles.hourglassQueue : '',
         ]}
-        style={{color: statusColorMap[props.status || statusAlias.UNEXEC]}}
+        style={{color: statusIconMap[props.status || STATUS.UNEXEC]}}
       >
         <SvgIcon name={logoName.value} size={props.size} />
       </span>

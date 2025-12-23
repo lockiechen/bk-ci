@@ -173,6 +173,12 @@ const router = createRouter({
           ],
         },
         {
+          path: 'flow/:flowId/preview/:version',
+          component: () => import('../views/Flow/Preview/index'),
+          name: ROUTE_NAMES.FLOW_PREVIEW,
+          props: true,
+        },
+        {
           path: 'flow/:flowId/execute/:buildNo',
           component: () => import('../views/Flow/Execute/index'),
           children: [

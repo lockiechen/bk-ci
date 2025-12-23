@@ -1,83 +1,67 @@
-import { BuildCancelPolicy, RunLockType, type FlowInfo, type FlowVersion } from '@/types/flow'
+import { type FlowInfo, type FlowVersion } from '@/types/flow'
+import { get, post } from '@/utils/http'
+import {
+    delay,
+    ENABLE_MOCK_FALLBACK,
+    getMockFlowInfo,
+    getMockVersionList,
+    MOCK_API_DELAY,
+} from './previewMock'
 
 /**
- * 获取创作流基本信息
- * @param projectId 项目ID
- * @param flowId 创作流ID
- * @returns 创作流基本信息
+ * Get flow basic info
+ * Falls back to mock data on API failure when ENABLE_MOCK_FALLBACK is true
  */
-export function fetchFlowInfo({
+export async function fetchFlowInfo({
   projectId,
   flowId,
 }: {
   projectId: string
   flowId: string
 }): Promise<FlowInfo> {
-  // TODO: 调用实际接口
-  // return http.get(`/version/projects/${projectId}/pipelines/${flowId}/detail`)
-  //   .then(res => res.data)
-
-  // Mock 数据
-  return new Promise((resolve) => {
-    setTimeout(() => {
-      resolve({
-        pipelineId: 'p-fc1ba8afdea34eed8a95e668879f4115',
-        pipelineName: '归档测试111',
-        hasCollect: false,
-        canManualStartup: true,
-        canDebug: true,
-        canRelease: true,
-        instanceFromTemplate: false,
-        version: 1,
-        baseVersion: 2,
-        baseVersionStatus: 'RELEASED',
-        baseVersionName: 'V1(P1.T1.2)',
-        releaseVersion: 4,
-        releaseVersionName: 'V2(P2.T2.2)',
-        hasPermission: true,
-        pipelineDesc: '',
-        creator: 'zhangsan',
-        createTime: 1750665486000,
-        updateTime: 1764126574000,
-        permissions: {
-          canManage: true,
-          canDelete: true,
-          canView: true,
-          canEdit: true,
-          canExecute: true,
-          canDownload: true,
-          canShare: true,
-          canArchive: true,
-        },
-        runLockType: RunLockType.MULTIPLE,
-        latestVersionStatus: 'RELEASED',
-
-        locked: false,
-        buildCancelPolicy: BuildCancelPolicy.EXECUTE_PERMISSION,
-      })
-    }, 500)
-  })
+  try {
+    return await get<FlowInfo>(
+      `/version/api/user/projects/${projectId}/pipelines/${flowId}/detail`
+    )
+  } catch (error) {
+    if (ENABLE_MOCK_FALLBACK) {
+      console.warn('[API Fallback] fetchFlowInfo failed, using mock data:', error)
+      await delay(MOCK_API_DELAY)
+      return getMockFlowInfo() as FlowInfo
+    }
+    throw error
+  }
 }
 
-export function getFlowVersionList({
+/**
+ * Get flow version list
+ * Falls back to mock data on API failure when ENABLE_MOCK_FALLBACK is true
+ */
+export async function getFlowVersionList({
   projectId,
   flowId,
 }: {
   projectId: string
   flowId: string
 }): Promise<FlowVersion[]> {
-  return new Promise((resolve) => {
-    setTimeout(() => {
-      resolve([
-        { version: 3, versionName: 'V5 (P2.T3.3)', isLatest: true },
-        { version: 2, versionName: 'V5 (P2.T3.2)' },
-        { version: 1, versionName: 'V5 (P2.T3.1)' },
-      ])
-    }, 500)
-  })
+  try {
+    return await get<FlowVersion[]>(
+      `/version/api/user/projects/${projectId}/pipelines/${flowId}/versions`
+    )
+  } catch (error) {
+    if (ENABLE_MOCK_FALLBACK) {
+      console.warn('[API Fallback] getFlowVersionList failed, using mock data:', error)
+      await delay(MOCK_API_DELAY)
+      return getMockVersionList() as FlowVersion[]
+    }
+    throw error
+  }
 }
 
-export function updateRemark({
+/**
+ * Update build remark
+ */
+export async function updateRemark({
   projectId,
   flowId,
   buildId,
@@ -88,9 +72,18 @@ export function updateRemark({
   buildId: string
   remark: string
 }): Promise<boolean> {
-  return new Promise((resolve) => {
-    setTimeout(() => {
-      resolve(true)
-    }, 500)
-  })
+  try {
+    await post(
+      `/process/api/user/builds/${projectId}/${flowId}/${buildId}/updateRemark`,
+      { remark }
+    )
+    return true
+  } catch (error) {
+    if (ENABLE_MOCK_FALLBACK) {
+      console.warn('[API Fallback] updateRemark failed, using mock data:', error)
+      await delay(MOCK_API_DELAY)
+      return true
+    }
+    throw error
+  }
 }
