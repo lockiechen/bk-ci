@@ -4,9 +4,10 @@ import { Dialog, Input, Message } from 'bkui-vue';
 import styles from './CreateGroupDialog.module.css';
 
 interface Props {
-  isShow: boolean;
-  groupId: string;
-  currentName: string;
+  isShow: boolean
+  groupId: string
+  currentName: string
+  isLoading: boolean
 }
 
 export const RenameGroupDialog = defineComponent({
@@ -23,6 +24,10 @@ export const RenameGroupDialog = defineComponent({
     currentName: {
       type: String,
       required: true,
+    },
+    isLoading: {
+      type: Boolean,
+      default: false,
     },
   },
   emits: ['update:isShow', 'confirm'],
@@ -56,7 +61,7 @@ export const RenameGroupDialog = defineComponent({
         Message({ theme: 'error', message: t('flow.dialog.renameGroup.groupNameRequired') });
         return;
       }
-      emit('confirm', { groupId: props.groupId, name: group.name.trim() });
+      emit('confirm', { id: props.groupId, name: group.name.trim() });
       handleClose();
     };
 
@@ -65,6 +70,7 @@ export const RenameGroupDialog = defineComponent({
         isShow={props.isShow}
         title={t('flow.dialog.renameGroup.title')}
         width={480}
+        isLoading={props.isLoading}
         onCancel={handleClose}
         onClosed={handleClose}
         onConfirm={handleConfirm}

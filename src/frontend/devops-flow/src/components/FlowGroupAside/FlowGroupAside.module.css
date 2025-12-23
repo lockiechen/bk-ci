@@ -7,7 +7,7 @@
   flex-direction: column;
   height: 100%;
   overflow: hidden;
-  background: var(--bg-tertiary);
+  background: var(--bg-primary);
 }
 
 .sidebarContent {
@@ -76,6 +76,11 @@
   border-radius: 0 2px 2px 0;
 }
 
+/* 置顶项背景色 */
+.menuItem.pinnedItem {
+  background: var(--bg-secondary);
+}
+
 /* ==========================================
  * 分组相关样式
  * ========================================== */
@@ -127,7 +132,7 @@
 .groupHeader.stickyProjectHeader {
   position: sticky;
   z-index: 10;
-  background: var(--bg-tertiary);
+  background: var(--bg-primary);
 
   &.divider {
     margin: 0;

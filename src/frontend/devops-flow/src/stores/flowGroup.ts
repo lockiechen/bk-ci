@@ -51,7 +51,7 @@ export const useFlowGroupStore = defineStore('flowGroup', () => {
       // 如果 id 是 unclassified，使用 un-group 图标
       icon: group.id === FLOW_GROUP_TYPES.UNCLASSIFIED_FLOWS ? 'un-group' : (group.icon || 'group'),
       // 默认显示操作按钮
-      showAction: group.showAction !== undefined ? group.showAction : true,
+      showAction:  group.id === FLOW_GROUP_TYPES.UNCLASSIFIED_FLOWS ? false : group.showAction !== undefined ? group.showAction : true,
     };
   }
   
@@ -109,40 +109,28 @@ export const useFlowGroupStore = defineStore('flowGroup', () => {
   /**
    * 重命名创作流组
    */
-  async function renameFlowGroup(id: string, name: string) {
+  async function renameFlowGroup(params: EditGroupParams) {
     try {
-      const updatedGroup = await apiRenameFlowGroup(id, name);
-      const index = flowGroups.value.findIndex(g => g.id === id);
-      if (index > -1) {
-        flowGroups.value[index] = processFlowGroup({
-          ...flowGroups.value[index],
-          ...updatedGroup,
-        });
-      }
-      return updatedGroup;
+      const { id, ...otherParams } = params
+      const updatedGroup = await apiRenameFlowGroup(projectId.value, id as string, otherParams)
+      return updatedGroup
     } catch (error) {
-      console.error('Failed to rename flow group:', error);
-      throw error;
+      console.error('Failed to rename flow group:', error)
+      throw error
     }
   }
   
   /**
    * 置顶/取消置顶创作流组
    */
-  async function pinFlowGroup(id: string, top: boolean) {
+  async function pinFlowGroup(id: string, enabled: boolean) {
     try {
       const index = flowGroups.value.findIndex(g => g.id === id);
       const group = flowGroups.value[index];
       if (!group) {
         throw new Error('Group not found');
       }
-      const updatedGroup = await apiPinFlowGroup(group, top);
-      if (group) {
-        flowGroups.value[index] = processFlowGroup({
-          ...flowGroups.value[index],
-          ...updatedGroup,
-        });
-      }
+      const updatedGroup = await apiPinFlowGroup(projectId.value, id, enabled);
       return updatedGroup;
     } catch (error) {
       console.error('Failed to pin flow group:', error);

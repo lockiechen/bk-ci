@@ -162,8 +162,7 @@ export function useFlowListData(styles?: Styles) {
       pageSize: pagination.value.limit,
       sortType: currentSortType.value as SortType,
       collation: currentCollation.value === 'null' ? 'DEFAULT' :  currentCollation.value.toLocaleUpperCase() as Collation,
-      // viewId: groupId || (route.params.groupId as string) || 'allPipeline',
-      viewId: 'allPipeline',
+      viewId: groupId || (route.params.groupId as string),
     }
     await store.fetchFlowList(params)
   }

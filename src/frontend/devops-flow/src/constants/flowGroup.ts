@@ -11,11 +11,11 @@ export const FLOW_GROUP_TYPES = {
   /** 最近使用创作流 */
   RECENT_USED_FLOWS: 'recentUse',
   /** 全部创作流 */
-  ALL_FLOWS: 'allFlows',
+  ALL_FLOWS: 'allPipeline',
   /** 我收藏的创作流 */
-  MY_FAVORITES: 'myFavorites',
+  MY_FAVORITES: 'collect',
   /** 我创建的创作流 */
-  MY_CREATED: 'myCreated',
+  MY_CREATED: 'myPipeline',
   /** 回收站 */
   RECYCLE_BIN: 'recycleBin',
 } as const;
