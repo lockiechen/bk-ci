@@ -55,7 +55,7 @@
       "execute": "実行",
       "nonManual": "手動以外",
       "disabled": "無効",
-      "pipelineLockTips": "パイプラインは無効化されており、いかなる方法でもトリガーできません",
+      "pipelineLockTips": "作成フローは無効化されており、いかなる方法でもトリガーできません",
       "pipelineManualDisable": "このパイプラインは手動トリガーの設定がされていません",
       "orderByAlpha": "名前順 A-Z",
       "orderByCreateTime": "作成時間順",
@@ -234,6 +234,7 @@
       "noticeUser": "通知ユーザー",
       "noticeContent": "通知内容",
       "deleteSuccess": "削除成功",
+      "deleteFail": "削除に失敗しました",
       "triggerEventDeletedAndRemoved": "このトリガーイベントは削除され、作成フローから削除されました",
       "allEvents": "すべてのイベント",
       "enterKeywords": "キーワードを入力してください",
@@ -467,6 +468,7 @@
         "selectedGroupSuffix": "ユーザーグループ",
         "pleaseSelectGroup": "作成フローグループを選択してください",
         "added": "追加済み",
+        "err403": "権限がありません",
         "dynamicGroup": "動的グループ"
       },
       "saveAsTemplate": {

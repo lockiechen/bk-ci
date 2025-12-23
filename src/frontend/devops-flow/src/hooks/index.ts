@@ -12,7 +12,6 @@
  * - useEditingPos: 编辑位置管理
  * - useTableHeight: 表格高度自适应
  * - useNewFlow: 新建创作流
- * - useAddToGroup: 添加到分组
  * - useExecutionRecordData: 执行记录数据
  * - useTriggerRecordData: 触发记录数据
  */
@@ -37,7 +36,6 @@ export { useExecutionRecordData } from './useExecutionRecordData'
 export { useTriggerRecordData, type Styles as TriggerRecordStyles } from './useTriggerRecordData'
 
 // 弹窗和交互
-export { useAddToGroup } from './useAddToGroup'
 export { useDeleteConfirm } from './useDeleteConfirm'
 export { useNewFlow } from './useNewFlow'
 

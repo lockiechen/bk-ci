@@ -7,6 +7,7 @@ import { useDeleteConfirm } from '@/hooks/useDeleteConfirm'
 import { useFlowGroupData } from '@/hooks/useFlowGroupData'
 import { useFlowHomeContentStore } from '../stores/flowContentList'
 import { ORDER_ENUM, FLOW_SORT_FILED } from '../utils/flowConst'
+import { ROUTE_NAMES } from '@/constants/routes'
 import { type SortType, type Collation, type ContentTableItem } from '@/api/flowContentList'
 
 export interface Styles {
@@ -22,6 +23,7 @@ export function useFlowListData(styles?: Styles) {
   const { showDeleteConfirm } = useDeleteConfirm()
   const { myFlowGroupMenuItems, projectFlowGroups } = useFlowGroupData()
   const store = useFlowHomeContentStore()
+  const { loadAllData } = useFlowGroupData()
   const { t } = useI18n()
   const route = useRoute()
   const router = useRouter()
@@ -149,13 +151,14 @@ export function useFlowListData(styles?: Styles) {
    */
   function loadContentDataWithGroupId(groupId: string) {
     loadContentData(groupId)
+    // 同时更新组数据
+    loadAllData()
   }
 
   /**
    * 加载表格数据
    */
   async function loadContentData(groupId?: string) {
-    // TODO 使用 groupId
     const params = {
       projectId: route.params.projectId as string,
       page: pagination.value.current,
@@ -353,6 +356,21 @@ export function useFlowListData(styles?: Styles) {
       },
     })
   }
+  
+  /**
+   * 执行创作流
+   */
+  function handleExecute(row: ContentTableItem) {
+    console.log('执行创作流', row)
+    // TODO
+  }
+
+  function goEdit(row: ContentTableItem) {
+    router.push({
+      name: ROUTE_NAMES.FLOW_EDIT_WORKFLOW_ORCHESTRATION,
+      params: { flowId: row.pipelineId },
+    })
+  }
 
   return {
     // 原始数据（使用 storeToRefs 确保响应式）
@@ -396,12 +414,11 @@ export function useFlowListData(styles?: Styles) {
     collectHandler,
     rowMouseEnter,
     rowMouseLeave,
+    goEdit,
+    handleExecute,
     
     // 操作方法（直接暴露 store 的方法）
-    goEdit: store.goEdit,
-    handleExecute: store.handleExecute,
     closeAllDialogs: store.closeAllDialogs,
-    createNewContent: store.createNewContent,
     importNewContent: store.importNewContent,
     removeContent: store.removeContent,
     confirmEnableAction: store.confirmEnableAction,

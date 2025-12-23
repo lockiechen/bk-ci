@@ -1,8 +1,9 @@
 import { defineComponent, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
+import { storeToRefs } from 'pinia'
 import { Dialog, Loading, Input, Tree, Checkbox, Button, Message } from 'bkui-vue'
 import { SvgIcon } from '@/components/SvgIcon'
-import { useAddToGroup } from '@/hooks/useAddToGroup'
+import { useAddToGroupStore } from '@/stores/addToGroupStore'
 import styles from './AddToGroupPopup.module.css'
 
 export default defineComponent({
@@ -27,29 +28,22 @@ export default defineComponent({
   emits: ['update:isShow', 'confirm'],
   setup(props, { emit }) {
     const { t } = useI18n()
-    const {
-      loading,
-      filterKeyword,
-      treeData,
-      selectedGroups,
-      handleCheck,
-      emptySelectedGroups,
-      remove,
-      initPopup,
-    } = useAddToGroup()
+    const store = useAddToGroupStore()
+    const { loading, filterKeyword, pipelineGroupsTree, selectedGroups } = storeToRefs(store)
 
     watch(
       () => props.isShow,
       (newValue) => {
         if (newValue) {
-          initPopup(props.data)
+          store.initPopup(props.data)
         }
       },
+      { immediate: true },
     )
 
     const onClose = () => {
       emit('update:isShow', false)
-      emptySelectedGroups()
+      store.emptySelectedGroups()
       filterKeyword.value = ''
     }
 
@@ -60,8 +54,7 @@ export default defineComponent({
         return
       }
 
-      emit('confirm', props.data.id, viewIds)
-      onClose()
+      emit('confirm', props.data.pipelineId, viewIds)
     }
 
     return () => (
@@ -70,7 +63,9 @@ export default defineComponent({
         quick-close={false}
         class={styles.addToGroupPopup}
         width={800}
+        isLoading={props.loading}
         onClosed={onClose}
+        onHidden={onClose}
         onConfirm={onConfirm}
       >
         <Loading loading={loading.value} size="small" class={styles.addGroupMain}>
@@ -86,7 +81,7 @@ export default defineComponent({
               type="search"
             />
             <Tree
-              data={treeData.value}
+              data={pipelineGroupsTree.value}
               expand-all
               node-key="id"
               selectable={false}
@@ -107,7 +102,7 @@ export default defineComponent({
                           modelValue={node.checked}
                           indeterminate={node.indeterminate}
                           disabled={node.disabled}
-                          onChange={(checked: boolean) => handleCheck(checked, node)}
+                          onChange={(checked: boolean) => store.handleCheck(checked, node)}
                           class={styles.iconMiddle}
                         />
                         <span class={styles.addedGroupName}>{node.name}</span>
@@ -129,7 +124,12 @@ export default defineComponent({
                 {t('flow.dialog.addGroup.selectedGroupSuffix')}
               </span>
               {selectedGroups.value.length ? (
-                <Button theme="primary" text size="small" onClick={emptySelectedGroups}>
+                <Button
+                  theme="primary"
+                  text
+                  size="small"
+                  onClick={() => store.emptySelectedGroups()}
+                >
                   <span class="text-xs">{t('flow.common.reset')}</span>
                 </Button>
               ) : null}
@@ -138,7 +138,7 @@ export default defineComponent({
               {selectedGroups.value.map((group) => (
                 <li key={group.id} class={styles.viewItem}>
                   <span class="flex-1 text-ellipsis">{group.name}</span>
-                  <span onClick={() => remove(group)} class={styles.iconClose}>
+                  <span onClick={() => store.remove(group)} class={styles.iconClose}>
                     <SvgIcon name="close-line" size={14} />
                   </span>
                 </li>

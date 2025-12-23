@@ -151,6 +151,28 @@ httpInstance.interceptors.response.use(
       return Promise.reject(networkError)
     }
 
+    // 检查 response.data 是否包含业务错误信息
+    const responseData = error.response.data as any
+    if (
+      responseData &&
+      typeof responseData === 'object' &&
+      ('message' in responseData || 'status' in responseData || 'code' in responseData)
+    ) {
+      // 如果 response.data 包含业务错误信息，直接 reject 这个数据
+      if (!config?.meta?.silent && config?.meta?.showBusinessError !== false) {
+        const businessError = new HttpError({
+          type: 'business',
+          message: responseData.message || 'Business error',
+          business: {
+            code: responseData.status || responseData.code,
+            message: responseData.message,
+          },
+        })
+        handleHttpError(businessError)
+      }
+      return Promise.reject(responseData)
+    }
+
     const status = error.response.status
     const httpError = new HttpError({
       type: 'http',

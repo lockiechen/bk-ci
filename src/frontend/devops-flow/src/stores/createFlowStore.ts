@@ -205,16 +205,15 @@ export const useNewFlowStore = defineStore('newFlow', () => {
    * 直接调用 API，避免循环依赖
    */
   async function createNewFlow(params: CreateContentParams): Promise<any> {
-    isLoading.value = true
+    projectModelLoading.value = true
     try {
       const result = await createContent(params)
-      resetForm()
       return result
     } catch (error) {
       console.error('Failed to create new flow:', error)
       throw error
     } finally {
-      isLoading.value = false
+      projectModelLoading.value = false
     }
   }
 

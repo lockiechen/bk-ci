@@ -1,7 +1,6 @@
 import {
   addToFlowGroup,
   copyContent,
-  createContent,
   deleteContent,
   disableContent,
   getContentDetail,
@@ -11,14 +10,16 @@ import {
   importContent,
   saveAsTemplate,
   toggleFlowFavorite,
+  type DeleteContentParams,
   type ContentTableItem,
   type ContentTableParams,
   type CopyFlowParams,
-  type CreateContentParams,
-  type ImportContentParams,
   type MatchDynamicViewParams,
+  type ImportContentParams,
   type SaveAsTemplateParams,
+  type AddToFlowGroupParams,
 } from '@/api/flowContentList'
+import { useRoute } from 'vue-router'
 import { ROUTE_NAMES } from '@/constants/routes'
 import { STATUS, type StageStatusInfo } from '@/types/flow'
 import { VERSION_STATUS_ENUM } from '@/utils/flowConst'
@@ -44,6 +45,7 @@ type IconMap = {
 
 export const useFlowHomeContentStore = defineStore('flowContentList', () => {
   const { t, locale } = useI18n()
+  const route = useRoute()
   const flowTableList = ref<ContentTableItem[]>([])
   const tableLoading = ref(false)
   const pagination = ref({
@@ -115,7 +117,7 @@ export const useFlowHomeContentStore = defineStore('flowContentList', () => {
       tooltips: disabledTips(content),
       flowAction: [
         {
-          text: !content.lock ? t('flow.content.enable') : t('flow.content.disable'),
+          text: content.lock ? t('flow.content.enable') : t('flow.content.disable'),
           handler: (data: ContentTableItem) => {
             if (enableActionCallback) {
               enableActionCallback(data)
@@ -126,7 +128,6 @@ export const useFlowHomeContentStore = defineStore('flowContentList', () => {
         },
         {
           text: t('flow.content.addTo'),
-          tooltips: t('flow.content.addToTooltip'),
           handler: (data: ContentTableItem) => openActionDialog(data, DialogType.ADD_TO),
         },
         {
@@ -385,21 +386,6 @@ export const useFlowHomeContentStore = defineStore('flowContentList', () => {
   }
 
   /**
-   * 新建创作流
-   */
-  async function createNewContent(params: CreateContentParams) {
-    try {
-      const newContent = await createContent(params)
-      const processedContent = processContentItem(newContent)
-      flowTableList.value.unshift(processedContent)
-      return processedContent
-    } catch (error) {
-      console.error('Failed to create content:', error)
-      throw error
-    }
-  }
-
-  /**
    * 导入创作流
    */
   async function importNewContent(params: ImportContentParams) {
@@ -415,28 +401,16 @@ export const useFlowHomeContentStore = defineStore('flowContentList', () => {
   }
 
   /**
-   * 执行创作流
-   */
-  function handleExecute(row: ContentTableItem) {
-    console.log('执行创作流', row)
-    // TODO
-  }
-
-  function goEdit(row: ContentTableItem) {
-    console.log('编辑创作流', row)
-    // TODO
-  }
-
-  /**
    * 删除创作流
    */
   async function removeContent(flowId: string) {
     try {
-      await deleteContent(flowId)
-      const index = flowTableList.value.findIndex((content) => content.pipelineId === flowId)
-      if (index > -1) {
-        flowTableList.value.splice(index, 1)
+      const params: DeleteContentParams = {
+        projectId: route.params.projectId as string,
+        pipelineIds: [flowId],
       }
+      const res = await deleteContent(params)
+      return res
     } catch (error) {
       console.error('Failed to remove content:', error)
       throw error
@@ -448,18 +422,13 @@ export const useFlowHomeContentStore = defineStore('flowContentList', () => {
    */
   async function confirmEnableAction(flowId: string, lock: boolean) {
     try {
-      await disableContent(flowId, lock)
-      const index = flowTableList.value.findIndex((content) => content.pipelineId === flowId)
-      if (index > -1) {
-        const currentItem = flowTableList.value[index]
-        if (currentItem) {
-          const updatedItem: ContentTableItem = {
-            ...currentItem,
-            lock,
-          }
-          flowTableList.value[index] = processContentItem(updatedItem)
-        }
+      const params: { pipelineId: string; projectId: string; enable: boolean } = {
+        pipelineId: flowId,
+        projectId: route.params.projectId as string,
+        enable: lock,
       }
+      const res = await disableContent(params)
+      return res
     } catch (error) {
       console.error('Failed to disable content:', error)
       throw error
@@ -469,11 +438,12 @@ export const useFlowHomeContentStore = defineStore('flowContentList', () => {
   /**
    * 复制创作流
    */
-  async function copyContentItem(flowId: string, params: CopyFlowParams) {
+  async function copyContentItem(param: CopyFlowParams) {
     try {
-      const result = await copyContent(flowId, params)
-      const processedContent = processContentItem(result)
-      flowTableList.value.unshift(processedContent)
+      const result = await copyContent({
+        ...param,
+        projectId: route.params.projectId as string,
+      })
       return result
     } catch (error) {
       console.error('Failed to copy content:', error)
@@ -484,9 +454,9 @@ export const useFlowHomeContentStore = defineStore('flowContentList', () => {
   /**
    * 另存为模板
    */
-  async function saveContentAsTemplate(flowId: string, params: SaveAsTemplateParams) {
+  async function saveContentAsTemplate(params: SaveAsTemplateParams) {
     try {
-      const result = await saveAsTemplate(flowId, params)
+      const result = await saveAsTemplate(route.params.projectId as string, params)
       return result
     } catch (error) {
       console.error('Failed to save content as template:', error)
@@ -497,23 +467,10 @@ export const useFlowHomeContentStore = defineStore('flowContentList', () => {
   /**
    * 添加至创作流组
    */
-  async function addContentToFlowGroup(flowId: string, groupId: string) {
+  async function addContentToFlowGroup(params: AddToFlowGroupParams) {
     try {
-      await addToFlowGroup(flowId, groupId)
-      const index = flowTableList.value.findIndex((content) => content.pipelineId === flowId)
-      if (index > -1) {
-        const currentItem = flowTableList.value[index]
-        if (currentItem) {
-          const currentViewNames = currentItem.viewNames || []
-          if (!currentViewNames.includes(groupId)) {
-            const updatedItem: ContentTableItem = {
-              ...currentItem,
-              viewNames: [...currentViewNames, groupId],
-            }
-            flowTableList.value[index] = processContentItem(updatedItem)
-          }
-        }
-      }
+      const res = await addToFlowGroup(route.params.projectId as string, params)
+      return res
     } catch (error) {
       console.error('Failed to add content to flow group:', error)
       throw error
@@ -522,16 +479,16 @@ export const useFlowHomeContentStore = defineStore('flowContentList', () => {
 
   async function getMatchDynamicData(params: MatchDynamicViewParams) {
     try {
-      const result = await getMatchDynamicView(params)
+      const result = await getMatchDynamicView(route.params.projectId as string, params)
       return result
     } catch (error) {
       console.error('Failed to get match dynamic view:', error)
       throw error
     }
   }
-  async function getProjectTagList(params: string) {
+  async function getProjectTagList() {
     try {
-      const result = await getProjectTags(params)
+      const result = await getProjectTags(route.params.projectId as string)
       return result
     } catch (error) {
       console.error('Failed to get project tag list:', error)
@@ -560,13 +517,10 @@ export const useFlowHomeContentStore = defineStore('flowContentList', () => {
     isShowSaveAsTemplateDialog,
     currentActionData,
     // Actions
-    goEdit,
-    handleExecute,
     convertMStoString,
     closeAllDialogs,
     fetchFlowList,
     loadContentDetail,
-    createNewContent,
     importNewContent,
     removeContent,
     confirmEnableAction,

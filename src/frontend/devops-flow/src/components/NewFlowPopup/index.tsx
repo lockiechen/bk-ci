@@ -73,20 +73,6 @@ export default defineComponent({
     }
 
     /**
-     * 确认创建
-     */
-    async function onConfirm() {
-      try {
-        await handleConfirm()
-      } catch (error) {
-        Message({
-          message: t('flow.content.createFailed'),
-          theme: 'error',
-        })
-      }
-    }
-
-    /**
      * 关闭弹窗
      */
     function onClose() {
@@ -151,7 +137,7 @@ export default defineComponent({
                   class={styles.btn}
                   loading={projectModelLoading.value}
                   theme="primary"
-                  onClick={onConfirm}
+                  onClick={handleConfirm}
                 >
                   {t('flow.content.createAndStartOrchestrating')}
                 </Button>

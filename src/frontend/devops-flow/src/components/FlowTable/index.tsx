@@ -19,6 +19,7 @@ import {
   type ContentTableItem,
   type SaveAsTemplateParams,
   type CopyFlowParams,
+  type AddToFlowGroupParams,
 } from '@/api/flowContentList'
 import { useTableHeight } from '@/hooks/useTableHeight'
 import { useFlowListData, type Styles } from '@/hooks/useFlowListData'
@@ -350,30 +351,28 @@ export const FlowTable = defineComponent({
             </Button>
           ) : (
             <div class={styles.actions}>
-              {
-                !(row.released || row.onlyBranchVersion) ? (
-                  <Button
-                    text
-                    theme="primary"
-                    onClick={() => goEdit(row)}
-                  >
-                    {t('flow.content.edit')}
-                  </Button>
-                ) : (
-                  <Button
-                    text
-                    theme="primary"
-                    disabled={row.disabled}
-                    onClick={() => handleExecute(row)}
-                    v-bk-tooltips={{
-                      content: row.tooltips,
-                      disabled: !row.disabled,
-                    }}
-                  >
-                    {row.lock ? t('flow.content.disabled') : row.canManualStartup ? t('flow.content.execute') : t('flow.content.nonManual') }
-                  </Button>
-                )
-              }
+              {!(row.released || row.onlyBranchVersion) ? (
+                <Button text theme="primary" onClick={() => goEdit(row)}>
+                  {t('flow.content.edit')}
+                </Button>
+              ) : (
+                <Button
+                  text
+                  theme="primary"
+                  disabled={row.disabled}
+                  onClick={() => handleExecute(row)}
+                  v-bk-tooltips={{
+                    content: row.tooltips,
+                    disabled: !row.disabled,
+                  }}
+                >
+                  {row.lock
+                    ? t('flow.content.disabled')
+                    : row.canManualStartup
+                      ? t('flow.content.execute')
+                      : t('flow.content.nonManual')}
+                </Button>
+              )}
               <ExtMenu data={row} config={row.flowAction} />
             </div>
           )}
@@ -515,7 +514,26 @@ export const FlowTable = defineComponent({
           h('strong', { style: 'font-weight: 700; color: var(--color-text-primary);' }, objectName),
         ],
         onConfirm: async () => {
-          await removeContent(data?.pipelineId)
+          try {
+            const res = await removeContent(data?.pipelineId)
+            const allSuccess = Object.values(res).every((success) => success)
+
+            if (allSuccess) {
+              Message({ theme: 'success', message: t('flow.content.deleteSuccess') })
+              loadContentDataWithGroupId(props.groupId)
+            } else {
+              const failedPipelineIds = Object.entries(res)
+                .filter(([_, success]) => !success)
+                .map(([pipelineId]) => pipelineId)
+
+              Message({
+                theme: 'error',
+                message: `${failedPipelineIds.join(', ')} ${t('flow.content.deleteFail')}`,
+              })
+            }
+          } catch (error: any) {
+            Message({ theme: 'error', message: error?.message || error })
+          }
         },
       })
     }
@@ -526,13 +544,21 @@ export const FlowTable = defineComponent({
       const objectName = data?.name || data?.pipelineId
       showDeleteConfirm({
         message: () => [
-          `${isEnable ? t('flow.content.confirmDisableFlow') : t('flow.content.confirmEnableFlow')}\n${t('flow.content.operationObject')}: `,
+          `${!isEnable ? t('flow.content.confirmDisableFlow') : t('flow.content.confirmEnableFlow')}\n${t('flow.content.operationObject')}: `,
           h('strong', { style: 'font-weight: 700; color: var(--color-text-primary);' }, objectName),
         ],
         theme: 'primary',
         confirmText: t('flow.common.confirm'),
         onConfirm: async () => {
-          await confirmEnableAction(data?.pipelineId, !data.lock)
+          try {
+            const res = await confirmEnableAction(data?.pipelineId, data.lock)
+            if (res) {
+              Message({ theme: 'success', message: t('flow.common.success') })
+              loadContentDataWithGroupId(props.groupId)
+            }
+          } catch (error: any) {
+            Message({ theme: 'error', message: error?.message || error })
+          }
         },
       })
     }
@@ -542,48 +568,64 @@ export const FlowTable = defineComponent({
     // 设置启用/禁用操作回调
     setEnableActionCallback(handleEnableAction)
 
-    const handleAddTo = async (flowId: string, groupId: string) => {
+    const handleAddTo = async (pipelineId: string, groupId: string[]) => {
       confirmLoading.value = true
+      const params: AddToFlowGroupParams = {
+        pipelineIds: [pipelineId],
+        viewIds: groupId,
+      }
       try {
-        await addContentToFlowGroup(flowId, groupId)
-        Message({
-          theme: 'success',
-          message: t('flow.content.addTo') + t('flow.common.success'),
-        })
+        const res = await addContentToFlowGroup(params)
+        if (res) {
+          Message({
+            theme: 'success',
+            message: t('flow.content.addTo') + t('flow.common.success'),
+          })
+          loadContentDataWithGroupId(props.groupId)
+          closeAllDialogs()
+        }
       } catch (error: any) {
-        Message({ theme: 'error', message: error || error.message })
+        Message({ theme: 'error', message: error?.message || error })
       } finally {
         confirmLoading.value = false
       }
     }
 
-    const handleCopyFlow = async (flowId: string, params: CopyFlowParams) => {
+    const handleCopyFlow = async (pipelineId: string, param: CopyFlowParams) => {
       confirmLoading.value = true
+      const { dynamicGroup, ...otherParams } = param
       try {
-        const res = await copyContentItem(flowId, params)
+        const params = {
+          ...otherParams,
+          pipelineId: pipelineId,
+        }
+        const res = await copyContentItem(params)
         if (res) {
           Message({
             theme: 'success',
             message: t('flow.content.copyCreationFlow') + t('flow.common.success'),
           })
+          loadContentDataWithGroupId(props.groupId)
+          closeAllDialogs()
         }
       } catch (error: any) {
-        Message({ theme: 'error', message: error || error.message })
+        Message({ theme: 'error', message: error?.message || error })
       } finally {
         confirmLoading.value = false
       }
     }
 
-    const handleSaveAsTemplate = async (flowId: string, params: SaveAsTemplateParams) => {
+    const handleSaveAsTemplate = async (params: SaveAsTemplateParams) => {
       confirmLoading.value = true
       try {
-        await saveContentAsTemplate(flowId, params)
+        await saveContentAsTemplate(params)
         Message({
           theme: 'success',
           message: t('flow.content.saveAsTemplate') + t('flow.common.success'),
         })
+        closeAllDialogs()
       } catch (error: any) {
-        Message({ theme: 'error', message: error || error.message })
+        Message({ theme: 'error', message: error?.message || error })
       } finally {
         confirmLoading.value = false
       }

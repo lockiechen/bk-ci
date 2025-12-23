@@ -16,6 +16,9 @@ import {
 export type { StatusType }
 
 type TriggerType = 'manualTrigger' | 'timerTrigger' | 'codeGitWebHookTrigger' | 'remoteTrigger'
+export type SortType = 'NAME' | 'CREATE_DATE' | 'LATEST_BUILD_START_DATA' | 'UPDATE_TIME'
+export type Collation = 'ASC' | 'DESC' | 'null' | 'DEFAULT'
+type CanUpdate = 'INTERNAL' | 'TRUE' | 'FALSE'
 
 export interface ContentTableItem {
   latestBuildRoute?: object
@@ -95,9 +98,6 @@ export interface ContentTableResponse {
   records: ContentTableItem[]
 }
 
-export type SortType = 'NAME' | 'CREATE_DATE' | 'LATEST_BUILD_START_DATA' | 'UPDATE_TIME'
-export type Collation = 'ASC' | 'DESC' | 'null' | 'DEFAULT'
-
 export interface ContentTableParams {
   projectId: string
   page?: number
@@ -153,12 +153,16 @@ export interface MenuItem<T = any> {
   tooltips?: string
   handler: (data: T, item: MenuItem) => void
 }
+
 export interface SaveAsTemplateParams {
   templateName: string
-  isCopySetting: boolean
+  copySetting: boolean
+  pipelineId?: string
 }
 
 export interface CopyFlowParams {
+  pipelineId?: string
+  projectId?: string
   name: string
   desc?: string
   labels?: string[]
@@ -166,12 +170,16 @@ export interface CopyFlowParams {
   dynamicGroup?: string[]
 }
 
-export interface MatchDynamicViewParams {
-  labelIds: any[]
-  flowName: string
+export interface DynamicParamLables {
+  groupId: string
+  labelIds: string[]
 }
 
-type CanUpdate = 'INTERNAL' | 'TRUE' | 'FALSE'
+export interface MatchDynamicViewParams {
+  labels: DynamicParamLables[]
+  pipelineName: string
+}
+
 /**
  * 创作环境信息
  */
@@ -242,6 +250,7 @@ export interface AuthoringNodeItem {
   agentHashId: string
   agentId: number
 }
+
 export interface AuthoringNodeResponse {
   count: number
   page: number
@@ -260,24 +269,52 @@ export interface SaveBaseInfoParams {
   projectId: string
 }
 
+export interface DeleteContentParams {
+  projectId: string
+  pipelineIds: string[]
+}
+
+export interface GroupLabel {
+  id: string
+  groupId: string
+  name: string
+  createTime: number
+  uptimeTime: number
+  createUser: string
+  updateUser: string
+}
+
+export interface GroupResponse {
+  id: string
+  projectId: string
+  name: string
+  createTime: number
+  updateTime: number
+  createUser: string
+  updateUser: string
+  labels: GroupLabel[]
+}
+
 /**
  * 获取已选中的tree数据接口返回格式
  */
 export interface SelectedTreeDataResponse {
-  status: number
-  data: Array<{
-    id: string
-    projectId: string
-    name: string
-    projected: boolean
-    createTime: number
-    updateTime: number
-    creator: string
-    top: boolean
-    viewType: number
-    pipelineCount: number
-    pac: boolean
-  }>
+  id?: string
+  projectId?: string
+  name?: string
+  projected?: boolean
+  createTime?: number
+  updateTime?: number
+  creator?: string
+  top?: boolean
+  viewType?: number
+  pipelineCount?: number
+  pac?: boolean
+}
+
+export interface AddToFlowGroupParams {
+  pipelineIds: string[]
+  viewIds: string[]
 }
 
 export interface CreateContentResponse {
@@ -321,125 +358,89 @@ export async function getContentTableData(
 }
 
 /**
- * 单条删除
+ * 删除创作流
  */
-export async function deleteContent(flowId: string): Promise<void> {
-  // TODO: 调用实际接口
-  // await http.delete(`/api/flow/content/${flowId}`);
-
-  // 模拟数据
-  return new Promise((resolve) => {
-    setTimeout(() => {
-      resolve()
-    }, 300)
-  })
+export async function deleteContent(params: DeleteContentParams): Promise<Record<string, boolean>> {
+  try {
+    const res = await del<Record<string, boolean>>(
+      `${PROCESS_API_URL_PREFIX}/user/pipelines/batchDelete`,
+      { data: params },
+    )
+    return res
+  } catch (error) {
+    throw error
+  }
 }
 
 /**
  * 禁用创作流
  */
-export async function disableContent(flowId: string, disabled: boolean): Promise<void> {
-  // TODO: 调用实际接口
-  // await http.put(`/api/flow/content/${flowId}/disable`);
-
-  // 模拟数据
-  return new Promise((resolve) => {
-    setTimeout(() => {
-      resolve()
-    }, 300)
-  })
+export async function disableContent(params: {
+  pipelineId: string
+  projectId: string
+  enable: boolean
+}): Promise<boolean> {
+  try {
+    const { pipelineId, projectId, enable } = params
+    const res = await post<boolean>(
+      `${PROCESS_API_URL_PREFIX}/user/pipelines/projects/${projectId}/pipelines/${pipelineId}/lock?enable=${enable}`,
+    )
+    return res
+  } catch (error) {
+    throw error
+  }
 }
 
 /**
  * 复制创作流
  */
-export async function copyContent(
-  flowId: string,
-  params: CopyFlowParams,
-): Promise<ContentTableItem> {
-  // TODO: 调用实际接口
-  // const response = await http.post(`/api/flow/content/${flowId}/copy`, { params });
-  // return response.data;
-
-  // 模拟数据
-  return new Promise((resolve) => {
-    setTimeout(() => {
-      const mockData: ContentTableItem = {
-        projectId: 'fayetest',
-        pipelineId: 'p-68ae025a1a354136948596ab3d09073f',
-        pipelineName: '0420-4',
-        pipelineDesc: '',
-        taskCount: 3,
-        buildCount: 0,
-        lock: false,
-        canManualStartup: true,
-        latestBuildStartTime: 0,
-        latestBuildEndTime: 0,
-        latestBuildNum: 0,
-        latestBuildEstimatedExecutionSeconds: 1,
-        deploymentTime: 1618922545000,
-        createTime: 1618922545000,
-        updateTime: 1618922545000,
-        pipelineVersion: 1,
-        currentTimestamp: 1766136363205,
-        runningBuildCount: 0,
-        hasPermission: true,
-        hasCollect: false,
-        latestBuildUserId: '',
-        instanceFromTemplate: false,
-        updater: 'fayewang',
-        creator: 'fayewang',
-        lastBuildTotalCount: 0,
-        lastBuildFinishCount: 0,
-        delete: false,
-        latestVersionStatus: 'RELEASED',
-        permissions: {
-          canManage: true,
-          canDelete: true,
-          canView: true,
-          canEdit: true,
-          canExecute: true,
-          canDownload: true,
-          canShare: true,
-          canArchive: true,
-        },
-        yamlExist: false,
-        archivingFlag: false,
-      }
-      resolve(mockData)
-    }, 300)
-  })
+export async function copyContent(params: CopyFlowParams): Promise<ContentTableItem> {
+  try {
+    const { projectId, pipelineId, ...otherParams } = params
+    const res = await post<ContentTableItem>(
+      `${PROCESS_API_URL_PREFIX}/user/pipelines/${projectId}/${pipelineId}/copy`,
+      otherParams,
+    )
+    return res
+  } catch (error) {
+    throw error
+  }
 }
 
 /**
  * 另存为模板
  */
-export async function saveAsTemplate(flowId: string, params: SaveAsTemplateParams): Promise<void> {
-  // TODO: 调用实际接口
-  // const response = await http.post(`/api/flow/content/${flowId}/save-as-template`, { templateName });
-  // return response.data;
-
-  // 模拟数据
-  return new Promise((resolve) => {
-    setTimeout(() => {
-      resolve()
-    }, 300)
-  })
+export async function saveAsTemplate(
+  projectId: string,
+  params: SaveAsTemplateParams,
+): Promise<{ id: string }> {
+  try {
+    const res = await post<{ id: string }>(
+      `${PROCESS_API_URL_PREFIX}/user/templates/projects/${projectId}/templates/saveAsTemplate`,
+      params,
+    )
+    return res
+  } catch (error) {
+    throw error
+  }
 }
 
 /**
  * 添加至创作流组
  */
-export async function addToFlowGroup(flowId: string, viewId: string): Promise<void> {
-  // TODO: 调用实际接口
-  // await http.post(`/api/flow/content/${flowId}/add-to-group`, { viewId });
-
-  // 模拟数据
-  return new Promise((resolve) => {
-    setTimeout(() => {
-      resolve()
-    }, 300)
-  })
+export async function addToFlowGroup(
+  projectId: string,
+  params: AddToFlowGroupParams,
+): Promise<boolean> {
+  try {
+    const res = await post<boolean>(
+      `${PROCESS_API_URL_PREFIX}/user/pipelineViews/projects/${projectId}/bulkAdd`,
+      params,
+    )
+    return res
+  } catch (error) {
+    throw error
+  }
 }
 
 /**
@@ -581,156 +582,50 @@ export async function getContentDetail(id: string): Promise<ContentTableItem> {
 /**
  * 获取动态流水线组数据
  */
-export async function getMatchDynamicView(params: MatchDynamicViewParams): Promise<string[]> {
-  // TODO: 调用实际接口
-  // const response = await http.post('/api/flow/content', params);
-  // return response.data;
-
-  // 模拟数据
-  return new Promise((resolve) => {
-    setTimeout(() => {
-      resolve(['personal-1'])
-    }, 300)
-  })
+export async function getMatchDynamicView(
+  projectId: string,
+  params: MatchDynamicViewParams,
+): Promise<string[]> {
+  try {
+    const res = await post<string[]>(
+      `${PROCESS_API_URL_PREFIX}/user/pipelineViews/projects/${projectId}/matchDynamicView`,
+      params,
+    )
+    return res
+  } catch (error) {
+    throw error
+  }
 }
 
 /**
  * 获取项目标签数据
  */
-export async function getProjectTags(projectId: string): Promise<any[]> {
-  // TODO: 调用实际接口获取项目标签
-  // const response = await http.get('/api/project/tags', { params });
-  // return response.data;
-
-  // 模拟数据
-  return new Promise((resolve) => {
-    setTimeout(() => {
-      resolve([
-        {
-          id: 'mobdjbyp',
-          projectId: 'yu-test',
-          name: '标签一',
-          createTime: 1741333022,
-          updateTime: 1741333022,
-          createUser: 'v_yjjiaoyu',
-          updateUser: 'v_yjjiaoyu',
-          labels: [
-            {
-              id: 'mobdjgap',
-              viewId: 'mobdjbyp',
-              name: '测试标签',
-              createTime: 1741333039,
-              uptimeTime: 1741333039,
-              createUser: 'v_yjjiaoyu',
-              updateUser: 'v_yjjiaoyu',
-            },
-            {
-              id: 'pwgdbjop',
-              viewId: 'mobdjbyp',
-              name: '测试标签2',
-              createTime: 1741333053,
-              uptimeTime: 1741333053,
-              createUser: 'v_yjjiaoyu',
-              updateUser: 'v_yjjiaoyu',
-            },
-            {
-              id: 'pdraqqdp',
-              viewId: 'mobdjbyp',
-              name: '测试标签3',
-              createTime: 1762852870,
-              uptimeTime: 1762852870,
-              createUser: 'v_yjjiaoyu',
-              updateUser: 'v_yjjiaoyu',
-            },
-          ],
-        },
-        {
-          id: 'mobdjbyp1',
-          projectId: 'yu-test',
-          name: '标签一',
-          createTime: 1741333022,
-          updateTime: 1741333022,
-          createUser: 'v_yjjiaoyu',
-          updateUser: 'v_yjjiaoyu',
-          labels: [
-            {
-              id: 'mobdjgap',
-              viewId: 'mobdjbyp',
-              name: '测试标签',
-              createTime: 1741333039,
-              uptimeTime: 1741333039,
-              createUser: 'v_yjjiaoyu',
-              updateUser: 'v_yjjiaoyu',
-            },
-            {
-              id: 'pwgdbjop',
-              viewId: 'mobdjbyp',
-              name: '测试标签2',
-              createTime: 1741333053,
-              uptimeTime: 1741333053,
-              createUser: 'v_yjjiaoyu',
-              updateUser: 'v_yjjiaoyu',
-            },
-            {
-              id: 'pdraqqdp',
-              viewId: 'mobdjbyp',
-              name: '测试标签3',
-              createTime: 1762852870,
-              uptimeTime: 1762852870,
-              createUser: 'v_yjjiaoyu',
-              updateUser: 'v_yjjiaoyu',
-            },
-          ],
-        },
-      ])
-    }, 300)
-  })
+export async function getProjectTags(projectId: string): Promise<GroupResponse[]> {
+  try {
+    const res = await get<GroupResponse[]>(
+      `${PROCESS_API_URL_PREFIX}/user/pipelineGroups/groups?projectId=${projectId}`,
+    )
+    return res
+  } catch (error) {
+    throw error
+  }
 }
 
 /**
- * 根据flowId获取已选中的tree数据
+ * 获取已选中的tree数据
  */
-export async function getSelectedTreeData(flowId: string): Promise<SelectedTreeDataResponse> {
-  // TODO: 调用实际接口
-  // const response = await http.get(`/api/flow/content/${flowId}/selected-tree-data`);
-  // return response.data;
-
-  // 模拟数据
-  return new Promise((resolve) => {
-    setTimeout(() => {
-      resolve({
-        status: 0,
-        data: [
-          {
-            id: 'personal-3',
-            projectId: '后端开发组',
-            name: 'fdsafsafdsdsa',
-            projected: true,
-            createTime: 1705994742,
-            updateTime: 1705994742,
-            creator: 'v_jingdhe',
-            top: false,
-            viewType: 1,
-            pipelineCount: 0,
-            pac: false,
-          },
-          {
-            id: 'personal-4',
-            projectId: '部署流程组',
-            name: '?\u0011+33',
-            projected: true,
-            createTime: 1668502613,
-            updateTime: 1756350071,
-            creator: 'v_jingdhe',
-            top: false,
-            viewType: 2,
-            pipelineCount: 0,
-            pac: false,
-          },
-        ],
-      })
-    }, 300)
-  })
+export async function getSelectedTreeData(
+  projectId: string,
+  pipelineId: string,
+): Promise<SelectedTreeDataResponse[]> {
+  try {
+    const res = await get<SelectedTreeDataResponse[]>(
+      `${PROCESS_API_URL_PREFIX}/user/pipelineViews/projects/${projectId}/pipelines/${pipelineId}/listViews`,
+    )
+    return res
+  } catch (error) {
+    throw error
+  }
 }
 
 /**
