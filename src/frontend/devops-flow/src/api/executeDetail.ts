@@ -1,6 +1,8 @@
 import {
+  type FlowInfo,
   type ExecuteDetailData
 } from '@/types/flow'
+import { PROCESS_API_URL_PREFIX } from '@/utils/apiUrlPrefix'
 import { del, get, post } from '@/utils/http'
 
 /**
@@ -84,16 +86,36 @@ export function requestPipelineExecDetail({
   pipelineId: string
   executeCount?: number
 }): Promise<ExecuteDetailData> {
-  const params: Record<string, any> = {}
-  if (executeCount !== undefined) {
-    params.executeCount = executeCount
-  }
-  
-  return get<ExecuteDetailData>(
-    `/process/api/user/builds/projects/${projectId}/pipelines/${pipelineId}/builds/${buildNo}/record`,
+  try {
+    const url = executeCount
+    ? `${PROCESS_API_URL_PREFIX}/user/builds/projects/${projectId}/pipelines/${pipelineId}/builds/${buildNo}/record?executeCount=${executeCount}`
+    : `${PROCESS_API_URL_PREFIX}/user/builds/projects/${projectId}/pipelines/${pipelineId}/builds/${buildNo}/record`
 
-    { params }
-  )
+    const res = get<ExecuteDetailData>(url)
+    return res
+  } catch (error) {
+    throw error
+  }
+}
+
+/**
+ * 获取指定版本号的流水线编排版本信息
+ */
+export function requestFlowVersion({
+  projectId,
+  pipelineId,
+  version,
+}: {
+  projectId: string
+  pipelineId: string
+  version: number
+}): Promise<FlowInfo> {
+  try {
+    const res = get<FlowInfo>(`${PROCESS_API_URL_PREFIX}/user/version/projects/${projectId}/pipelines/${pipelineId}/versions/${version}/info`)
+    return res
+  } catch (error) {
+    throw error
+  }
 }
 
 /**
@@ -113,7 +135,7 @@ export function requestTerminatePipeline({
   buildId: string
 }): Promise<boolean> {
   return del<boolean>(
-    `/process/api/user/builds/${projectId}/${pipelineId}/${buildId}`
+    `${PROCESS_API_URL_PREFIX}/user/builds/${projectId}/${pipelineId}/${buildId}`
   )
 }
 
@@ -145,7 +167,7 @@ export function retryFlow({
   const queryStr = taskId ? `?taskId=${taskId}${failedContainerStr}&skip=${skip}` : ''
   
   return post<RetryPipelineResponse>(
-    `/process/api/user/builds/${projectId}/${pipelineId}/${buildId}/retry${queryStr}`
+    `${PROCESS_API_URL_PREFIX}/user/builds/${projectId}/${pipelineId}/${buildId}/retry${queryStr}`
   )
 }
 
@@ -168,7 +190,7 @@ export function replayFlow({
   forceTrigger?: boolean
 }): Promise<ReplayPipelineResponse> {
   return post<ReplayPipelineResponse>(
-    `/process/api/user/builds/${projectId}/${pipelineId}/${buildId}/replayByBuild?forceTrigger=${forceTrigger}`
+    `${PROCESS_API_URL_PREFIX}/user/builds/${projectId}/${pipelineId}/${buildId}/replayByBuild?forceTrigger=${forceTrigger}`
   )
 }
 
@@ -196,7 +218,7 @@ export function requestBuildParams({
   }
   
   return get<BuildParamItem[]>(
-    `/process/api/user/builds/${projectId}/${pipelineId}/${buildId}/parameters`,
+    `${PROCESS_API_URL_PREFIX}/user/builds/${projectId}/${pipelineId}/${buildId}/parameters`,
     { params }
   )
 }
@@ -217,6 +239,6 @@ export function requestBuildParamCombination({
   buildId: string
 }): Promise<BuildParamProperty[]> {
   return get<BuildParamProperty[]>(
-    `/process/api/user/builds/${projectId}/${pipelineId}/${buildId}/parameters`
+    `${PROCESS_API_URL_PREFIX}/user/builds/${projectId}/${pipelineId}/${buildId}/parameters`
   )
 }
