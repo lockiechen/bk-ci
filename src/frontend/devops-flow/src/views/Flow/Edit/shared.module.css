@@ -110,3 +110,7 @@
   border-radius: 2px;
   font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
 }
+
+.tabPadding {
+  padding: var(--spacing-lg);
+}

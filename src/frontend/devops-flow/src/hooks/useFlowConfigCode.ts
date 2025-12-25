@@ -16,7 +16,9 @@ export type FlowConfigSection =
  * Hook options
  */
 export interface UseFlowConfigCodeOptions {
+  projectId: string
   flowId?: string
+  version: string
   section: FlowConfigSection
   autoLoad?: boolean
 }
@@ -27,7 +29,9 @@ export interface UseFlowConfigCodeOptions {
 export function useFlowConfigCode(options: UseFlowConfigCodeOptions) {
   const { flowId, section, autoLoad = true } = options
   const { yamlContent, loading, flowSetting } = useFlowModel({
+    projectId: options.projectId,
     flowId,
+    version: '',
     autoLoad,
   })
 

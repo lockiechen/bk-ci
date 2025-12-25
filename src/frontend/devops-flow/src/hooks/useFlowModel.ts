@@ -22,13 +22,14 @@ import type { AddAtomEventPayload, AddStageEventPayload, ClickEventPayload } fro
 import { DEFAULT_VERSION } from './useAtomVersion'
 
 export interface UseFlowModelOptions {
+  projectId: string
   flowId?: string
   version?: string
   autoLoad?: boolean
 }
 
-export function useFlowModel(options: UseFlowModelOptions = {}) {
-  const { flowId, version, autoLoad = true } = options
+export function useFlowModel(options: UseFlowModelOptions) {
+  const { projectId, flowId, version, autoLoad = true } = options
 
   const store = useFlowModelStore()
   const atomStore = useAtomStore()
@@ -131,7 +132,7 @@ export function useFlowModel(options: UseFlowModelOptions = {}) {
   })
 
   onMounted(() => {
-    if (autoLoad && flowId) loadFlow()
+    if (autoLoad && flowId && version) store.loadFlowModel(projectId, flowId, version)
   })
 
   /**
@@ -462,14 +463,20 @@ export function useFlowModel(options: UseFlowModelOptions = {}) {
     // clearEditingPos()
   }
 
-  // Load/Save/Misc
-  const loadFlow = async (id?: string, ver?: string) => {
-    const targetFlowId = id || flowId
-    if (targetFlowId) await store.loadFlowModel(targetFlowId, ver || version)
-  }
-
   const saveFlow = async (params: Parameters<typeof store.saveFlow>[0]) => {
     return await store.saveFlow(params)
+  }
+
+  /**
+   * Load flow model (with optional force reload)
+   */
+  const loadFlow = async (
+    loadProjectId: string,
+    loadFlowId: string,
+    loadVersion?: string,
+    forceReload = false,
+  ) => {
+    return await store.loadFlowModel(loadProjectId, loadFlowId, loadVersion, forceReload)
   }
 
   const updateFlowModel = (model: FlowModel) => {
@@ -512,8 +519,8 @@ export function useFlowModel(options: UseFlowModelOptions = {}) {
     editingElement, // Plugin context
 
     // Actions
-    loadFlow,
     saveFlow,
+    loadFlow,
     updateFlowModel,
     updateFlowSetting,
     updateYaml,
@@ -551,7 +558,7 @@ export function useFlowModel(options: UseFlowModelOptions = {}) {
      * - Atom 复制/删除：发出 container 对象 { elements: [...], containerId: ... }
      * @param changedObject - bk-pipeline 发出的变更对象
      */
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+     
     handlePipelineChange: (changedObject: any) => {
       if (!flowModel.value?.stages) return
 

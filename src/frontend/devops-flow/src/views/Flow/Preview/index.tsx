@@ -1,8 +1,8 @@
-import type { StartupProperty } from '@/api/preview'
+import type { AuthoringNodeItem, StartupProperty } from '@/api/preview'
 import { SvgIcon } from '@/components/SvgIcon'
 import { usePreview, type ParamType } from '@/hooks/usePreview'
 import 'bkui-pipeline/dist/bkui-pipeline.css'
-import BkPipeline from 'bkui-pipeline/vue3'
+import BkPipeline, { type PipelineModel } from 'bkui-pipeline/vue3'
 import { Alert, Checkbox, Exception, Input, Loading, Select } from 'bkui-vue'
 import { defineComponent } from 'vue'
 import { useI18n } from 'vue-i18n'
@@ -27,6 +27,12 @@ export default defineComponent({
       checkAll,
       selectedNode,
       runMessage,
+      canExecute,
+      flowName,
+
+      // Authoring nodes
+      authoringNodes,
+      authoringNodesLoading,
       
       // Grouped params
       groupedParams,
@@ -211,7 +217,7 @@ export default defineComponent({
     const renderCollapseHeader = (
       sectionId: 1 | 2 | 3 | 4 | 5,
       title: string,
-      actions?: () => JSX.Element
+      actions?: () => any
     ) => (
       <header
         class={[
@@ -241,8 +247,8 @@ export default defineComponent({
         {/* Header */}
         <PreviewHeader
           executing={store.executing}
-          flowInfo={store.flowInfo}
-          pipelineModel={store.pipelineModel}
+          canExecute={canExecute.value}
+          flowName={flowName.value}
           onExecute={handleExecute}
           onVersionChange={handleVersionChange}
         />
@@ -269,17 +275,28 @@ export default defineComponent({
                       <span class={styles.requiredMark}>*</span>
                     </div>
                     <Select
-                      modelValue={selectedNode.value}
+                      v-model={selectedNode.value}
                       clearable={false}
+                      loading={authoringNodesLoading.value}
                       class={styles.fullWidthSelect}
                       placeholder={t('flow.common.pleaseSelect')}
-                      onChange={(val: string) => {
-                        selectedNode.value = val
-                      }}
                     >
-                      <Select.Option value="ins-0svirhrz47yp76qu" label="ins-0svirhrz47yp76qu" />
-                      <Select.Option value="ins-1abcdefg12345678" label="ins-1abcdefg12345678" />
-                      <Select.Option value="ins-2hijklmn87654321" label="ins-2hijklmn87654321" />
+                      {authoringNodes.value.map((node: AuthoringNodeItem) => (
+                        <Select.Option
+                          key={node.agentId}
+                          value={node.agentId}
+                          label={node.displayName || `${node.name} (${node.ip})`}
+                          disabled={!node.envEnableNode}
+                        >
+                          <div class={styles.nodeOption}>
+                            <span class={styles.nodeName}>{node.name}</span>
+                            <span class={styles.nodeIp}>({node.ip})</span>
+                            {!node.agentStatus && (
+                              <span class={styles.nodeOffline}>[{t('flow.preview.offline')}]</span>
+                            )}
+                          </div>
+                        </Select.Option>
+                      ))}
                     </Select>
                     <div class={styles.runtimeInfoDesc}>
                       {t('flow.preview.creationNodeDesc')}
@@ -289,11 +306,8 @@ export default defineComponent({
                   <div class={styles.runtimeInfoItem}>
                     <div class={styles.runtimeInfoLabel}>{t('flow.preview.runMessage')}</div>
                     <Input
-                      modelValue={runMessage.value}
+                      v-model={runMessage.value}
                       placeholder={t('flow.preview.runMessagePlaceholder')}
-                      onChange={(val: string) => {
-                        runMessage.value = val
-                      }}
                     />
                     <div class={styles.runtimeInfoDesc}>
                       {t('flow.preview.runMessageDesc')}
@@ -425,7 +439,7 @@ export default defineComponent({
                 {store.pipelineModel?.stages && store.pipelineModel.stages.length > 0 ? (
                   <BkPipeline
                     isPreview={true}
-                    pipeline={store.pipelineModel}
+                    pipeline={store.pipelineModel as PipelineModel}
                     editable={false}
                     canSkipElement={store.canElementSkip}
                     onChange={handlePipelineChange}

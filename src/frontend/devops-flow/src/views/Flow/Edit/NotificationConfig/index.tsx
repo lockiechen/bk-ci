@@ -1,27 +1,17 @@
-import { defineComponent, ref, computed } from 'vue'
-import { useI18n } from 'vue-i18n'
-import { useRoute } from 'vue-router'
-import { Checkbox, Collapse, Button, Card, Message } from 'bkui-vue'
 import { SvgIcon } from '@/components/SvgIcon'
 import { useFlowModel } from '@/hooks/useFlowModel'
+import { Button, Card, Collapse, Message } from 'bkui-vue'
+import { computed, defineComponent, ref, watch } from 'vue'
+import { useI18n } from 'vue-i18n'
+import { useRoute } from 'vue-router'
+import type { Subscription } from '../../../../api/flowModel'
 import sharedStyles from '../shared.module.css'
 import styles from './NotificationConfig.module.css'
-
-const { CollapsePanel } = Collapse
-
-interface Notification {
-  types: string[]
-  groups: string[]
-  users: string
-  content: string
-  wechatGroupFlag?: boolean
-  wechatGroup?: string
-}
 
 interface NotifyItem {
   type: string
   name: string
-  notifications: Notification[]
+  notifications: Subscription[]
 }
 
 export default defineComponent({
@@ -30,35 +20,47 @@ export default defineComponent({
     const { t } = useI18n()
     const route = useRoute()
     const flowId = route.params.flowId as string
-    const flowModel = useFlowModel({ flowId })
+    const projectId = route.params.projectId as string
 
-    // 通知数据（从flowModel或setting中获取）
-    const successSubscriptionList = ref<Notification[]>([])
-    const failSubscriptionList = ref<Notification[]>([
-      {
-        types: ['EMAIL', 'WEWORK'],
-        groups: [],
-        users: '${{actor}}',
-        content:
-          '【${BK_CI_PROJECT_NAME_CN}】 - 【${BK_CI_FLOW_NAME}】 #${BK_CI_BUILD_NUM}执行成功,耗时${BK_CI_BUILD_TOTAL_TIME},触发人:${BK_CI_START_USER_NAME}.',
+    // Use flowModel to get and update settings
+    const { flowSetting, updateFlowSetting } = useFlowModel({
+      projectId,
+      flowId,
+      version: route.params.version as string,
+    })
+
+    // 通知数据（从flowSetting中获取）
+    const successSubscriptionList = ref<Subscription[]>([])
+    const failSubscriptionList = ref<Subscription[]>([])
+    const cancelSubscriptionList = ref<Subscription[]>([])
+    const publishSubscriptionList = ref<Subscription[]>([])
+
+    // Initialize data from flowSetting
+    watch(
+      flowSetting,
+      (setting) => {
+        if (setting) {
+          successSubscriptionList.value = setting.successSubscriptionList || []
+          failSubscriptionList.value = setting.failSubscriptionList || []
+          cancelSubscriptionList.value = (setting as any).cancelSubscriptionList || []
+          publishSubscriptionList.value = (setting as any).publishSubscriptionList || []
+        }
       },
-      {
-        types: ['EMAIL', 'WEWORK'],
-        groups: [],
-        users: '${{actor}}',
-        content:
-          '【${BK_CI_PROJECT_NAME_CN}】 - 【${BK_CI_FLOW_NAME}】 #${BK_CI_BUILD_NUM}执行成功,耗时${BK_CI_BUILD_TOTAL_TIME},触发人:${BK_CI_START_USER_NAME}.',
-      },
-    ])
-    const cancelSubscriptionList = ref<Notification[]>([
-      {
-        types: ['EMAIL'],
-        groups: [],
-        users: '${{actor}}',
-        content: '',
-      },
-    ])
-    const publishSubscriptionList = ref<Notification[]>([])
+      { immediate: true }
+    )
+
+    // Update flowSetting when notification data changes
+    const updateNotificationSetting = () => {
+      if (!flowSetting.value) return
+      
+      updateFlowSetting({
+        ...flowSetting.value,
+        successSubscriptionList: successSubscriptionList.value,
+        failSubscriptionList: failSubscriptionList.value,
+        cancelSubscriptionList: cancelSubscriptionList.value as any,
+        publishSubscriptionList: publishSubscriptionList.value as any,
+      })
+    }
 
     // 通知列表配置
     const notifyList = computed<NotifyItem[]>(() => [
@@ -89,7 +91,7 @@ export default defineComponent({
     ])
 
     // 获取通知列表
-    const getNotificationList = (type: string): Notification[] => {
+    const getNotificationList = (type: string): Subscription[] => {
       switch (type) {
         case 'successSubscriptionList':
           return successSubscriptionList.value
@@ -136,6 +138,10 @@ export default defineComponent({
     const handleDeleteNotification = (type: string, index: number) => {
       const list = getNotificationList(type)
       list.splice(index, 1)
+      
+      // Update flowSetting after deletion
+      updateNotificationSetting()
+      
       Message({
         theme: 'success',
         message: t('flow.content.deleteSuccess'),

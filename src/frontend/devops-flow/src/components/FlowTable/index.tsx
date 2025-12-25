@@ -1,29 +1,29 @@
-import { defineComponent, ref, computed, watch, h, onMounted } from 'vue'
-import { useI18n } from 'vue-i18n'
-import { useRouter } from 'vue-router'
-import { FLOW_SORT_FILED } from '@/utils/flowConst.ts'
-import { Button, Table, Loading, Dropdown, Message, Tag, Popover } from 'bkui-vue'
-import type { Column } from 'bkui-vue/lib/table/props'
-import SearchSelect from '@blueking/search-select-v3'
-import ExtMenu from '@/components/ExtMenu/index'
-import EmptyTableStatus from '@/components/EmptyTable'
-import { SvgIcon } from '@/components/SvgIcon'
-import ImportFlowPopup from '@/components/ImportFlowPopup'
-import NewFlowPopup from '@/components/NewFlowPopup'
-import AddToGroupPopup from '@/components/AddToGroupPopup'
-import CopyFlowPopup from '@/components/CopyFlowPopup'
-import StatusIcon from '@/components/StatusIcon'
-import StageSteps from '@/components/StageSteps'
-import SaveAsTemplatePopup from '@/components/SaveAsTemplatePopup'
 import {
   type ContentTableItem,
-  type SaveAsTemplateParams,
   type CopyFlowParams,
+  type SaveAsTemplateParams,
 } from '@/api/flowContentList'
-import { useTableHeight } from '@/hooks/useTableHeight'
-import { useFlowListData, type Styles } from '@/hooks/useFlowListData'
-import { useDeleteConfirm } from '@/hooks/useDeleteConfirm'
+import AddToGroupPopup from '@/components/AddToGroupPopup'
+import CopyFlowPopup from '@/components/CopyFlowPopup'
+import EmptyTableStatus from '@/components/EmptyTable'
+import ExtMenu from '@/components/ExtMenu/index'
+import ImportFlowPopup from '@/components/ImportFlowPopup'
+import NewFlowPopup from '@/components/NewFlowPopup'
+import SaveAsTemplatePopup from '@/components/SaveAsTemplatePopup'
+import StageSteps from '@/components/StageSteps'
+import StatusIcon from '@/components/StatusIcon'
+import { SvgIcon } from '@/components/SvgIcon'
 import { ROUTE_NAMES } from '@/constants/routes'
+import { useDeleteConfirm } from '@/hooks/useDeleteConfirm'
+import { useFlowListData, type Styles } from '@/hooks/useFlowListData'
+import { useTableHeight } from '@/hooks/useTableHeight'
+import { FLOW_SORT_FILED } from '@/utils/flowConst.ts'
+import SearchSelect from '@blueking/search-select-v3'
+import { Button, Dropdown, Loading, Message, Popover, Table, Tag } from 'bkui-vue'
+import type { Column } from 'bkui-vue/lib/table/props'
+import { computed, defineComponent, h, onMounted, ref, watch } from 'vue'
+import { useI18n } from 'vue-i18n'
+import { useRouter } from 'vue-router'
 import styles from './FlowTable.module.css'
 
 export const FlowTable = defineComponent({
@@ -150,22 +150,43 @@ export const FlowTable = defineComponent({
     }
 
     const renderFlowName = (row: ContentTableItem) => {
+      /**
+       * Handle flow name click navigation
+       * If only draft version exists, redirect to edit page instead of detail page
+       */
+      const handleFlowClick = () => {
+        if (row.delete) return
+
+        // If only draft version exists (no released version), go to edit page directly
+        if (row.onlyDraftVersion) {
+          router.push({
+            name: ROUTE_NAMES.FLOW_EDIT_WORKFLOW_ORCHESTRATION,
+            params: {
+              projectId: row.projectId,
+              flowId: row.pipelineId,
+              version: row.pipelineVersion?.toString(),
+            },
+          })
+          return
+        }
+
+        // Otherwise go to detail page
+        router.push({
+          name: ROUTE_NAMES.FLOW_DETAIL_EXECUTION_RECORD,
+          params: {
+            projectId: row.projectId,
+            flowId: row.pipelineId,
+            version: row.pipelineVersion?.toString(),
+          },
+        })
+      }
+
       return (
         <>
           <span
             class={row.delete ? 'text-disabled' : styles.nameLink}
             v-overflow-title
-            onClick={() => {
-              if (row.delete) {
-                return
-              }
-              router.push({
-                name: ROUTE_NAMES.FLOW_DETAIL_EXECUTION_RECORD,
-                params: {
-                  flowId: row.pipelineId,
-                },
-              })
-            }}
+            onClick={handleFlowClick}
           >
             {row.pipelineName}
           </span>

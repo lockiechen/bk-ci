@@ -1,4 +1,15 @@
 /**
+ * Flow Model Type Definitions
+ * Unified type definitions for flow orchestration system
+ */
+
+import type { PluginOutputVariable } from '@/types/variable'
+
+// ============================================
+// Status Constants and Types
+// ============================================
+
+/**
  * 状态常量定义
  * 统一管理所有状态值，避免 Magic string
  */
@@ -48,6 +59,10 @@ export const STATUS = {
  */
 export type StatusType = typeof STATUS[keyof typeof STATUS]
 
+// ============================================
+// Enums
+// ============================================
+
 export enum RunLockType {
   MULTIPLE = 'MULTIPLE',
   GROUP_LOCK = 'GROUP_LOCK',
@@ -58,22 +73,21 @@ export enum BuildCancelPolicy {
   RESTRICTED = 'RESTRICTED',
 }
 
-// Stage 状态信息
-export interface StageStatusInfo {
-  stageId: string
-  name: string
-  status: StatusType
-  startEpoch?: number
-  elapsed?: number
+// ============================================
+// Common Types
+// ============================================
+
+/**
+ * 自定义变量
+ */
+export interface CustomVariable {
+  key: string
+  value: string
 }
 
-// 执行记录
-export interface ExecutionRecord {
-  startUser: string
-  timeCost: TimeCost
-}
-
-// 时间成本
+/**
+ * 时间成本
+ */
 export interface TimeCost {
   systemCost: number // 系统耗时（毫秒）
   executeCost: number // 执行耗时（毫秒）
@@ -82,7 +96,247 @@ export interface TimeCost {
   totalCost: number // 总耗时（毫秒）
 }
 
-// Stage 状态信息
+// ============================================
+// Element (Plugin/Atom) Related Types
+// ============================================
+
+/**
+ * 附加选项 - 元素的执行控制配置
+ */
+export interface AdditionalOptions {
+  enable: boolean
+  continueWhenFailed: boolean
+  manualSkip: boolean
+  retryWhenFailed: boolean
+  retryCount: number
+  manualRetry: boolean
+  timeout: number
+  timeoutVar: string
+  runCondition: string
+  pauseBeforeExec: boolean
+  subscriptionPauseUser: string
+  otherTask: string
+  customVariables: CustomVariable[]
+  customCondition: string
+  enableCustomEnv: boolean
+  failControl?: string[] // 失败控制选项数组
+}
+
+/**
+ * 插件元素 (Element/Atom/Plugin)
+ * 统一的元素类型定义，包含编排配置和运行时状态
+ */
+export interface Element {
+  '@type'?: string
+  name: string
+  id: string
+  stepId?: string
+  scriptType?: string
+  script?: string
+  continueNoneZero?: boolean
+  enableArchiveFile?: boolean
+  archiveFile?: string
+  additionalOptions?: AdditionalOptions
+  customEnv?: CustomVariable[] // 自定义环境变量
+  executeCount?: number
+  version?: string
+  classType?: string
+  atomCode?: string
+  taskAtom?: string
+  canElementSkip?: boolean
+  useLatestParameters?: boolean
+  data?: {
+    input: Record<string, unknown>
+    output: PluginOutputVariable[]
+  }
+  // Runtime status fields
+  status?: StatusType | ''
+  [key: string]: unknown
+}
+
+// ============================================
+// Container (Job) Related Types
+// ============================================
+
+/**
+ * 调度类型配置
+ */
+export interface DispatchType {
+  buildType: string
+  value: string
+  performanceUid: string
+  persistence: boolean
+  imageType: string
+  credentialId: string
+  credentialProject: string
+  imageCode: string
+  imageVersion: string
+  imageName: string
+  dockerBuildVersion: string
+  imagePublicFlag: boolean
+  imageRDType: string
+  recommendFlag: boolean
+}
+
+/**
+ * Job 控制选项
+ */
+export interface JobControlOption {
+  enable: boolean
+  prepareTimeout?: number
+  timeout: number
+  timeoutVar: string
+  runCondition: string
+  customVariables: CustomVariable[]
+  customCondition: string
+  dependOnType: string
+  dependOnId: string[]
+  dependOnName: string
+  continueWhenFailed: boolean
+}
+
+/**
+ * 矩阵 Job 控制选项
+ */
+export interface MatrixControlOption {
+  strategyStr: string
+  includeCaseStr: string
+  excludeCaseStr: string
+  fastKill: boolean
+  maxConcurrency: number
+}
+
+/**
+ * 互斥组配置
+ */
+export interface MutexGroup {
+  enable: boolean
+  mutexGroupName: string
+  queueEnable: boolean
+  timeoutVar: string
+  queue: number
+}
+
+/**
+ * 参数定义
+ */
+export interface Param {
+  id: string
+  name: string
+  required: boolean
+  constant: boolean
+  type: string
+  defaultValue: unknown
+  options?: unknown[]
+  desc?: string
+  displayCondition?: Record<string, string>
+  readOnly?: boolean
+  valueNotEmpty?: boolean
+  category?: string // User-defined group name for categorization
+  order?: number // Order for sorting variables
+  payload?: {
+    [key: string]: unknown
+  }
+}
+
+/**
+ * 容器 (Container/Job)
+ * 统一的容器类型定义，包含编排配置和运行时状态
+ */
+export interface Container {
+  '@type': string
+  id: string
+  name: string
+  elements: Element[]
+  containerId: string
+  containerHashId: string
+  matrixGroupFlag?: boolean
+  classType?: string
+  jobId?: string
+  // Build environment config
+  baseOS?: string
+  vmNames?: string[]
+  maxQueueMinutes?: number
+  maxRunningMinutes?: number
+  buildEnv?: Record<string, string>
+  dispatchType?: DispatchType
+  showBuildResource?: boolean
+  enableExternal?: boolean
+  // Control options
+  jobControlOption?: JobControlOption
+  matrixControlOption?: MatrixControlOption
+  mutexGroup?: MutexGroup
+  nfsSwitch?: boolean
+  params?: Param[]
+  // Runtime status fields
+  status?: StatusType
+  startEpoch?: number
+  systemElapsed?: number
+  elementElapsed?: number
+  canRetry?: boolean
+  executeCount?: number
+  timeCost?: TimeCost
+  runContainer?: boolean // Preview skip state
+  groupContainers?: Container[] // For matrix job group containers
+  [key: string]: unknown
+}
+
+// ============================================
+// Stage Related Types
+// ============================================
+
+/**
+ * Stage 控制选项
+ */
+export interface StageControlOption {
+  enable: boolean
+  runCondition: string
+  customVariables: CustomVariable[]
+  customCondition: string
+  manualTrigger: boolean
+  triggerUsers: string[]
+  timeout: number
+}
+
+/**
+ * 检查配置 (checkIn/checkOut)
+ */
+export interface CheckConfig {
+  manualTrigger: boolean
+  timeout: number
+  markdownContent: boolean
+  notifyType: string[]
+}
+
+/**
+ * Stage 阶段
+ * 统一的阶段类型定义，包含编排配置和运行时状态
+ */
+export interface Stage {
+  containers: Container[]
+  id: string
+  name: string
+  tag?: string[]
+  fastKill?: boolean
+  finally?: boolean
+  // Control options
+  stageControlOption?: StageControlOption
+  checkIn?: CheckConfig
+  checkOut?: CheckConfig
+  // Runtime status fields
+  status?: StatusType
+  elapsed?: number
+  canRetry?: boolean
+  executeCount?: number
+  timeCost?: TimeCost
+  startEpoch?: number
+  runStage?: boolean // Preview skip state
+  [key: string]: unknown
+}
+
+/**
+ * Stage 状态信息 - 用于状态显示
+ */
 export interface StageStatusInfo {
   stageId: string
   name: string
@@ -94,63 +348,13 @@ export interface StageStatusInfo {
   showMsg?: string
 }
 
-// 执行记录
-export interface ExecutionRecord {
-  startUser: string
-  timeCost: TimeCost
-}
+// ============================================
+// Flow Model and Settings
+// ============================================
 
-// 质量红线
-export interface ArtifactQuality {
-  [key: string]: any
-}
-
-// 插件元素
-export interface Element {
-  '@type': string
-  name: string
-  id: string
-  status: StatusType | ''
-  executeCount?: number
-  version?: string
-  [key: string]: any
-}
-
-// 容器
-export interface Container {
-  '@type': string
-  id: string
-  name: string
-  elements: Element[]
-  status: StatusType
-  startEpoch?: number
-  systemElapsed?: number
-  elementElapsed?: number
-  canRetry?: boolean
-  containerId: string
-  containerHashId: string
-  executeCount?: number
-  timeCost?: TimeCost
-  [key: string]: any
-}
-
-// Stage
-export interface Stage {
-  containers: Container[]
-  id: string
-  name: string
-  status: StatusType
-  elapsed?: number
-  fastKill?: boolean
-  finally?: boolean
-  canRetry?: boolean
-  executeCount?: number
-  timeCost?: TimeCost
-  startEpoch?: number
-  [key: string]: any
-}
-
-// 创作流模型
+/**
+ * 创作流模型
+ */
 export interface FlowModel {
   '@type': string
   name: string
@@ -159,13 +363,74 @@ export interface FlowModel {
   labels?: string[]
   instanceFromTemplate?: boolean
   creator?: string
-  events?: Record<string, any>
-  staticViews?: any[]
+  events?: Record<string, unknown>
+  staticViews?: unknown[]
   timeCost?: TimeCost
   latestVersion?: number
-  [key: string]: any
+  [key: string]: unknown
 }
 
+/**
+ * 订阅配置
+ */
+export interface Subscription {
+  types: string[]
+  groups: string[]
+  users: string
+  wechatGroupFlag: boolean
+  wechatGroup: string
+  wechatGroupMarkdownFlag: boolean
+  detailFlag: boolean
+  content: string
+}
+
+/**
+ * 创作流设置
+ */
+export interface FlowSettings {
+  creator?: string
+  createTime?: number
+  updateTime?: number
+  pipelineName: string
+  desc: string
+  runLockType: string
+  maxConRunningQueueSize: number
+  waitQueueTimeMinute: number
+  maxQueueSize: number
+  concurrencyGroup: string
+  concurrencyCancelInProgress: boolean
+  successSubscriptionList: Subscription[]
+  failSubscriptionList: Subscription[]
+  // Authoring environment name
+  envName?: string
+  // Cancel subscription list
+  cancelSubscriptionList?: Subscription[]
+  // Publish subscription list
+  publishSubscriptionList?: Subscription[]
+}
+
+// ============================================
+// Execution Related Types
+// ============================================
+
+/**
+ * 执行记录
+ */
+export interface ExecutionRecord {
+  startUser: string
+  timeCost: TimeCost
+}
+
+/**
+ * 质量红线
+ */
+export interface ArtifactQuality {
+  [key: string]: unknown
+}
+
+/**
+ * 执行详情数据
+ */
 export interface ExecuteDetailData {
   id: string // 构建ID
   pipelineId: string // 流水线ID
@@ -195,11 +460,16 @@ export interface ExecuteDetailData {
   debug: boolean // 是否调试模式
   artifactQuality?: ArtifactQuality // 制品质量信息
   versionChange: boolean // 版本是否变更
-  webhookInfo?: Record<string, any> // Webhook信息
-  materials?: Record<string, any>[] // 材料列表
+  webhookInfo?: Record<string, unknown> // Webhook信息
+  materials?: Record<string, unknown>[] // 材料列表
   cancelBuildPerm: boolean // 是否有取消构建权限
-  [key: string]: any
+  errorInfoList: Record<string, unknown>[] // 错误信息列表
+  [key: string]: unknown
 }
+
+// ============================================
+// Version and Permission Types
+// ============================================
 
 /**
  * 版本状态类型
@@ -233,31 +503,40 @@ export interface FlowPermissions {
 export interface FlowInfo {
   pipelineId: string // 流水线ID
   pipelineName: string // 流水线名称
-  hasCollect: boolean // 是否已收藏
-  canManualStartup: boolean // 是否可手动启动
-  canDebug: boolean // 是否可调试
-  canRelease: boolean // 是否可发布
-  instanceFromTemplate: boolean // 是否从模板实例化
-  version: number // 当前版本
-  baseVersion: number // 基础版本
-  baseVersionStatus: VersionStatus // 基础版本状态
-  baseVersionName: string // 基础版本名称
+  version: number // 版本号
+  versionNum: number // 版本数量
+  versionName: string // 版本名称
+  pipelineVersion: number // 流水线版本
+  pipelineCreator: string // 创建者
+  createTime: number // 创建时间
+  updateTime: number // 更新时间
+  versionStatus: VersionStatus // 版本状态
+  latestVersionStatus: VersionStatus // 最新版本状态
   releaseVersion: number // 发布版本
   releaseVersionName: string // 发布版本名称
-  hasPermission: boolean // 是否有权限
-  pipelineDesc: string // 流水线描述
-  creator: string // 创建人
-  createTime: number // 创建时间戳
-  updateTime: number // 更新时间戳
-  permissions: FlowPermissions // 权限信息
-  runLockType: RunLockType // 运行锁定类型
-  latestVersionStatus: VersionStatus // 最新版本状态
+  baseVersion: number // 基础版本
+  baseVersionName: string // 基础版本名称
   locked: boolean // 是否锁定
-  buildCancelPolicy: BuildCancelPolicy // 取消构建策略
+  permissions: FlowPermissions // 权限信息
+  hasCollect: boolean // 是否收藏
+  canManualStartup: boolean // 是否可手动启动
+  canDebug: boolean // 是否可调试
+  instanceFromTemplate: boolean // 是否从模板创建
+  yamlExist: boolean // 是否存在YAML配置
+  latestVersion: number // 最新版本
+  latestBuildNum: number // 最新构建次数
+  [key: string]: unknown
 }
 
+/**
+ * 版本列表项
+ */
 export interface FlowVersion {
-  version: number
-  versionName: string
-  isLatest?: boolean
+  version: number // 版本号
+  versionName: string // 版本名称
+  creator: string // 创建者
+  createTime: number // 创建时间
+  versionStatus: VersionStatus // 版本状态
+  isLatest: boolean // 是否最新版本
+  [key: string]: unknown
 }

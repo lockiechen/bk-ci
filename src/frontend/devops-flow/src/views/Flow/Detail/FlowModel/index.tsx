@@ -1,17 +1,17 @@
+import CodeEditor from '@/components/CodeEditor'
+import EmptyPage from '@/components/EmptyPage/index'
+import ModeSwitch from '@/components/ModeSwitch'
+import { useFlowModel } from '@/hooks/useFlowModel'
+import { useModeStore } from '@/stores/flowMode'
+import layoutStyles from '@/styles/layout.module.css'
+import { Loading } from 'bkui-vue'
 import { defineComponent } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useRoute } from 'vue-router'
-import { Loading } from 'bkui-vue'
-import { useModeStore } from '@/stores/flowMode'
-import { useFlowModel } from '@/hooks/useFlowModel'
-import ModeSwitch from '@/components/ModeSwitch'
-import EmptyPage from '@/components/EmptyPage/index'
-import CodeEditor from '@/components/CodeEditor'
 import styles from './FlowModel.module.css'
-import layoutStyles from '@/styles/layout.module.css'
 
-import BkPipeline from 'bkui-pipeline/vue3'
 import 'bkui-pipeline/dist/bkui-pipeline.css'
+import BkPipeline from 'bkui-pipeline/vue3'
 
 export default defineComponent({
   name: 'FlowModel',
@@ -28,8 +28,10 @@ export default defineComponent({
     const modeStore = useModeStore()
 
     // 使用 useFlowModel hook 管理数据
-    const { flowModel, flowModelWithoutTriggerStage, yamlContent, loading, isFlowEmpty } =
+    const { flowModelWithoutTriggerStage, yamlContent, loading, isFlowEmpty } =
       useFlowModel({
+        projectId: route.params.projectId as string,
+        version: route.params.version as string,
         flowId: route.params.flowId as string, // TODO: 从路由参数获取实际的 flowId
         autoLoad: true,
       })

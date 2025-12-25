@@ -14,21 +14,20 @@ export default defineComponent({
     const { t } = useI18n()
     const route = useRoute()
     const router = useRouter()
+    const projectId = route.params.projectId as string
     const flowId = route.params.flowId as string
+    // flowId is actually pipelineId in this context
+    const pipelineId = flowId
 
-    // 使用 hook 管理执行记录数据
+    // Use hook to manage execution record data
     const {
       records: tableData,
       pagination,
       loading,
-      isAllChecked,
-      isIndeterminate,
       handlePageChange,
       handleLimitChange,
-      handleSelectAll,
-      handleSelect,
       updateQueryParams,
-    } = useExecutionRecordData(flowId)
+    } = useExecutionRecordData(projectId, pipelineId)
 
     // 日期范围
     const dateRange = ref<[Date, Date] | null>(null)
@@ -203,7 +202,7 @@ export default defineComponent({
                 name: ROUTE_NAMES.FLOW_DETAIL_EXECUTION_DETAIL_TAB,
                 params: {
                   flowId,
-                  buildNo: (row as ExecutionRecord).buildNo,
+                  buildNo: (row as ExecutionRecord).id,
                 },
               })
             }}
@@ -283,13 +282,19 @@ export default defineComponent({
           </div>
         </div>
 
-        {/* 表格区域 */}
+        {/* Table area */}
         <div class={styles.tableWrapper}>
           <Table
             data={tableData.value}
             columns={tableColumns.value}
             class={styles.table}
-            pagination={pagination.value}
+            pagination={{
+              current: pagination.value.current,
+              count: pagination.value.count,
+              limit: pagination.value.limit,
+              showTotalCount: true,
+            }}
+            remotePagination
             border="outer"
             loading={loading.value}
             onPageChange={handlePageChange}

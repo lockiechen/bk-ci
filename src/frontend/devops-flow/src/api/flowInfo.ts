@@ -1,13 +1,12 @@
 import { type FlowInfo, type FlowVersion } from '@/types/flow'
 import { get, post } from '@/utils/http'
-import {
-    delay,
-    ENABLE_MOCK_FALLBACK,
-    getMockFlowInfo,
-    getMockVersionList,
-    MOCK_API_DELAY,
-} from './previewMock'
 
+export interface ResponseWithRecords<T> {
+  records: T[]
+  total: number
+  page: number
+  pageSize: number
+}
 /**
  * Get flow basic info
  * Falls back to mock data on API failure when ENABLE_MOCK_FALLBACK is true
@@ -19,18 +18,9 @@ export async function fetchFlowInfo({
   projectId: string
   flowId: string
 }): Promise<FlowInfo> {
-  try {
-    return await get<FlowInfo>(
-      `/version/api/user/projects/${projectId}/pipelines/${flowId}/detail`
+  return await get<FlowInfo>(
+      `/process/api/user/version/projects/${projectId}/pipelines/${flowId}/detail`
     )
-  } catch (error) {
-    if (ENABLE_MOCK_FALLBACK) {
-      console.warn('[API Fallback] fetchFlowInfo failed, using mock data:', error)
-      await delay(MOCK_API_DELAY)
-      return getMockFlowInfo() as FlowInfo
-    }
-    throw error
-  }
 }
 
 /**
@@ -43,19 +33,11 @@ export async function getFlowVersionList({
 }: {
   projectId: string
   flowId: string
-}): Promise<FlowVersion[]> {
-  try {
-    return await get<FlowVersion[]>(
-      `/version/api/user/projects/${projectId}/pipelines/${flowId}/versions`
+}): Promise<ResponseWithRecords<FlowVersion>> {
+   const res = await get<ResponseWithRecords<FlowVersion>>(
+      `/process/api/user/version/projects/${projectId}/pipelines/${flowId}/versions`
     )
-  } catch (error) {
-    if (ENABLE_MOCK_FALLBACK) {
-      console.warn('[API Fallback] getFlowVersionList failed, using mock data:', error)
-      await delay(MOCK_API_DELAY)
-      return getMockVersionList() as FlowVersion[]
-    }
-    throw error
-  }
+    return res
 }
 
 /**
@@ -72,18 +54,9 @@ export async function updateRemark({
   buildId: string
   remark: string
 }): Promise<boolean> {
-  try {
-    await post(
+  await post(
       `/process/api/user/builds/${projectId}/${flowId}/${buildId}/updateRemark`,
       { remark }
     )
     return true
-  } catch (error) {
-    if (ENABLE_MOCK_FALLBACK) {
-      console.warn('[API Fallback] updateRemark failed, using mock data:', error)
-      await delay(MOCK_API_DELAY)
-      return true
-    }
-    throw error
-  }
 }

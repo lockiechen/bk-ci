@@ -45,7 +45,7 @@ export default defineComponent({
     const router = useRouter()
     
     // 从 store 获取执行详情数据（全局唯一）
-    const { executeDetail, isLatestBuild, isRunning } = useExecuteDetail()
+    const { executeDetail, isRunning } = useExecuteDetail()
 
     // ==================== State ====================
     const hideSkipExecTask = ref(false)
@@ -548,7 +548,7 @@ export default defineComponent({
                     editable={false}
                     isExecDetail={true}
                     currentExecCount={executeCount.value}
-                    cancelUserId={cancelUserId.value}
+                    cancelUserId={cancelUserId.value as string}
                     pipeline={filteredPipeline.value}
                     matchRules={props.matchRules as any}
                     onClick={handlePipelineClick}

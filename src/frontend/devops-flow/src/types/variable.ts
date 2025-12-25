@@ -2,7 +2,7 @@
  * Variable type definitions for devops-flow
  */
 
-import type { Param } from '@/api/flowModel'
+import type { Param } from '@/types/flow'
 
 /**
  * Variable types

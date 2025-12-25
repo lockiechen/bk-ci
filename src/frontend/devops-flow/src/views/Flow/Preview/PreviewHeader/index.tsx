@@ -3,7 +3,7 @@ import { CommonHeader } from '@/components/CommonHeader'
 import { SvgIcon } from '@/components/SvgIcon'
 import type { FlowInfo, FlowVersion } from '@/types/flow'
 import { Button, Select, Tag } from 'bkui-vue'
-import { computed, defineComponent, onMounted, ref, watch, type PropType } from 'vue'
+import { computed, defineComponent, onMounted, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useRoute, useRouter } from 'vue-router'
 import styles from './PreviewHeader.module.css'
@@ -31,22 +31,6 @@ const findLatestVersion = (versions: FlowVersion[]): FlowVersion | undefined => 
   return versions.find(v => v.isLatest)
 }
 
-/**
- * Get flow name from model or info (pure function)
- */
-const getFlowName = (
-  pipelineModel: { name?: string } | null,
-  flowInfo: FlowInfo | null
-): string => {
-  return pipelineModel?.name || flowInfo?.pipelineName || ''
-}
-
-/**
- * Check if user can execute (pure function)
- */
-const checkCanExecute = (flowInfo: FlowInfo | null): boolean => {
-  return flowInfo?.permissions?.canExecute ?? true
-}
 
 // ============================================
 // 3. Component Definition
@@ -59,14 +43,14 @@ export default defineComponent({
       type: Boolean,
       default: false,
     },
-    flowInfo: {
-      type: Object as PropType<FlowInfo | null>,
-      default: null,
+    canExecute: {
+      type: Boolean,
+      default: true,
     },
-    pipelineModel: {
-      type: Object as PropType<{ name?: string } | null>,
-      default: null,
-    },
+    flowName: {
+      type: String,
+      default: '',
+    }
   },
   emits: ['execute', 'versionChange'],
   setup(props, { emit }) {
@@ -98,10 +82,6 @@ export default defineComponent({
       Object.prototype.hasOwnProperty.call(route.query, 'debug')
     )
 
-    const flowName = computed(() => getFlowName(props.pipelineModel, props.flowInfo))
-
-    const canExecute = computed(() => checkCanExecute(props.flowInfo))
-
     const currentVersionOption = computed(() =>
       versionList.value.find(v => v.version === selectedVersion.value)
     )
@@ -118,7 +98,7 @@ export default defineComponent({
 
       try {
         loadingVersions.value = true
-        const list = await getFlowVersionList({
+        const { records: list } = await getFlowVersionList({
           projectId: projectId.value,
           flowId: flowId.value,
         })
@@ -225,7 +205,7 @@ export default defineComponent({
         {/* Execute/Debug button */}
         <Button
           theme="primary"
-          disabled={props.executing || !canExecute.value}
+          disabled={props.executing || !props.canExecute}
           loading={props.executing}
           onClick={handleExecute}
         >
@@ -250,7 +230,7 @@ export default defineComponent({
     // ----------------------------------------
     return () => {
       // Early return for loading state
-      if (!flowName.value) {
+      if (!props.flowName) {
         return (
           <header class={styles.previewHeader}>
             <i class={[styles.spinIcon, 'bk-icon', 'icon-loading']} />
@@ -259,7 +239,7 @@ export default defineComponent({
       }
 
       return (
-        <CommonHeader workflowName={flowName.value}>
+        <CommonHeader workflowName={props.flowName}>
           {{
             'version-selector': renderVersionSelector,
             'execution-detail': renderExecutionTitle,

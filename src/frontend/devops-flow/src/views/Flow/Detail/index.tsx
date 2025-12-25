@@ -1,9 +1,13 @@
-import { defineComponent, computed } from 'vue'
-import { useI18n } from 'vue-i18n'
-import { useRoute, useRouter, RouterView } from 'vue-router'
-import { FLOW_DETAIL_TABS, isValidFlowDetailTab } from '@/constants/routes'
-import styles from './Detail.module.css'
+import { FlowHeader } from '@/components/FlowHeader'
+import { FLOW_DETAIL_TABS, isValidFlowDetailTab, ROUTE_NAMES } from '@/constants/routes'
+import { useFlowInfo } from '@/hooks/useFlowInfo'
 import layoutStyles from '@/styles/layout.module.css'
+import type { FlowInfo, FlowVersion } from '@/types/flow'
+import { VERSION_STATUS_ENUM } from '@/utils/flowConst'
+import { computed, defineComponent, watch } from 'vue'
+import { useI18n } from 'vue-i18n'
+import { RouterView, useRoute, useRouter } from 'vue-router'
+import styles from './Detail.module.css'
 
 export default defineComponent({
   name: 'FlowDetail',
@@ -11,7 +15,57 @@ export default defineComponent({
     const { t } = useI18n()
     const route = useRoute()
     const router = useRouter()
-    const flowId = route.params.flowId as string
+    const flowId = computed(() => route.params.flowId as string)
+    const projectId = computed(() => route.params.projectId as string)
+    const { flowInfo, flowVersionList, loading } = useFlowInfo()
+
+    /**
+     * Check if the flow only has draft version (no released version)
+     * If true, redirect to edit page instead of detail page
+     */
+    const isOnlyDraftVersion = computed(() => {
+      return flowInfo.value?.latestVersionStatus === VERSION_STATUS_ENUM.COMMITTING
+    })
+
+    // Watch for flowInfo changes and redirect if only draft version exists
+    watch(
+      () => flowInfo.value?.latestVersionStatus,
+      (status) => {
+        if (status === VERSION_STATUS_ENUM.COMMITTING) {
+          // Only draft version exists, redirect to edit page
+          router.replace({
+            name: ROUTE_NAMES.FLOW_EDIT_WORKFLOW_ORCHESTRATION,
+            params: {
+              projectId: projectId.value,
+              flowId: flowId.value,
+              version: flowInfo.value?.version?.toString(),
+            },
+          })
+        }
+      },
+      { immediate: true }
+    )
+
+    const handleVersionChange = (version: number) => {
+      router.push({
+        name: ROUTE_NAMES.FLOW_DETAIL_EXECUTION_RECORD,
+        params: { flowId: flowId.value, version },
+      })
+    }
+
+    const handleEdit = () => {
+      router.push({
+        name: ROUTE_NAMES.FLOW_EDIT_WORKFLOW_ORCHESTRATION,
+        params: { flowId: flowId.value, version: flowInfo.value?.releaseVersion },
+      })
+    }
+
+    const handleExecute = () => {
+      router.push({
+        name: ROUTE_NAMES.FLOW_PREVIEW,
+        params: { flowId: flowId.value, version: flowInfo.value?.releaseVersion },
+      })
+    }
 
     // 从路由名称获取当前 tab（直接使用路由名称）
     const currentTab = computed(() => {
@@ -59,7 +113,7 @@ export default defineComponent({
         // 如果 tab 不合法，重定向到默认 tab
         router.push({
           name: FLOW_DETAIL_TABS.EXECUTION_RECORD,
-          params: { flowId },
+          params: { flowId: flowId.value, version: flowInfo.value?.releaseVersion },
         })
         return
       }
@@ -67,42 +121,60 @@ export default defineComponent({
       // key 就是路由名称，直接使用
       router.push({
         name: key,
-        params: { flowId },
+        params: { flowId: flowId.value, version: flowInfo.value?.releaseVersion },
       })
     }
 
-    return () => (
-      <div class={layoutStyles.content}>
-        <nav class={styles.sidebar}>
-          {menuItems.map((item, index) => (
-            <div key={index} class={styles.menuGroup}>
-              {item.tabs.length > 0 && (
-                <>
-                  <div class={styles.menuCategory}>{item.title}</div>
-                  <div class={styles.subMenu}>
-                    {item.tabs.map((child) => (
-                      <button
-                        key={child}
-                        class={[
-                          styles.menuItem,
-                          currentTab.value === child && styles.menuItemActive,
-                        ]}
-                        onClick={() => handleMenuClick(child)}
-                      >
-                        {t(`flow.content.${child}`)}
-                      </button>
-                    ))}
-                  </div>
-                </>
-              )}
-            </div>
-          ))}
-        </nav>
+    return () => {
+      // Don't render if only draft version (will redirect)
+      if (isOnlyDraftVersion.value) {
+        return null
+      }
 
-        <div class={styles.content}>
-          <RouterView />
-        </div>
-      </div>
-    )
+      return (
+        <>
+          <FlowHeader
+            loading={loading.value}
+            flowInfo={flowInfo.value as FlowInfo}
+            versionList={(flowVersionList.value ?? []) as FlowVersion[] }
+            onVersionChange={handleVersionChange}
+            onEdit={handleEdit}
+            onExecute={handleExecute}
+          />
+          <div class={layoutStyles.content}>
+            
+            <nav class={styles.sidebar}>
+              {menuItems.map((item, index) => (
+                <div key={index} class={styles.menuGroup}>
+                  {item.tabs.length > 0 && (
+                    <>
+                      <div class={styles.menuCategory}>{item.title}</div>
+                      <div class={styles.subMenu}>
+                        {item.tabs.map((child) => (
+                          <button
+                            key={child}
+                            class={[
+                              styles.menuItem,
+                              currentTab.value === child && styles.menuItemActive,
+                            ]}
+                            onClick={() => handleMenuClick(child)}
+                          >
+                            {t(`flow.content.${child}`)}
+                          </button>
+                        ))}
+                      </div>
+                    </>
+                  )}
+                </div>
+              ))}
+            </nav>
+
+            <div class={styles.content}>
+              <RouterView />
+            </div>
+          </div>
+        </>
+      )
+    }
   },
 })

@@ -1,22 +1,20 @@
+import AuthoringEnv from '@/components/AuthoringEnv'
+import CodeEditor from '@/components/CodeEditor'
+import EmptyPage from '@/components/EmptyPage/index'
+import ModeSwitch from '@/components/ModeSwitch'
+import { useAuthoringEnvironment } from '@/hooks/useAuthoringEnvironment.ts'
+import { useFlowConfigCode } from '@/hooks/useFlowConfigCode'
+import { useModeStore } from '@/stores/flowMode.ts'
+import layoutStyles from '@/styles/layout.module.css'
+import { Loading } from 'bkui-vue'
 import { defineComponent } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useRoute } from 'vue-router'
-import { Loading } from 'bkui-vue'
-import { useModeStore } from '@/stores/flowMode.ts'
-import ModeSwitch from '@/components/ModeSwitch'
-import EmptyPage from '@/components/EmptyPage/index'
-import CodeEditor from '@/components/CodeEditor'
-import AuthoringContent from './AuthoringContent.tsx'
-import { useAuthoringEnv } from '@/hooks/useAuthoringEnv'
-import { useFlowConfigCode } from '@/hooks/useFlowConfigCode'
-import styles from './AuthoringEnv.module.css'
-import layoutStyles from '@/styles/layout.module.css'
 
 export default defineComponent({
   name: 'AuthoringEnv',
   components: {
     ModeSwitch,
-    AuthoringContent,
     EmptyPage,
     CodeEditor,
     Loading,
@@ -27,9 +25,10 @@ export default defineComponent({
     const modeStore = useModeStore()
 
     // Use authoring environment hook for UI mode
-    const { authoringEnv } = useAuthoringEnv({
+    const { envSelectList, envListLoading, nodeList, nodeListLoading } = useAuthoringEnvironment({
+      projectId: route.params.projectId as string,
       flowId: route.params.flowId as string,
-      autoLoad: true,
+      autoLoadNodes: true,
     })
 
     // Use flow config code hook for Code mode
@@ -38,8 +37,11 @@ export default defineComponent({
       yamlContent,
       sectionHighlight,
       isEmpty,
+      flowSetting
     } = useFlowConfigCode({
+      projectId: route.params.projectId as string,
       flowId: route.params.flowId as string,
+      version: route.params.version as string,
       section: 'authoring-env',
       autoLoad: true,
     })
@@ -74,14 +76,12 @@ export default defineComponent({
               ) : (
                 <div>
                   {!isEmpty.value ? (
-                    <AuthoringContent
-                      modelValue={authoringEnv.value?.id || ''}
-                      envList={[
-                        {
-                          value: authoringEnv.value?.id || '',
-                          label: authoringEnv.value?.name || '',
-                        }
-                      ]}
+                    <AuthoringEnv
+                      modelValue={flowSetting.value?.envName}
+                      envList={envSelectList.value}
+                      envLoading={envListLoading.value}
+                      nodeList={nodeList.value}
+                      nodeLoading={nodeListLoading.value}
                     />
                   ) : (
                     <EmptyPage

@@ -1,11 +1,11 @@
-import { ref } from 'vue'
-import { storeToRefs } from 'pinia'
-import { type CreateContentParams } from '@/api/flowContentList'
+import { type CreateContentParams } from '@/api/flowContentList';
 import { templateTypeEnum } from "@/utils/flowConst";
+import { storeToRefs } from 'pinia';
+import { ref } from 'vue';
 
-import { useRouter, useRoute } from "vue-router";
-import { ROUTE_NAMES } from '@/constants/routes'
-import { useNewFlowStore } from '@/stores/createFlowStore'
+import { ROUTE_NAMES } from '@/constants/routes';
+import { useNewFlowStore } from '@/stores/createFlowStore';
+import { useRoute, useRouter } from "vue-router";
 
 /**
  * NewFlowPopup组件业务逻辑 Hook
@@ -108,20 +108,12 @@ export function useNewFlow() {
       if (res) {
         router.push({
           name: ROUTE_NAMES.FLOW_EDIT_WORKFLOW_ORCHESTRATION,
-          params: { flowId: res.pipelineId },
+          params: { ...route.params, flowId: res.pipelineId, version: res.version },
         })
       }
     } catch (error) {
       console.log("error:", error)
     }
-  }
-
-  function goEnvironment(envName?: string) {
-    let url = `${location.origin}/console/environment/${route.params.projectId}`
-    if (envName) {
-      url += `/envDetail/${envName}`
-    }
-    window.open(url, '_blank')
   }
 
   return {
@@ -148,7 +140,6 @@ export function useNewFlow() {
     handleNextStep,
     handlePrevStep,
     handleConfirm,
-    goEnvironment,
     resetForm: store.resetForm,
     updateBaseInfo: store.updateBaseInfo,
     updateTemplateInfo: store.updateTemplateInfo,

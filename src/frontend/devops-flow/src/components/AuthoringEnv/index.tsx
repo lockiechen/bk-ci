@@ -1,12 +1,12 @@
-import { defineComponent, ref, onMounted, onUnmounted, watch } from 'vue'
-import { useI18n } from 'vue-i18n'
-import { Select, Tag, Loading } from 'bkui-vue'
-import { useNewFlow } from '@/hooks/useNewFlow'
 import { SvgIcon } from '@/components/SvgIcon'
+import useAuthoringEnvironment from '@/hooks/useAuthoringEnvironment'
+import { Loading, Select, Tag } from 'bkui-vue'
+import { defineComponent, nextTick, ref, watch } from 'vue'
+import { useI18n } from 'vue-i18n'
 import styles from './AuthoringEnv.module.css'
 
 export default defineComponent({
-  name: 'AuthoringContent',
+  name: 'AuthoringEnv',
   components: {
     SvgIcon,
   },
@@ -34,89 +34,52 @@ export default defineComponent({
     nodeLoading: {
       type: Boolean,
       default: false,
-    },
+    }
   },
   emits: ['update:modelValue'],
   setup(props, { emit }) {
     const { t } = useI18n()
-    const selectRef = ref()
-    const isPopoverVisible = ref(false)
     const envName = ref(props.modelValue)
-    const trigger = ref<'default' | 'manual'>('manual')
-
-    const { goEnvironment } = useNewFlow()
+    const { goEnvironment, loadNodeList } = useAuthoringEnvironment()
 
     watch(
       () => props.modelValue,
       (newValue) => {
         if (newValue !== envName.value) {
           envName.value = newValue
+          nextTick(() => {
+            loadNodeList(newValue)
+          })
         }
       },
     )
 
-    onMounted(() => {
-      document.addEventListener('click', handleClickOutside)
-    })
-
-    onUnmounted(() => {
-      document.removeEventListener('click', handleClickOutside)
-    })
-
-    function handleClickOutside(event: MouseEvent) {
-      if (isPopoverVisible.value && selectRef.value) {
-        const selectElement = selectRef.value.$el
-        const popoverElement = document.querySelector('.bk-select-search-wrapper')
-
-        const isClickInsideSelect = selectElement?.contains(event.target as Node)
-        const isClickInsidePopover = popoverElement?.contains(event.target as Node)
-
-        if (!isClickInsideSelect && !isClickInsidePopover) {
-          selectRef.value?.hidePopover()
-        }
-      }
-    }
-
-    function showPopover(event: MouseEvent) {
-      const popoverElement = document.querySelector('.bk-select-search-wrapper')
-      const isClickInsidePopover = popoverElement?.contains(event.target as Node)
-
-      if (isPopoverVisible.value && !isClickInsidePopover) {
-        selectRef.value?.hidePopover()
-      } else {
-        selectRef.value?.showPopover()
-      }
-    }
-
     function handleChange() {
       emit('update:modelValue', envName.value)
+      nextTick(() => {
+          loadNodeList(envName.value)
+      })
     }
 
-    function handlePopoverHide(value: boolean) {
-      isPopoverVisible.value = value
+    function goToEnvironment() {
+      goEnvironment(envName.value)
     }
 
     return () => (
       <div class={styles.authoringContent}>
-        <p class={styles.authoringHeader} onClick={showPopover}>
+        <p class={styles.authoringHeader}>
           {props.isEdit ? (
             <Select
-              ref={selectRef}
               v-model={envName.value}
               filterable
+              list={props.envList}
               loading={props.envLoading}
-              trigger={trigger.value}
               searchPlaceholder={t('flow.content.searchEnvironment')}
-              popoverMinWidth={240}
-              onToggle={handlePopoverHide}
               onChange={handleChange}
             >
-              {props.envList.map((i: any) => (
-                <Select.Option key={i.value} id={i.label} name={i.label}></Select.Option>
-              ))}
             </Select>
           ) : (
-            <span class={styles.headerText}>{t('flow.content.myAuthoringEnv')}</span>
+            <span class={styles.headerText}>{props.modelValue}</span>
           )}
         </p>
         {envName.value ? (
@@ -125,7 +88,7 @@ export default defineComponent({
               <p class={styles.envItemTit}>
                 {t('flow.content.creationNode')}
                 {props.isEdit ? (
-                  <span onClick={() => goEnvironment(envName.value)}>
+                  <span onClick={goToEnvironment}>
                     <SvgIcon name="set-line" size={12} class={`cursor-pointer ${styles.setLine}`} />
                   </span>
                 ) : null}

@@ -1,12 +1,12 @@
-import { get, post } from '@/utils/http'
 import {
-  delay,
-  ENABLE_MOCK_FALLBACK,
-  getMockExecuteResponse,
-  getMockPipelineModel,
-  getMockStartupInfo,
-  MOCK_API_DELAY,
-} from './previewMock'
+  fetchAuthoringNodeList,
+  type AuthoringNodeItem,
+  type AuthoringNodeResponse,
+} from '@/api/authoringEnvironmentApi'
+import { get, post } from '@/utils/http'
+
+// Re-export types for backward compatibility
+export type { AuthoringNodeItem, AuthoringNodeResponse as AuthoringNodesResponse }
 
 /**
  * Startup info response from API
@@ -86,20 +86,10 @@ export async function requestStartupInfo({
   if (version) {
     params.version = version
   }
-
-  try {
-    return await get<StartupInfo>(
+  return await get<StartupInfo>(
       `/process/api/user/builds/${projectId}/${flowId}/manualStartupInfo`,
       { params }
     )
-  } catch (error) {
-    if (ENABLE_MOCK_FALLBACK) {
-      console.warn('[API Fallback] requestStartupInfo failed, using mock data:', error)
-      await delay(MOCK_API_DELAY)
-      return getMockStartupInfo()
-    }
-    throw error
-  }
 }
 
 /**
@@ -120,19 +110,24 @@ export async function fetchPipelineByVersion({
     params.version = version
   }
 
-  try {
-    return await get<PipelineModelResponse>(
+  return await get<PipelineModelResponse>(
       `/process/api/user/pipelines/${projectId}/${flowId}`,
       { params }
     )
-  } catch (error) {
-    if (ENABLE_MOCK_FALLBACK) {
-      console.warn('[API Fallback] fetchPipelineByVersion failed, using mock data:', error)
-      await delay(MOCK_API_DELAY)
-      return getMockPipelineModel()
-    }
-    throw error
-  }
+}
+
+/**
+ * Get authoring nodes list for preview execution
+ * Uses the centralized authoringEnvironmentApi
+ */
+export async function requestAuthoringNodes({
+  projectId,
+  envName,
+}: {
+  projectId: string
+  envName: string
+}): Promise<AuthoringNodeResponse> {
+  return await fetchAuthoringNodeList({ projectId, envName })
 }
 
 /**
@@ -141,14 +136,18 @@ export async function fetchPipelineByVersion({
  */
 export async function requestExecPipeline({
   projectId,
-  flowId,
+  pipelineId,
   version,
   params,
+  remark,
+  resourceHashId,
 }: {
   projectId: string
-  flowId: string
+  pipelineId: string
   version?: number
   params: Record<string, any>
+  remark?: string
+  resourceHashId?: string
 }): Promise<ExecutePipelineResponse> {
   const query: Record<string, any> = {}
   if (version) {
@@ -160,18 +159,18 @@ export async function requestExecPipeline({
     delete params.buildNo
   }
 
-  try {
-    return await post<ExecutePipelineResponse>(
-      `/process/api/user/builds/${projectId}/${flowId}`,
+  // Add remark (run message) to params body with correct field name
+  if (remark) {
+    params.BK_CI_BUILD_MSG = remark
+  }
+  // Add resourceHashId (selected node) to params body with correct field name
+  if (resourceHashId) {
+    params.BK_CI_CREATIVE_STREAM_NODE_AGENT_ID = resourceHashId
+  }
+
+  return await post<ExecutePipelineResponse>(
+      `/process/api/user/builds/${projectId}/${pipelineId}`,
       params,
       { params: query }
     )
-  } catch (error) {
-    if (ENABLE_MOCK_FALLBACK) {
-      console.warn('[API Fallback] requestExecPipeline failed, using mock data:', error)
-      await delay(MOCK_API_DELAY)
-      return getMockExecuteResponse()
-    }
-    throw error
-  }
 }

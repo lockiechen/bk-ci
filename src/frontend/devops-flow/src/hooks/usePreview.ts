@@ -1,7 +1,8 @@
-import type { StartupProperty } from '@/api/preview'
+import type { AuthoringNodeItem, StartupProperty } from '@/api/preview'
 import { ROUTE_NAMES } from '@/constants/routes'
 import { usePreviewStore } from '@/stores'
 import { Message } from 'bkui-vue'
+import type { ComputedRef, Ref } from 'vue'
 import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useRoute, useRouter } from 'vue-router'
@@ -33,27 +34,33 @@ interface UsePreviewOptions {
 /** UsePreview return type */
 interface UsePreviewReturn {
   // Route params
-  projectId: ReturnType<typeof computed<string>>
-  flowId: ReturnType<typeof computed<string>>
-  version: ReturnType<typeof computed<number | undefined>>
-  isDebugMode: ReturnType<typeof computed<boolean>>
+  projectId: ComputedRef<string>
+  flowId: ComputedRef<string>
+  version: ComputedRef<number | undefined>
+  isDebugMode: ComputedRef<boolean>
+  canExecute: ComputedRef<boolean>
+  flowName: ComputedRef<string>
 
   // UI State
-  activeSections: ReturnType<typeof ref<Set<SectionId>>>
-  checkAll: ReturnType<typeof ref<boolean>>
-  selectedNode: ReturnType<typeof ref<string>>
-  runMessage: ReturnType<typeof ref<string>>
+  activeSections: Ref<Set<SectionId>>
+  checkAll: Ref<boolean>
+  selectedNode: Ref<string>
+  runMessage: Ref<string>
+
+  // Authoring nodes
+  authoringNodes: ComputedRef<AuthoringNodeItem[]>
+  authoringNodesLoading: ComputedRef<boolean>
 
   // Grouped params (computed)
-  groupedParams: ReturnType<typeof computed<Record<string, StartupProperty[]>>>
-  groupedConstants: ReturnType<typeof computed<Record<string, StartupProperty[]>>>
-  groupedOtherParams: ReturnType<typeof computed<Record<string, StartupProperty[]>>>
-  hasGroupedParams: ReturnType<typeof computed<boolean>>
-  hasGroupedConstants: ReturnType<typeof computed<boolean>>
-  hasGroupedOtherParams: ReturnType<typeof computed<boolean>>
+  groupedParams: ComputedRef<Record<string, StartupProperty[]>>
+  groupedConstants: ComputedRef<Record<string, StartupProperty[]>>
+  groupedOtherParams: ComputedRef<Record<string, StartupProperty[]>>
+  hasGroupedParams: ComputedRef<boolean>
+  hasGroupedConstants: ComputedRef<boolean>
+  hasGroupedOtherParams: ComputedRef<boolean>
 
   // Atoms count (computed)
-  selectedAtomsCount: ReturnType<typeof computed<AtomsCount>>
+  selectedAtomsCount: ComputedRef<AtomsCount>
 
   // Store getters
   store: ReturnType<typeof usePreviewStore>
@@ -70,6 +77,7 @@ interface UsePreviewReturn {
   handleVersionChange: (newVersion: number) => void
   handleExecute: () => Promise<void>
   loadData: (ver?: number) => Promise<void>
+  loadAuthoringNodes: (envName: string) => Promise<void>
 }
 
 // ============================================
@@ -170,17 +178,31 @@ export const usePreview = (options: UsePreviewOptions = {}): UsePreviewReturn =>
     Object.prototype.hasOwnProperty.call(route.query, 'debug')
   )
 
+  const canExecute = computed(() =>
+    store.atomicFlowInfo.value?.permissions?.canExecute ?? true
+  )
+  const flowName = computed(() =>
+    store.atomicPipelineModel.value?.modelAndSetting.model.name as string ?? '--'
+  )
+
   // ----------------------------------------
   // 3.3 Local UI State
   // ----------------------------------------
   const activeSections = ref<Set<SectionId>>(new Set(defaultExpandedSections as SectionId[]))
   const checkAll = ref(true)
-  const selectedNode = ref('')
+  const selectedNode = ref()
   const runMessage = ref('')
 
   // ----------------------------------------
   // 3.4 Computed Data Layer (Derived from Store)
   // ----------------------------------------
+
+  /** Authoring nodes list */
+  const authoringNodes = computed(() => store.authoringNodes)
+
+  /** Authoring nodes loading state */
+  const authoringNodesLoading = computed(() => store.authoringNodesLoading)
+
   const groupedParams = computed(() => 
     groupParamsByCategory(store.paramList, '未分组入参')
   )
@@ -324,6 +346,8 @@ export const usePreview = (options: UsePreviewOptions = {}): UsePreviewReturn =>
           message: t('flow.preview.cannotManualStartup'),
         })
       }
+      
+      await loadAuthoringNodes(store.atomicPipelineModel.value?.modelAndSetting?.setting?.envName ?? '')
     } catch (error: unknown) {
       console.error('Failed to load preview data:', error)
       Message({
@@ -335,17 +359,46 @@ export const usePreview = (options: UsePreviewOptions = {}): UsePreviewReturn =>
   }
 
   /**
+   * Load authoring nodes by envName
+   */
+  const loadAuthoringNodes = async (envName: string): Promise<void> => {
+    try {
+     
+      await store.loadAuthoringNodes({
+        projectId: projectId.value,
+        envName,
+      })
+
+      // Set first available node as default selected
+      const availableNodes = store.authoringNodes.filter(
+        (node: AuthoringNodeItem) => node.agentStatus && node.envEnableNode
+      )
+      if (availableNodes.length > 0 && !selectedNode.value) {
+        selectedNode.value = availableNodes[0]!.agentId
+      }
+    } catch (error: unknown) {
+      console.error('Failed to load authoring nodes:', error)
+      // Don't show error message as this is non-critical
+    }
+  }
+
+  /**
    * Execute the pipeline
    */
   const handleExecute = async (): Promise<void> => {
     try {
       const skipAtoms = store.canElementSkip ? store.getSkippedAtoms() : {}
       
+      // Get pipelineId from flowInfo, fallback to flowId if not available
+      const pipelineId = store.flowInfo?.pipelineId || flowId.value
+      
       const result = await store.executePipeline({
         projectId: projectId.value,
-        flowId: flowId.value,
+        pipelineId,
         version: isDebugMode.value ? store.flowInfo?.version : version.value,
         skipAtoms,
+        remark: runMessage.value,
+        resourceHashId: selectedNode.value,
       })
 
       if (result?.id) {
@@ -406,16 +459,22 @@ export const usePreview = (options: UsePreviewOptions = {}): UsePreviewReturn =>
   // ----------------------------------------
   return {
     // Route params
-    projectId,
+    projectId, 
     flowId,
     version,
     isDebugMode,
+    flowName,
+    canExecute,
 
     // UI State
     activeSections,
     checkAll,
     selectedNode,
     runMessage,
+
+    // Authoring nodes
+    authoringNodes,
+    authoringNodesLoading,
 
     // Grouped params
     groupedParams,
@@ -443,6 +502,7 @@ export const usePreview = (options: UsePreviewOptions = {}): UsePreviewReturn =>
     handleVersionChange,
     handleExecute,
     loadData,
+    loadAuthoringNodes,
   }
 }
 

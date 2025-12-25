@@ -1,11 +1,11 @@
 import { FLOW_EDIT_TABS, isValidFlowEditTab } from '@/constants/routes'
-import { useFlowModel } from '@/hooks/useFlowModel'
 import { useUIStore } from '@/stores/ui'
 import { Tab } from 'bkui-vue'
 import { storeToRefs } from 'pinia'
 import { computed, defineComponent, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { RouterView, useRoute, useRouter } from 'vue-router'
+import { EditHeader } from '../../../components/EditHeader'
 import styles from './Edit.module.css'
 import VariablePanel from './VariablePanel'
 
@@ -16,9 +16,7 @@ export default defineComponent({
     const route = useRoute()
     const router = useRouter()
     const flowId = route.params.flowId as string
-    const flowModel = useFlowModel({
-      flowId,
-    })
+
 
     const tabConfigs = [
       {
@@ -86,40 +84,43 @@ export default defineComponent({
     })
 
     return () => (
-      <div class={styles.editWrapper}>
-        {/* 主内容区域 */}
-        <div
-          class={[
-            styles.mainContent,
-            isVariablePanelOpen.value &&
-              shouldShowVariablePanel.value &&
-              styles.mainContentWithPanel,
-          ]}
-        >
-          <Tab
-            active={activeTab.value}
-            type="card-tab"
-            class={styles.tabSwitcher}
-            onChange={handleTabChange}
+      <>
+        <EditHeader />
+        <div class={styles.editWrapper}>
+          {/* 主内容区域 */}
+          <div
+            class={[
+              styles.mainContent,
+              isVariablePanelOpen.value &&
+                shouldShowVariablePanel.value &&
+                styles.mainContentWithPanel,
+            ]}
           >
-            {tabConfigs.map((tab) => (
-              <Tab.TabPanel key={tab.name} name={tab.name} label={t(tab.labelKey)} />
-            ))}
-          </Tab>
-          <div class={styles.tabContent}>
-            <RouterView />
+            <Tab
+              active={activeTab.value}
+              type="card-tab"
+              class={styles.tabSwitcher}
+              onChange={handleTabChange}
+            >
+              {tabConfigs.map((tab) => (
+                <Tab.TabPanel key={tab.name} name={tab.name} label={t(tab.labelKey)} />
+              ))}
+            </Tab>
+            <div class={styles.tabContent}>
+              <RouterView />
+            </div>
           </div>
+          {/* 变量面板 - 只在创作流编排tab时显示 */}
+          {shouldShowVariablePanel.value && (
+            <VariablePanel
+              v-model={isVariablePanelOpen.value}
+              flowId={flowId}
+              editable
+              onToggle={handleVariablePanelToggle}
+            />
+          )}
         </div>
-        {/* 变量面板 - 只在创作流编排tab时显示 */}
-        {shouldShowVariablePanel.value && (
-          <VariablePanel
-            v-model={isVariablePanelOpen.value}
-            flowId={flowId}
-            editable
-            onToggle={handleVariablePanelToggle}
-          />
-        )}
-      </div>
+      </>
     )
   },
 })

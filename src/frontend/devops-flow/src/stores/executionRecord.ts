@@ -1,5 +1,5 @@
-import { ref, computed } from 'vue'
 import { defineStore } from 'pinia'
+import { computed, ref } from 'vue'
 import {
   getExecutionRecords,
   type ExecutionRecord,
@@ -7,28 +7,42 @@ import {
 } from '../api/executionRecord'
 
 export const useExecutionRecordStore = defineStore('executionRecord', () => {
-  // 执行记录列表
+  // Execution record list
   const records = ref<ExecutionRecord[]>([])
 
-  // 分页信息
+  // Pagination info
   const pagination = ref({
     current: 1,
     count: 0,
-    limit: 10,
+    limit: 20,
+    totalPages: 0,
   })
 
-  // 查询参数
-  const queryParams = ref<Omit<ExecutionRecordQueryParams, 'page' | 'limit'>>({
-    flowId: '',
+  // Query parameters
+  const queryParams = ref<{
+    projectId: string
+    pipelineId: string
+    startTime?: string
+    endTime?: string
+    keyword?: string
+    status?: string[]
+    trigger?: string[]
+    debug?: boolean
+  }>({
+    projectId: '',
+    pipelineId: '',
     startTime: undefined,
     endTime: undefined,
     keyword: undefined,
+    status: undefined,
+    trigger: undefined,
+    debug: false,
   })
 
-  // 加载状态
+  // Loading state
   const loading = ref(false)
 
-  // 全选状态
+  // Select all state
   const isAllChecked = computed(() => {
     return records.value.length > 0 && records.value.every((item) => item.checked)
   })
@@ -39,18 +53,27 @@ export const useExecutionRecordStore = defineStore('executionRecord', () => {
   })
 
   /**
-   * 加载执行记录列表
+   * Load execution records
    */
-  async function loadExecutionRecords() {
-    if (!queryParams.value.flowId) {
+  async function loadExecutionRecords(page?: number) {
+    if (!queryParams.value.projectId || !queryParams.value.pipelineId) {
+      console.warn('projectId or pipelineId is not set')
       return
     }
 
     loading.value = true
     try {
-      // 前端分页模式：不需要传递 page 和 limit，返回所有数据让 Table 组件自己处理
       const params: ExecutionRecordQueryParams = {
-        ...queryParams.value,
+        projectId: queryParams.value.projectId,
+        pipelineId: queryParams.value.pipelineId,
+        page: page || pagination.value.current,
+        pageSize: pagination.value.limit,
+        startTime: queryParams.value.startTime,
+        endTime: queryParams.value.endTime,
+        keyword: queryParams.value.keyword,
+        status: queryParams.value.status,
+        trigger: queryParams.value.trigger,
+        debug: queryParams.value.debug,
       }
 
       const response = await getExecutionRecords(params)
@@ -58,17 +81,19 @@ export const useExecutionRecordStore = defineStore('executionRecord', () => {
       pagination.value.count = response.count
       pagination.value.current = response.page
       pagination.value.limit = response.limit
+      pagination.value.totalPages = response.totalPages
     } catch (error) {
-      console.error('加载执行记录失败:', error)
+      console.error('Failed to load execution records:', error)
+      records.value = []
     } finally {
       loading.value = false
     }
   }
 
   /**
-   * 设置查询参数
+   * Set query parameters
    */
-  function setQueryParams(params: Partial<Omit<ExecutionRecordQueryParams, 'page' | 'limit'>>) {
+  function setQueryParams(params: Partial<typeof queryParams.value>) {
     queryParams.value = {
       ...queryParams.value,
       ...params,
@@ -76,7 +101,7 @@ export const useExecutionRecordStore = defineStore('executionRecord', () => {
   }
 
   /**
-   * 设置分页信息
+   * Set pagination
    */
   function setPagination(page: number, limit?: number) {
     pagination.value.current = page
@@ -86,7 +111,7 @@ export const useExecutionRecordStore = defineStore('executionRecord', () => {
   }
 
   /**
-   * 切换全选
+   * Toggle select all
    */
   function toggleSelectAll(checked: boolean) {
     records.value.forEach((item) => {
@@ -95,7 +120,7 @@ export const useExecutionRecordStore = defineStore('executionRecord', () => {
   }
 
   /**
-   * 切换单个选择
+   * Toggle single selection
    */
   function toggleSelect(recordId: string, checked: boolean) {
     const record = records.value.find((item) => item.id === recordId)
@@ -105,25 +130,30 @@ export const useExecutionRecordStore = defineStore('executionRecord', () => {
   }
 
   /**
-   * 重置状态
+   * Reset state
    */
   function reset() {
     records.value = []
     pagination.value = {
       current: 1,
       count: 0,
-      limit: 10,
+      limit: 20,
+      totalPages: 0,
     }
     queryParams.value = {
-      flowId: '',
+      projectId: '',
+      pipelineId: '',
       startTime: undefined,
       endTime: undefined,
       keyword: undefined,
+      status: undefined,
+      trigger: undefined,
+      debug: false,
     }
   }
 
   return {
-    // 状态
+    // State
     records,
     pagination,
     queryParams,
@@ -131,7 +161,7 @@ export const useExecutionRecordStore = defineStore('executionRecord', () => {
     isAllChecked,
     isIndeterminate,
 
-    // 方法
+    // Methods
     loadExecutionRecords,
     setQueryParams,
     setPagination,
