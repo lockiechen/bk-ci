@@ -32,6 +32,7 @@ export default defineComponent({
       fetchTriggerEventList,
       handleFilterChange,
       handleClearSearch,
+      handleClearCalendar,
       handleSearchChange,
     } = useTriggerRecordData(styles as Styles)
 
@@ -65,6 +66,7 @@ export default defineComponent({
                       shortcuts={shortcuts.value}
                       type="datetimerange"
                       use-shortcut-text
+                      onClear={() => handleClearCalendar(queryList)}
                       onPick-success={() => handleFilterChange(queryList)}
                     />
                     <SearchSelect

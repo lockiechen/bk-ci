@@ -1,7 +1,8 @@
 /**
  * 权限代持相关 API
  */
-
+import { get, post } from '@/utils/http'
+import { AUTH_API_URL_PREFIX } from '@/utils/apiUrlPrefix'
 /**
  * 资源授权数据结构
  */
@@ -67,28 +68,17 @@ export async function getResourceAuthorization({
   projectId: string
   flowId: string
 }): Promise<ResourceAuthData> {
-  // TODO: 调用实际接口
-  // const response = await http.get(`/auth/authorization/${projectId}/pipeline/getResourceAuthorization`, {
-  //   params: { resourceCode: flowId }
-  // });
-  // return response.data;
-
-  // 模拟数据
-  return new Promise((resolve) => {
-    setTimeout(() => {
-      resolve({
-        id: 2369,
-        projectCode: 'dgdf',
-        resourceType: 'flow',
-        resourceName: 'trigger/t-default.yml',
-        resourceCode: 'dfgsdfgdfgfdg',
-        handoverTime: 1747137436000,
-        handoverFrom: 'zhangsan',
-        handoverFromCnName: '张三',
-        executePermission: true,
-      })
-    }, 300)
-  })
+  try {
+    const response = await get<ResourceAuthData>(
+      `${AUTH_API_URL_PREFIX}/user/auth/authorization/${projectId}/pipeline/getResourceAuthorization`,
+      {
+        params: { resourceCode: flowId },
+      },
+    )
+    return response
+  } catch (error) {
+    throw error
+  }
 }
 
 /**
@@ -100,22 +90,13 @@ export async function resetResourceAuthorization(
   projectId: string,
   params: ResetResourceAuthParams,
 ): Promise<ResetResourceAuthResponse> {
-  // TODO: 调用实际接口
-  // const response = await http.post(`/auth/authorization/${projectId}/resetResourceAuthorization`, params);
-  // return response.data;
-
-  // 模拟数据
-  return new Promise((resolve) => {
-    setTimeout(() => {
-      console.log('重置资源授权成功:', params)
-      // 模拟成功响应（无失败项）
-      resolve({})
-      // 如果需要模拟失败响应，可以使用：
-      // resolve({
-      //   FAILED: [{
-      //     handoverFailedMessage: '重置失败原因1<br/>重置失败原因2'
-      //   }]
-      // })
-    }, 300)
-  })
+  try {
+    const response = await post<ResetResourceAuthResponse>(
+      `${AUTH_API_URL_PREFIX}/user/auth/authorization/${projectId}/resetResourceAuthorization`,
+      params,
+    )
+    return response
+  } catch (error) {
+    throw error
+  }
 }

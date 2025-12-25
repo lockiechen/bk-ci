@@ -1,6 +1,9 @@
 /**
  * 变更日志相关 API
  */
+import { get } from '@/utils/http'
+import { PROCESS_API_URL_PREFIX } from '@/utils/apiUrlPrefix'
+
 export interface ChangeLogRecord {
   id: number
   projectId: string
@@ -38,16 +41,14 @@ export interface ChangeLogListResponse {
  * @param flowId 创作流ID
  */
 export async function getChangeLogOperators(projectId: string, flowId: string): Promise<string[]> {
-  // TODO: 调用实际接口
-  // const response = await http.get(`/version/projects/${projectId}/pipelines/${flowId}/operatorList`);
-  // return response.data;
-
-  // 模拟数据
-  return new Promise((resolve) => {
-    setTimeout(() => {
-      resolve(['zhangsan', 'lisi', 'wangwu'])
-    }, 300)
-  })
+  try {
+    const response = await get<string[]>(
+      `${PROCESS_API_URL_PREFIX}/user/version/projects/${projectId}/pipelines/${flowId}/operatorList`,
+    )
+    return response
+  } catch (error) {
+    throw error
+  }
 }
 
 /**
@@ -59,65 +60,14 @@ export async function getChangeLogOperators(projectId: string, flowId: string): 
 export async function getChangeLogList(
   params: ChangeLogQueryParams,
 ): Promise<ChangeLogListResponse> {
-  // TODO: 调用实际接口
-  // const response = await http.get(`/version/projects/${projectId}/pipelines/${flowId}/operationLog`, { params });
-  // return response.data;
-
-  // 模拟数据
-  return new Promise((resolve) => {
-    setTimeout(() => {
-      const mockData: ChangeLogRecord[] = [
-        {
-          id: 296090,
-          projectId: 'abc',
-          pipelineId: 'p-e0f2eb86b8df4sds',
-          version: 3,
-          operator: 'zhangsan',
-          operationLogType: 'UPDATE_DRAFT_VERSION',
-          operationLogStr: '修改了草稿',
-          params: '',
-          operateTime: 1746692280000,
-          versionName: '',
-          versionCreateTime: 1746692078000,
-          status: 'COMMITTING',
-        },
-        {
-          id: 296091,
-          projectId: 'abc',
-          pipelineId: 'p-e0f2eb86b8df4sds',
-          version: 2,
-          operator: 'lisi',
-          operationLogType: 'CREATE_DRAFT_VERSION',
-          operationLogStr: '创建了草稿',
-          params: '',
-          operateTime: 1746692080000,
-          versionName: '',
-          versionCreateTime: 1746692078000,
-          status: 'COMMITTED',
-        },
-        {
-          id: 296092,
-          projectId: 'abc',
-          pipelineId: 'p-e0f2eb86b8df4sds',
-          version: 1,
-          operator: 'zhangsan',
-          operationLogType: 'COMMIT_VERSION',
-          operationLogStr: '提交了版本',
-          params: '',
-          operateTime: 1746692078000,
-          versionName: '',
-          versionCreateTime: 1746692078000,
-          status: 'COMMITTED',
-        },
-      ]
-
-      resolve({
-        count: 3,
-        page: 1,
-        pageSize: 20,
-        totalPages: 1,
-        records: mockData,
-      })
-    }, 1000)
-  })
+  try {
+    const { projectId, flowId, ...otherParams } = params
+    const response = await get<ChangeLogListResponse>(
+      `${PROCESS_API_URL_PREFIX}/user/version/projects/${projectId}/pipelines/${flowId}/operationLog`,
+      { params: otherParams },
+    )
+    return response
+  } catch (error) {
+    throw error
+  }
 }

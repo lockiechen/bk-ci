@@ -140,6 +140,7 @@ export function useTriggerRecordData(styles: Styles) {
     fetchTriggerEventList: store.fetchTriggerEventList,
     handleFilterChange: store.handleFilterChange,
     handleClearSearch: store.handleClearSearch,
+    handleClearCalendar: store.handleClearCalendar,
     handleSearchChange: store.handleSearchChange,
   }
 }

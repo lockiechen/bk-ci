@@ -12,6 +12,7 @@ import {
   type QueryListFunction,
   type TypeItem,
 } from '@/api/triggerRecord'
+import { useRoute } from 'vue-router'
 
 interface SearchItemValue {
   id: string
@@ -26,6 +27,7 @@ interface SearchItem {
 
 export const useTriggerRecordStore = defineStore('triggerRecord', () => {
   const { t } = useI18n()
+  const router = useRoute()
 
   const loading = ref(false)
   const triggerEventList = ref<TriggerRecordItem[]>([])
@@ -85,7 +87,7 @@ export const useTriggerRecordStore = defineStore('triggerRecord', () => {
     {
       name: t('flow.triggerRecord.eventType'),
       id: 'eventType',
-      multiable: true,
+      multiple: true,
       children: eventTypeList.value.map((item) => ({
         id: item.id,
         name: item.value,
@@ -109,7 +111,7 @@ export const useTriggerRecordStore = defineStore('triggerRecord', () => {
       (acc: Partial<TriggerRecordParams>, item) => {
         if (item.values?.length) {
           const allowedFields: (keyof TriggerRecordParams)[] = [
-            'status',
+            'eventType',
             'triggerUser',
             'triggerType',
           ]
@@ -138,14 +140,13 @@ export const useTriggerRecordStore = defineStore('triggerRecord', () => {
     loading.value = true
     try {
       const params: TriggerRecordParams = {
-        projectId: '',
-        pipelineId: '',
+        projectId: router.params.projectId as string,
+        pipelineId: router.params.flowId as string,
         ...getSearchQuery(),
         page,
         pageSize,
       }
 
-      console.log('🚀 ~ fetchTriggerEventList ~ params:', params)
       const response = await getTriggerRecords(params)
       return {
         records: response?.records || [],
@@ -174,6 +175,14 @@ export const useTriggerRecordStore = defineStore('triggerRecord', () => {
    */
   const handleClearSearch = (queryList: QueryListFunction) => {
     searchValue.value = []
+    dateTimeRange.value = []
+    queryList(1)
+  }
+
+  /**
+   * 清空日历搜索条件
+   */
+  const handleClearCalendar = (queryList: QueryListFunction) => {
     dateTimeRange.value = []
     queryList(1)
   }
@@ -213,6 +222,7 @@ export const useTriggerRecordStore = defineStore('triggerRecord', () => {
     // 方法
     fetchTriggerEventList,
     init,
+    handleClearCalendar,
     handleFilterChange,
     handleClearSearch,
     handleSearchChange,

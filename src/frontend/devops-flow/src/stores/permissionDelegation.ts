@@ -3,12 +3,11 @@ import { defineStore } from 'pinia'
 import { useI18n } from 'vue-i18n'
 import { useRoute } from 'vue-router'
 import { Message } from 'bkui-vue'
+import { useAuthStore } from '@/stores/auth'
 import {
   getResourceAuthorization,
   resetResourceAuthorization,
-  type ResourceAuthData,
   type ResetResourceAuthParams,
-  type ResetResourceAuthResponse,
 } from '@/api/permissionDelegation'
 
 /**
@@ -16,6 +15,7 @@ import {
  */
 export const usePermissionDelegationStore = defineStore('permissionDelegation', () => {
   const route = useRoute()
+  const authStore = useAuthStore()
   const { t } = useI18n()
 
   // 状态定义
@@ -64,16 +64,16 @@ export const usePermissionDelegationStore = defineStore('permissionDelegation', 
   async function handleReset() {
     const params: ResetResourceAuthParams = {
       projectCode: projectId.value,
-      resourceType: 'flow',
+      resourceType: 'pipeline',
       handoverChannel: 'OTHER',
       resourceAuthorizationHandoverList: [
         {
           projectCode: projectId.value,
-          resourceType: 'flow',
+          resourceType: 'pipeline',
           resourceName: resourceAuthData.value.resourceName,
           resourceCode: resourceAuthData.value.resourceCode,
           handoverFrom: resourceAuthData.value.handoverFrom,
-          handoverTo: 'default_user', // TODO真实用户
+          handoverTo: authStore.userInfo,
         },
       ],
     }
