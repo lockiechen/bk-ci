@@ -254,6 +254,7 @@ export interface FlowInfo {
   latestVersionStatus: VersionStatus // 最新版本状态
   locked: boolean // 是否锁定
   buildCancelPolicy: BuildCancelPolicy // 取消构建策略
+  description?: string
 }
 
 export interface FlowVersion {

@@ -61,7 +61,7 @@ export default defineComponent({
       // 请求执行构建
       const res = await retryFn({
         projectId,
-        flowId,
+        pipelineId: flowId,
         buildId,
         forceTrigger,
       })
@@ -69,7 +69,7 @@ export default defineComponent({
         const params: Record<string, any> = {
           ...route.params,
           projectId,
-          flowId,
+          pipelineId: flowId,
           buildNo: res.id,
           type: 'executeDetail',
         }

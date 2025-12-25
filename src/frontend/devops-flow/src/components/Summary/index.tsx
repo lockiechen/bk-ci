@@ -5,7 +5,7 @@ import { ROUTE_NAMES } from '@/constants/routes'
 import { useExecuteDetail } from '@/hooks/useExecuteDetail'
 import { type ExecuteDetailData } from '@/types/flow'
 import { Button, Input, Message, Popover } from 'bkui-vue'
-import { computed, defineComponent, ref, type PropType } from 'vue'
+import { computed, defineComponent, ref, watch, type PropType } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useRoute, useRouter } from 'vue-router'
 import styles from './Summary.module.css'
@@ -35,7 +35,7 @@ export default defineComponent({
     const flowId = ref(route.params.flowId as string)
     const remark = ref(props.execDetail.remark)
     const tempRemark = ref(props.execDetail.remark)
-    const { requestUpdateRemark } = useExecuteDetail()
+    const { requestUpdateRemark, fetchVersionDetail } = useExecuteDetail()
 
     const webhookInfo = computed(() => {
       return props.execDetail.webhookInfo || null
@@ -73,25 +73,50 @@ export default defineComponent({
       ]
     })
     const artifactQuality = computed(() => props.execDetail?.artifactQuality)
+    watch(
+      () => props.execDetail,
+      (val, oldVal) => {
+        if (val.remark !== tempRemark.value) {
+          tempRemark.value = val.remark
+          remark.value = val.remark
+        }
+        if (val?.curVersion !== oldVal?.curVersion) {
+          updateCurVersionDesc()
+        }
+      },
+      { immediate: true },
+    )
 
-    const showMoreMaterial = () => {
+    function showMoreMaterial() {
       isShowMoreMaterial.value = true
     }
 
-    const hideMoreMaterial = () => {
+    function hideMoreMaterial() {
       isShowMoreMaterial.value = false
     }
 
-    const showRemarkEdit = () => {
+    function showRemarkEdit() {
       tempRemark.value = remark.value
       remarkEditable.value = true
     }
 
-    const hideRemarkEdit = () => {
+    function hideRemarkEdit() {
       remarkEditable.value = false
     }
 
-    const handleRemarkChange = async () => {
+    async function updateCurVersionDesc() {
+      try {
+        const result = await fetchVersionDetail(props.execDetail.curVersion)
+        curVersionDesc.value = result.description || ''
+      } catch (error: any) {
+        Message({
+          message: error.message || error,
+          theme: 'error',
+        })
+      }
+    }
+
+    async function handleRemarkChange() {
       if (isChangeRemark.value) {
         return
       }
@@ -101,7 +126,7 @@ export default defineComponent({
           isChangeRemark.value = true
           await requestUpdateRemark({
             projectId: projectId.value,
-            flowId: flowId.value,
+            pipelineId: flowId.value,
             buildId: buildNo.value,
             remark: tempRemark.value,
           })
@@ -123,7 +148,7 @@ export default defineComponent({
       }
     }
 
-    const goOutputs = (values: any) => {
+    function goOutputs(values: any) {
       router.push({
         name: ROUTE_NAMES.FLOW_DETAIL_OUTPUTS,
         params: route.params,
