@@ -1,9 +1,9 @@
 import { computed, defineComponent, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
-import { Dialog, Loading, Form, Input, Select } from 'bkui-vue'
+import { Dialog, Loading, Form, Input, Select, Message } from 'bkui-vue'
 import { SvgIcon } from '@/components/SvgIcon'
 import FlowLableSelector from '@/components/FlowLableSelector'
-import { type CopyFlowParams } from '@/api/flowContentList'
+import { type CopyFlowParams, type DynamicParamLables, type MatchDynamicViewParams } from '@/api/flowContentList'
 import { useFlowGroupData } from '@/hooks/useFlowGroupData'
 import { useFlowListData } from '@/hooks/useFlowListData'
 import styles from './CopyFlowPopup.module.css'
@@ -77,6 +77,8 @@ export default defineComponent({
     const tagGroupList = ref()
     const tagsLoading = ref(false)
     const labelSelectorRef = ref()
+    // 保存当前选中的标签映射，用于刷新时保留选择状态
+    const currentLabelMap = ref<Record<string, string[]>>({})
 
     const formFields = computed((): FormFieldConfig[] => [
       {
@@ -110,7 +112,7 @@ export default defineComponent({
           disabled: true,
           multiple: true,
           loading: dynamicLoading.value,
-          searchPlaceholder: t('flow.dialog.copyCreation.dynamicMatchPlaceholder'),
+          placeholder: t('flow.dialog.copyCreation.dynamicMatchPlaceholder'),
         },
       },
       {
@@ -119,34 +121,35 @@ export default defineComponent({
         component: 'Select',
         props: {
           multiple: true,
-          searchPlaceholder: t('flow.dialog.copyCreation.dynamicMatchPlaceholder'),
         },
       },
     ])
 
     watch(
       () => props.isShow,
-      (newVal) => {
+      async (newVal) => {
         if (newVal) {
-          const name = props.data?.name ? `${props.data.name}_copy` : ''
+          const name = props.data?.pipelineName ? `${props.data.pipelineName}_copy` : ''
           formData.value.name = name
-          getDynamicGroup()
-          handleRefresh()
+          await handleRefresh()
         }
       },
+      {
+        immediate: true,
+      }
     )
 
-    const getDynamicGroup = async (labelIds: string[] = []) => {
+    async function getDynamicGroup(labelIds: DynamicParamLables[]) {
       dynamicLoading.value = true
       try {
-        const params = {
-          labelIds,
-          flowName: formData.value.name,
+        const params: MatchDynamicViewParams = {
+          labels: labelIds,
+          pipelineName: formData.value.name,
         }
         const res = await getMatchDynamicData(params)
         formData.value.dynamicGroup = res
-      } catch (error) {
-        console.log('error:', error)
+      } catch (error: any) {
+        Message({  theme: 'error', message: error || error.message })
       } finally {
         dynamicLoading.value = false
       }
@@ -154,40 +157,55 @@ export default defineComponent({
 
     const onClose = () => {
       formData.value = initFormData()
+      currentLabelMap.value = {}  // 清空保存的标签映射
       emit('update:isShow', false)
     }
 
     const onConfirm = async () => {
-      emit('confirm', props.data.id, formData.value)
-      onClose()
+      emit('confirm', props.data.pipelineId, formData.value)
     }
 
     const handleAddLabel = () => {
       // TODO:跳转到标签设置页
     }
 
-    const handleRefresh = async () => {
-      // 清空标签数据
-      formData.value.labels = []
-      if (labelSelectorRef.value && labelSelectorRef.value.clearLabels) {
-        labelSelectorRef.value.clearLabels()
-      }
-
-      // TODO:获取label数据,projectId替换为真实projectId
+    async function handleRefresh() {
+      // 保留当前选中的标签状态，不清空
       tagsLoading.value = true
       try {
-        const res = await getProjectTagList('projectId')
+        const res = await getProjectTagList()
         tagGroupList.value = res
-      } catch (error) {
-        console.log('error:', error)
+        
+        // 如果有已选择的标签，使用当前选择的标签；否则使用空数组
+        const currentLabels = Object.keys(currentLabelMap.value).length > 0
+          ? Object.entries(currentLabelMap.value).map(([groupId, labelIds]) => ({
+              groupId,
+              labelIds
+            }))
+          : res.map(item => ({ groupId: item.id, labelIds: [] }))
+        
+        getDynamicGroup(currentLabels)
+      } catch (error: any) {
+        Message({  theme: 'error', message: error || error.message })
       } finally {
         tagsLoading.value = false
       }
     }
 
-    const updateDynamicGroup = (labelIds: string[]) => {
-      formData.value.labels = labelIds
-      getDynamicGroup(labelIds)
+    const updateDynamicGroup = (labelMap: Record<string, string[]>) => {
+      // 保存当前选中的标签映射
+      currentLabelMap.value = labelMap
+      
+      // 将 labelMap 转换为 labels 数组格式
+      const labels = Object.values(labelMap).flat()
+      formData.value.labels = labels
+      
+      // 构建动态分组查询参数
+      const params: DynamicParamLables[] = Object.entries(labelMap).map(([groupId, labelIds]) => ({
+        groupId,
+        labelIds
+      }))
+      getDynamicGroup(params)
     }
 
     const renderFormField = (field: FormFieldConfig) => {
@@ -258,7 +276,9 @@ export default defineComponent({
         title={t('flow.content.copyCreationFlow')}
         quick-close={false}
         class={styles.copyFlowPopup}
+        isLoading={props.loading}
         onClosed={onClose}
+        onHidden={onClose}
         onConfirm={onConfirm}
       >
         <Loading loading={props.loading} size="small">

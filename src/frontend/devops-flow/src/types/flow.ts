@@ -18,7 +18,7 @@ export const STATUS = {
   SUCCEED: 'SUCCEED',
   STAGE_SUCCESS: 'STAGE_SUCCESS',
   REVIEW_PROCESSED: 'REVIEW_PROCESSED',
-  
+
   // 失败状态
   FAILED: 'FAILED',
   TERMINATE: 'TERMINATE',
@@ -27,11 +27,11 @@ export const STATUS = {
   QUEUE_TIMEOUT: 'QUEUE_TIMEOUT',
   EXEC_TIMEOUT: 'EXEC_TIMEOUT',
   QUOTA_FAILED: 'QUOTA_FAILED',
-  
+
   // 取消/警告状态
   CANCELED: 'CANCELED',
   REVIEW_ABORT: 'REVIEW_ABORT',
-  
+
   // 运行中状态
   RUNNING: 'RUNNING',
   QUEUE: 'QUEUE',
@@ -45,7 +45,7 @@ export const STATUS = {
   DEPENDENT_WAITING: 'DEPENDENT_WAITING',
   QUALITY_CHECK_PASS: 'QUALITY_CHECK_PASS',
   QUALITY_CHECK_WAIT: 'QUALITY_CHECK_WAIT',
-  
+
   // 其他状态
   UNEXEC: 'UNEXEC',
   SKIP: 'SKIP',
@@ -57,7 +57,7 @@ export const STATUS = {
  * 状态类型定义
  * 基于 STATUS 常量生成类型
  */
-export type StatusType = typeof STATUS[keyof typeof STATUS]
+export type StatusType = (typeof STATUS)[keyof typeof STATUS]
 
 // ============================================
 // Enums
@@ -356,7 +356,7 @@ export interface StageStatusInfo {
  * 创作流模型
  */
 export interface FlowModel {
-  '@type': string
+  '@type'?: string
   name: string
   desc: string
   stages: Stage[]
@@ -393,20 +393,39 @@ export interface FlowSettings {
   updateTime?: number
   pipelineName: string
   desc: string
-  runLockType: string
-  maxConRunningQueueSize: number
-  waitQueueTimeMinute: number
-  maxQueueSize: number
-  concurrencyGroup: string
-  concurrencyCancelInProgress: boolean
-  successSubscriptionList: Subscription[]
-  failSubscriptionList: Subscription[]
-  // Authoring environment name
-  envName?: string
   // Cancel subscription list
   cancelSubscriptionList?: Subscription[]
   // Publish subscription list
   publishSubscriptionList?: Subscription[]
+  projectId: string
+  pipelineId: string
+  version?: number
+  labels?: string[]
+  labelNames?: string[]
+  buildNumRule?: string
+  successSubscription?: Subscription
+  failSubscription?: Subscription
+  successSubscriptionList?: Subscription[]
+  failSubscriptionList?: Subscription[]
+  runLockType?: string
+  waitQueueTimeMinute?: number
+  maxQueueSize?: number
+  concurrencyGroup?: string
+  concurrencyCancelInProgress?: boolean
+  maxConRunningQueueSize?: number
+  failIfVariableInvalid?: boolean
+  buildCancelPolicy?: 'EXECUTE_PERMISSION' | 'RESTRICTED'
+  maxPipelineResNum?: number
+  cleanVariablesWhenRetry?: boolean
+  pipelineAsCodeSettings?: {
+    enable: boolean
+    projectDialect: string
+    inheritedDialect: boolean
+    pipelineDialect: string
+  }
+  updater?: string
+  createdTime?: number
+  envName?: string
 }
 
 // ============================================
@@ -525,6 +544,8 @@ export interface FlowInfo {
   yamlExist: boolean // 是否存在YAML配置
   latestVersion: number // 最新版本
   latestBuildNum: number // 最新构建次数
+  buildCancelPolicy: BuildCancelPolicy // 取消构建策略
+  description?: string
   [key: string]: unknown
 }
 
@@ -539,4 +560,19 @@ export interface FlowVersion {
   versionStatus: VersionStatus // 版本状态
   isLatest: boolean // 是否最新版本
   [key: string]: unknown
+}
+
+export interface Subscription {
+  types: string[]
+  groups: string[]
+  users: string
+  wechatGroupFlag: boolean
+  wechatGroup: string
+  wechatGroupMarkdownFlag: boolean
+  detailFlag: boolean
+  content: string
+}
+export interface ModelAndSetting {
+  model: FlowModel
+  setting: FlowSettings
 }

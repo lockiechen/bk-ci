@@ -2,7 +2,7 @@
  * 创作流组相关 API
  */
 import { post, get, del, put } from '@/utils/http'
-import { PROCESS_API_URL_PREFIX, ENVIRONMENT_API_URL_PREFIX } from '@/utils/apiUrlPrefix'
+import { PROCESS_API_URL_PREFIX } from '@/utils/apiUrlPrefix'
 
 export type ViewType = 1 | 2 | -1 // 1: 动态分组，2: 静态分组，-1: 未分组
 
@@ -105,7 +105,7 @@ export async function deleteFlowGroup(projectId: string, viewId: string): Promis
  */
 export async function renameFlowGroup(projectId: string, viewId: string, params: EditGroupParams,): Promise<boolean> {
   try {
-    const res = put<boolean>(`${PROCESS_API_URL_PREFIX}/user/pipelineViews/projects/${projectId}/views/${viewId}`)
+    const res = put<boolean>(`${PROCESS_API_URL_PREFIX}/user/pipelineViews/projects/${projectId}/views/${viewId}`, params)
     return res
   } catch (error) {
     throw error
@@ -117,7 +117,7 @@ export async function renameFlowGroup(projectId: string, viewId: string, params:
  */
 export async function pinFlowGroup(projectId: string, viewId: string, enabled: boolean): Promise<boolean> {
   try {
-    const res = put<boolean>(`${PROCESS_API_URL_PREFIX}/user/pipelineViews/projects/${projectId}/views/${viewId}`, enabled)
+    const res = post<boolean>(`${PROCESS_API_URL_PREFIX}/user/pipelineViews/projects/${projectId}/views/${viewId}/top`, {enabled})
     return res
   } catch (error) {
     throw error

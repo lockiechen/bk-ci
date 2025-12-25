@@ -56,7 +56,7 @@
       "execute": "Execute",
       "nonManual": "Non-manual",
       "disabled": "Disabled",
-      "pipelineLockTips": "The pipeline is disabled and cannot be triggered in any way",
+      "pipelineLockTips": "The creation flow is disabled and cannot be triggered in any way",
       "pipelineManualDisable": "This pipeline is not configured for manual triggering",
       "orderByAlpha": "Order by Name A-Z",
       "orderByCreateTime": "Order by Creation Time",
@@ -131,6 +131,7 @@
       "loadingFlow": "Loading creation flow components...",
       "toggleFullScreen": "Toggle Full Screen",
       "favorite": "Favorite",
+      "uncollect": "Unfavorite",
       "export": "Export",
       "latest": "Latest",
       "executionInfo": "Execution Information",
@@ -234,6 +235,7 @@
       "noticeUser": "Notification User",
       "noticeContent": "Notification Content",
       "deleteSuccess": "Deletion successful",
+      "deleteFail": "Deletion failed",
       "triggerEventDeletedAndRemoved": "This trigger event has been deleted and removed from the creation flow",
       "allEvents": "All Events",
       "enterKeywords": "Please enter keywords",
@@ -481,6 +483,7 @@
         "selectedGroupSuffix": "user groups",
         "pleaseSelectGroup": "Please select a creation flow group",
         "added": "Added",
+        "err403": "No permission",
         "dynamicGroup": "Dynamic Group"
       },
       "saveAsTemplate": {

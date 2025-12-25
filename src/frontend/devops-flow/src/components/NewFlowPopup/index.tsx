@@ -1,6 +1,6 @@
 import { defineComponent, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
-import { Dialog, Button, Steps, Message } from 'bkui-vue'
+import { Dialog, Button, Steps } from 'bkui-vue'
 import styles from './Index.module.css'
 import BaseInfo from './BaseInfo'
 import SelectTemplate from './SelectTemplate'
@@ -73,20 +73,6 @@ export default defineComponent({
     }
 
     /**
-     * 确认创建
-     */
-    async function onConfirm() {
-      try {
-        await handleConfirm()
-      } catch (error) {
-        Message({
-          message: t('flow.content.createFailed'),
-          theme: 'error',
-        })
-      }
-    }
-
-    /**
      * 关闭弹窗
      */
     function onClose() {
@@ -98,6 +84,7 @@ export default defineComponent({
       <Dialog
         is-show={props.isShow}
         theme="primary"
+        zIndex={1000}
         width={1200}
         quick-close={false}
         onClosed={onClose}
@@ -151,7 +138,7 @@ export default defineComponent({
                   class={styles.btn}
                   loading={projectModelLoading.value}
                   theme="primary"
-                  onClick={onConfirm}
+                  onClick={handleConfirm}
                 >
                   {t('flow.content.createAndStartOrchestrating')}
                 </Button>

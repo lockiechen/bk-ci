@@ -32,7 +32,7 @@ export default defineComponent({
 
     const handleChange = (groupId: string, labelIds: string[]) => {
       labelMap.value[groupId] = labelIds
-      emit('change', Object.values(labelMap.value).flat())
+      emit('change', labelMap.value)
     }
 
     const clearLabels = () => {

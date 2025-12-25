@@ -1,5 +1,5 @@
 import {
-    type ExecuteDetailData
+  type ExecuteDetailData
 } from '@/types/flow'
 import { del, get, post } from '@/utils/http'
 
@@ -66,22 +66,22 @@ export interface BuildParamProperty {
 }
 
 /**
- * 获取执行历史详情数据
+ * 获取执行历史构建详情数据
  * @param projectId 项目ID
  * @param buildNo 构建编号
- * @param flowId 流水线ID
+ * @param pipelineId 流水线ID
  * @param executeCount 执行次数（可选）
- * @returns 执行详情数据
+ * @returns 构建详情数据
  */
 export function requestPipelineExecDetail({
   projectId,
   buildNo,
-  flowId,
+  pipelineId,
   executeCount,
 }: {
   projectId: string
   buildNo: string
-  flowId: string
+  pipelineId: string
   executeCount?: number
 }): Promise<ExecuteDetailData> {
   const params: Record<string, any> = {}
@@ -90,7 +90,7 @@ export function requestPipelineExecDetail({
   }
   
   return get<ExecuteDetailData>(
-    `/process/api/user/builds/projects/${projectId}/pipelines/${flowId}/builds/${buildNo}/record`,
+    `/process/api/user/builds/projects/${projectId}/pipelines/${pipelineId}/builds/${buildNo}/record`,
 
     { params }
   )
@@ -99,21 +99,21 @@ export function requestPipelineExecDetail({
 /**
  * 终止创作流执行
  * @param projectId 项目ID
- * @param flowId 创作流ID
+ * @param pipelineId 创作流ID
  * @param buildId 构建ID
  * @returns 是否成功终止
  */
 export function requestTerminatePipeline({
   projectId,
-  flowId,
+  pipelineId,
   buildId,
 }: {
   projectId: string
-  flowId: string
+  pipelineId: string
   buildId: string
 }): Promise<boolean> {
   return del<boolean>(
-    `/process/api/user/builds/${projectId}/${flowId}/${buildId}`
+    `/process/api/user/builds/${projectId}/${pipelineId}/${buildId}`
   )
 }
 
@@ -128,14 +128,14 @@ export function requestTerminatePipeline({
  */
 export function retryFlow({
   projectId,
-  flowId,
+  pipelineId,
   buildId,
   taskId,
   failedContainer,
   skip,
 }: {
   projectId: string
-  flowId: string
+  pipelineId: string
   buildId: string
   taskId?: string
   failedContainer?: string
@@ -145,7 +145,7 @@ export function retryFlow({
   const queryStr = taskId ? `?taskId=${taskId}${failedContainerStr}&skip=${skip}` : ''
   
   return post<RetryPipelineResponse>(
-    `/process/api/user/builds/${projectId}/${flowId}/${buildId}/retry${queryStr}`
+    `/process/api/user/builds/${projectId}/${pipelineId}/${buildId}/retry${queryStr}`
   )
 }
 
@@ -158,17 +158,17 @@ export function retryFlow({
  */
 export function replayFlow({
   projectId,
-  flowId,
+  pipelineId,
   buildId,
   forceTrigger = false,
 }: {
   projectId: string
-  flowId: string
+  pipelineId: string
   buildId: string
   forceTrigger?: boolean
 }): Promise<ReplayPipelineResponse> {
   return post<ReplayPipelineResponse>(
-    `/process/api/user/builds/${projectId}/${flowId}/${buildId}/replayByBuild?forceTrigger=${forceTrigger}`
+    `/process/api/user/builds/${projectId}/${pipelineId}/${buildId}/replayByBuild?forceTrigger=${forceTrigger}`
   )
 }
 

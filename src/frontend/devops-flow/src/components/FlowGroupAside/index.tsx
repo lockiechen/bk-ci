@@ -10,6 +10,7 @@ import { GroupActionMenu } from './GroupActionMenu'
 import { useFlowGroupData } from '../../hooks/useFlowGroupData'
 import { useDeleteConfirm } from '../../hooks/useDeleteConfirm'
 import { FLOW_GROUP_TYPES } from '../../constants/flowGroup'
+import { ROUTE_NAMES } from '@/constants/routes'
 import type { FlowGroupItem, EditGroupParams } from '../../api/flowGroup'
 
 export enum GroupSectionType {
@@ -67,7 +68,7 @@ export const FlowGroupAside = defineComponent({
 
     const handleItemClick = (key: string) => {
       router.push({
-        name: 'flowList',
+        name: ROUTE_NAMES.FLOW_LIST,
         params: { groupId: key },
         query: route.query,
       })
@@ -95,8 +96,8 @@ export const FlowGroupAside = defineComponent({
         }
         const res = await flowGroupData.createFlowGroup(params)
         if (res.id) {
-          flowGroupData.loadAllData()
           Message({ theme: 'success', message: t('flow.dialog.createGroup.addPipelineGroupSuc')})
+          flowGroupData.loadAllData()
         }
       } catch (error) {
         console.error('Failed to create flow group:', error)
@@ -123,27 +124,40 @@ export const FlowGroupAside = defineComponent({
     }
 
     // 处理重命名确认
-    const handleRenameConfirm = async (data: { groupId: string; name: string }) => {
+    const handleRenameConfirm = async (data: EditGroupParams) => {
       try {
-        await flowGroupData.renameFlowGroup(data.groupId, data.name)
-        Message({ theme: 'success', message: t('flow.actions.rename') + t('flow.common.success') })
+        dialogLoading.value = true
+        const params: EditGroupParams = {
+          ...data,
+          projected: currentGroupItem.value?.projected
+        }
+        const res = await flowGroupData.renameFlowGroup(params)
+        if (res) {
+          Message({ theme: 'success', message: t('flow.actions.rename') + t('flow.common.success') })
+          flowGroupData.loadAllData()
+        }
       } catch (error) {
         console.error('Failed to rename flow group:', error)
         Message({ theme: 'error', message: t('flow.actions.rename') + t('flow.common.failed') })
+      } finally {
+        dialogLoading.value = false
       }
     }
 
     // 处理置顶
     const handlePinToTop = async (item: FlowGroupItem) => {
       try {
-        const newTopState = !item.pin
-        await flowGroupData.pinFlowGroup(item.id, newTopState)
-        Message({
-          theme: 'success',
-          message: newTopState
-            ? t('flow.actions.pinToTop') + t('flow.common.success')
-            : t('flow.actions.unpin') + t('flow.common.success'),
-        })
+        const newTopState = !item.top
+        const res = await flowGroupData.pinFlowGroup(item.id, newTopState)
+        if (res) {
+          Message({
+            theme: 'success',
+            message: newTopState
+              ? t('flow.actions.pinToTop') + t('flow.common.success')
+              : t('flow.actions.unpin') + t('flow.common.success'),
+          })
+          flowGroupData.loadAllData()
+        }
       } catch (error) {
         console.error('Failed to pin flow group:', error)
         Message({ theme: 'error', message: t('flow.actions.pinToTop') + t('flow.common.failed') })
@@ -189,7 +203,7 @@ export const FlowGroupAside = defineComponent({
         },
         {
           id: 'pinToTop',
-          label: item.pin ? t('flow.actions.unpin') : t('flow.actions.pinToTop'),
+          label: item.top ? t('flow.actions.unpin') : t('flow.actions.pinToTop'),
         },
         {
           id: 'delete',
@@ -210,7 +224,7 @@ export const FlowGroupAside = defineComponent({
 
     const renderMenuItem = (item: FlowGroupItem) => {
       // 判断是否为配置对象还是分组项
-      const { id, name, icon, pipelineCount, showAction = false } = item
+      const { id, name, icon, pipelineCount, showAction = false, top } = item
       const sticky = id === FLOW_GROUP_TYPES.ALL_FLOWS
       const isTrash = id === FLOW_GROUP_TYPES.RECYCLE_BIN
       const operations = showAction ? getOperations(item) : []
@@ -223,6 +237,7 @@ export const FlowGroupAside = defineComponent({
             selectedItem.value === id && styles.active,
             sticky && styles.stickyMenuItem,
             isTrash && styles.trashItem,
+            top && styles.pinnedItem, // 置顶项添加背景色
           ]}
           onClick={() => handleItemClick(id)}
         >
@@ -348,6 +363,7 @@ export const FlowGroupAside = defineComponent({
           <RenameGroupDialog
             isShow={showRenameDialog.value}
             groupId={renameGroupId.value}
+            isLoading={dialogLoading.value}
             currentName={renameGroupName.value}
             onUpdate:isShow={(val: boolean) => {
               showRenameDialog.value = val

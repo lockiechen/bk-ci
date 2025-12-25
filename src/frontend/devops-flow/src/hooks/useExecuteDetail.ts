@@ -54,5 +54,6 @@ export function useExecuteDetail() {
     requestRetryFlow: store.requestRetryFlow,
     requestUpdateRemark: store.requestUpdateRemark,
     getStartupParams: store.getStartupParams,
+    fetchVersionDetail: store.fetchVersionDetail,
   }
 }

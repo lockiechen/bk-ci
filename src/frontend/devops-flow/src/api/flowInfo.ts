@@ -1,4 +1,5 @@
 import { type FlowInfo, type FlowVersion } from '@/types/flow'
+import { PROCESS_API_URL_PREFIX } from '@/utils/apiUrlPrefix'
 import { get, post } from '@/utils/http'
 
 export interface ResponseWithRecords<T> {
@@ -19,7 +20,7 @@ export async function fetchFlowInfo({
   flowId: string
 }): Promise<FlowInfo> {
   return await get<FlowInfo>(
-      `/process/api/user/version/projects/${projectId}/pipelines/${flowId}/detail`
+      `${PROCESS_API_URL_PREFIX}/user/version/projects/${projectId}/pipelines/${flowId}/detail`
     )
 }
 
@@ -45,17 +46,17 @@ export async function getFlowVersionList({
  */
 export async function updateRemark({
   projectId,
-  flowId,
+  pipelineId,
   buildId,
   remark,
 }: {
   projectId: string
-  flowId: string
+  pipelineId: string
   buildId: string
   remark: string
 }): Promise<boolean> {
   await post(
-      `/process/api/user/builds/${projectId}/${flowId}/${buildId}/updateRemark`,
+      `${PROCESS_API_URL_PREFIX}/user/builds/${projectId}/${pipelineId}/${buildId}/updateRemark`,
       { remark }
     )
     return true

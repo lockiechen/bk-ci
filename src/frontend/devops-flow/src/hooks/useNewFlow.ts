@@ -2,15 +2,18 @@ import { type CreateContentParams } from '@/api/flowContentList';
 import { templateTypeEnum } from "@/utils/flowConst";
 import { storeToRefs } from 'pinia';
 import { ref } from 'vue';
+import { useI18n } from 'vue-i18n';
 
 import { ROUTE_NAMES } from '@/constants/routes';
 import { useNewFlowStore } from '@/stores/createFlowStore';
+import { Message } from 'bkui-vue';
 import { useRoute, useRouter } from "vue-router";
 
 /**
  * NewFlowPopup组件业务逻辑 Hook
  */
 export function useNewFlow() {
+  const { t } = useI18n()
   const router = useRouter()
   const route = useRoute()
   const store = useNewFlowStore()
@@ -94,8 +97,8 @@ export function useNewFlow() {
       const params: CreateContentParams = {
         projectId: route.params.projectId as string,
         ...formData.value.baseInfo,
-        templateId: formData.value.templateInfo.activeTemplate.templateId,
-        templateVersion: formData.value.templateInfo.activeTemplate.version,
+        templateId: formData.value.templateInfo.activeTemplate.templateId!,
+        templateVersion: formData.value.templateInfo.activeTemplate.version!,
         ...formData.value.templateInfo.cloneTemplateSet.reduce((result, item) => {
           result[item] = true
           return result
@@ -110,9 +113,13 @@ export function useNewFlow() {
           name: ROUTE_NAMES.FLOW_EDIT_WORKFLOW_ORCHESTRATION,
           params: { ...route.params, flowId: res.pipelineId, version: res.version },
         })
+        store.resetForm()
       }
-    } catch (error) {
-      console.log("error:", error)
+    } catch (error: any) {
+       Message({
+        message: error || error.message || t('flow.content.createFailed'),
+        theme: 'error',
+      })
     }
   }
 

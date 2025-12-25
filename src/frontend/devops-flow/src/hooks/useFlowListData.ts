@@ -1,4 +1,4 @@
-import { computed, ref } from 'vue'
+import { computed, ref, watch } from 'vue'
 import { storeToRefs } from 'pinia'
 import { useRoute, useRouter } from 'vue-router'
 import { useI18n } from 'vue-i18n'
@@ -7,12 +7,22 @@ import { useDeleteConfirm } from '@/hooks/useDeleteConfirm'
 import { useFlowGroupData } from '@/hooks/useFlowGroupData'
 import { useFlowHomeContentStore } from '../stores/flowContentList'
 import { ORDER_ENUM, FLOW_SORT_FILED } from '../utils/flowConst'
-import { type SortType, type Collation, type ContentTableItem } from '@/api/flowContentList'
+import { ROUTE_NAMES } from '@/constants/routes'
+import {
+  type SortType,
+  type Collation,
+  type ContentTableItem,
+  type GroupResponse,
+} from '@/api/flowContentList'
+import { Message } from 'bkui-vue'
 
 export interface Styles {
   iconStarBtn: string
   [key: string]: string
 }
+
+// 搜索参数的 key 列表
+const SEARCH_KEYS = ['filterByPipelineName', 'filterByCreator', 'filterByViewIds', 'filterByLabels']
 
 /**
  * 创作流列表数据 Hook
@@ -20,7 +30,7 @@ export interface Styles {
  */
 export function useFlowListData(styles?: Styles) {
   const { showDeleteConfirm } = useDeleteConfirm()
-  const { myFlowGroupMenuItems, projectFlowGroups } = useFlowGroupData()
+  const { flowGroups, loadAllData } = useFlowGroupData()
   const store = useFlowHomeContentStore()
   const { t } = useI18n()
   const route = useRoute()
@@ -48,51 +58,103 @@ export function useFlowListData(styles?: Styles) {
       localStorage.getItem('flowSortCollation') ||
       ORDER_ENUM.ascending,
   )
-  const allGroups = computed(() => {
-    return [
-      {
-        id: FLOW_GROUP_TYPES.ALL_FLOWS,
-        name: t('flow.common.allFlows'),
-      },
-      ...myFlowGroupMenuItems.value,
-      ...projectFlowGroups.value,
-      {
-        id: FLOW_GROUP_TYPES.RECYCLE_BIN,
-        name: t('flow.sidebar.recycleBin'),
-      }
-    ]
-  })
+
 
   const currentGroup = computed(() => {
-    return allGroups.value.find(item => item.id === route.params.groupId)
+    const groupId = route.params.groupId as string
+    
+    // 先从 flowGroups 中查找
+    const foundGroup = flowGroups.value.find((item) => item.id === groupId)
+    if (foundGroup) {
+      return foundGroup
+    }
+    
+    // 如果没找到,说明是系统分组,构建一个虚拟的 group 对象
+    const systemGroupNames: Record<string, string> = {
+      [FLOW_GROUP_TYPES.ALL_FLOWS]: t('flow.common.allFlows'),
+      [FLOW_GROUP_TYPES.MY_FAVORITES]: t('flow.sidebar.myFavorites'),
+      [FLOW_GROUP_TYPES.MY_CREATED]: t('flow.sidebar.myCreated'),
+      [FLOW_GROUP_TYPES.RECYCLE_BIN]: t('flow.sidebar.recycleBin'),
+    }
+    
+    if (systemGroupNames[groupId]) {
+      return {
+        id: groupId,
+        name: systemGroupNames[groupId],
+      }
+    }
+    
+    return undefined
   })
-  
-  // 搜索选择器的值
+
+  // 搜索选择器的值（原始数据，用于 UI 展示）
   const searchValue = ref<
     Array<{ id: string; name: string; values?: Array<{ id: string; name: string }> }>
   >([])
 
+  const labelsGroup = ref<GroupResponse[]>([])
+
   // 搜索选择器的数据配置
-  const searchData = computed(() => [
-    {
-      id: 'filterByPipelineName',
-      name: t('flow.content.name'),
-    },
-    {
-      id: 'filterByCreator',
-      name: t('flow.content.creator'),
-    },
-    {
-      id: 'filterByViewIds',
-      name: t('flow.content.flowGroup'),
-      children: allGroups.value.filter(item => item.viewType !== -1),
-    },
-    {
-      id: 'filterByLabels',
-      name: t('flow.content.creationEnvironment'),
-      children: [],
-    },
-  ])
+  const searchData = computed(() => {
+    const baseSearchConfig = [
+      {
+        id: 'filterByPipelineName',
+        name: t('flow.content.name'),
+      },
+      {
+        id: 'filterByCreator',
+        name: t('flow.content.creator'),
+      },
+      {
+        id: 'filterByViewIds',
+        name: t('flow.content.flowGroup'),
+        multiple: true,
+        children: flowGroups.value.filter((item) => item.viewType !== -1),
+      },
+    ]
+
+    // 将 labelsGroup 中的每个分组作为独立的搜索配置项
+    const labelSearchConfigs = labelsGroup.value
+      .filter((item) => Array.isArray(item.labels) && item.labels.length > 0)
+      .map((item) => ({
+        id: item.id,
+        name: item.name,
+        multiple: true,
+        children: item.labels,
+      }))
+
+    return [...baseSearchConfig, ...labelSearchConfigs]
+  })
+
+  const flatSearchParams = computed(() => {
+    const params: any = {}
+    const labelIds: string[] = []
+    // 获取所有标签分组的 ID
+    const labelGroupIds = labelsGroup.value.map((item) => item.id)
+
+    searchValue.value.forEach((item) => {
+      // 检查是否是标签分组
+      if (labelGroupIds.includes(item.id)) {
+        // 收集所有标签 ID
+        if (item.values?.length) {
+          labelIds.push(...item.values.map((v) => v.id))
+        }
+      } else if (item.values?.length) {
+        // 其他多选类型
+        params[item.id] = item.values.map((v) => v.id).join(',')
+      } else if (item.name) {
+        // 普通文本输入类型
+        params[item.id] = item.name
+      }
+    })
+
+    // 合并所有标签到 filterByLabels
+    if (labelIds.length > 0) {
+      params.filterByLabels = labelIds.join(',')
+    }
+
+    return params
+  })
 
   const searchPlaceHolder = computed(() => {
     return searchData.value.map((item) => item.name).join('/')
@@ -145,25 +207,45 @@ export function useFlowListData(styles?: Styles) {
   })
 
   /**
+   * 初始化搜索选择器的值（从 URL 查询参数中获取）
+   */
+  let isSearchInitialized = false
+  watch(
+    flowGroups,
+    (groups) => {
+      // 只在首次加载且有数据时初始化一次
+      if (!isSearchInitialized && groups.length > 0) {
+        isSearchInitialized = true
+        initSearchFromQuery()
+      }
+    },
+    { immediate: true },
+  )
+
+  /**
    * 使用指定的 groupId 加载数据
    */
   function loadContentDataWithGroupId(groupId: string) {
     loadContentData(groupId)
+    // 同时更新组数据
+    loadAllData()
   }
 
   /**
    * 加载表格数据
    */
   async function loadContentData(groupId?: string) {
-    // TODO 使用 groupId
     const params = {
       projectId: route.params.projectId as string,
       page: pagination.value.current,
       pageSize: pagination.value.limit,
       sortType: currentSortType.value as SortType,
-      collation: currentCollation.value === 'null' ? 'DEFAULT' :  currentCollation.value.toLocaleUpperCase() as Collation,
-      // viewId: groupId || (route.params.groupId as string) || 'allPipeline',
-      viewId: 'allPipeline',
+      collation:
+        currentCollation.value === 'null'
+          ? 'DEFAULT'
+          : (currentCollation.value.toLocaleUpperCase() as Collation),
+      viewId: groupId || (route.params.groupId as string),
+      ...flatSearchParams.value,
     }
     await store.fetchFlowList(params)
   }
@@ -185,15 +267,88 @@ export function useFlowListData(styles?: Styles) {
   /**
    * 更新路由查询参数
    */
-  function updateQuery() {
+  function updateQuery(clearSearchParams = false) {
     const queryParams: any = {
       ...route.query,
       sortType: currentSortType.value,
       ...(currentCollation.value ? { collation: currentCollation.value } : {}),
     }
+
+    // 根据参数决定是否清除搜索参数
+    if (clearSearchParams) {
+      SEARCH_KEYS.forEach((key) => {
+        delete queryParams[key]
+      })
+    }
+
+    // 合并扁平化的搜索参数到路由中
+    Object.assign(queryParams, flatSearchParams.value)
+
     router.push({
       query: queryParams,
     })
+  }
+
+  /**
+   * 从路由查询参数初始化搜索条件
+   */
+  function initSearchFromQuery() {
+    searchValue.value = SEARCH_KEYS.reduce(
+      (result, key) => {
+        const queryValue = route.query[key] as string
+        if (!queryValue) return result
+
+        // 特殊处理 filterByLabels - 将标签分配到各个分组
+        if (key === 'filterByLabels') {
+          const labelIds = queryValue.split(',')
+
+          labelsGroup.value.forEach((labelGroup) => {
+            if (!labelGroup.labels?.length) return
+
+            const matchedLabels = labelIds
+              .map((id) => labelGroup.labels.find((label) => label.id === id))
+              .filter(Boolean)
+              .map((label) => ({ id: label!.id, name: label!.name }))
+
+            if (matchedLabels.length > 0) {
+              result.push({
+                id: labelGroup.id,
+                name: labelGroup.name,
+                values: matchedLabels,
+              })
+            }
+          })
+          return result
+        }
+
+        // 处理其他搜索参数
+        const searchConfig = searchData.value.find((item) => item.id === key)
+        if (!searchConfig) return result
+
+        // 处理多选类型（有 children）
+        if (searchConfig.children?.length) {
+          const values = queryValue
+            .split(',')
+            .map((id) => searchConfig.children?.find((c) => c.id === id))
+            .filter(Boolean)
+            .map((child) => ({ id: child!.id, name: child!.name }))
+
+          if (values.length > 0) {
+            result.push({ id: key, name: searchConfig.name, values })
+          }
+        } else {
+          // 处理普通文本输入类型
+          result.push({
+            id: key,
+            name: searchConfig.name,
+            values: [{ id: queryValue, name: queryValue }],
+          })
+        }
+
+        return result
+      },
+      [] as Array<{ id: string; name: string; values?: Array<{ id: string; name: string }> }>,
+    )
   }
 
   /**
@@ -285,17 +440,22 @@ export function useFlowListData(styles?: Styles) {
     }
   }
 
-  async function collectHandler(hasCollect: boolean, flowId: string) {
+  /**
+   * 收藏/取消收藏处理
+   * @param type - 当前收藏状态
+   * @param pipelineId - 流程 ID
+   */
+  async function collectHandler(type: boolean, pipelineId: string) {
     try {
-      const res = await store.updateCollect(!hasCollect, flowId)
+      const res = await store.updateCollect(!type, pipelineId)
       if (res) {
-        // TODO
-        // loadContentData()
-        const currentRow = flowTableList.value.find(i=>i.pipelineId === flowId)
-        currentRow ? currentRow.hasCollect = !hasCollect : null
+        const action = !type ? t('flow.content.favorite') : t('flow.content.uncollect')
+        const message = `${action}${t('flow.common.success')}`
+        Message({ theme: 'success', message })
+        loadContentDataWithGroupId(route.params.groupId as string)
       }
-    } catch (error) {
-      console.log("error:", error)
+    } catch (error: any) {
+      Message({ theme: 'error', message: error.message || error })
     }
   }
 
@@ -314,19 +474,20 @@ export function useFlowListData(styles?: Styles) {
     pagination.value.current = 1
   }
 
-  // 处理搜索选择器变化
+  function searchRefresh(clearSearchParams = false) {
+    pagination.value.current = 1
+    updateQuery(clearSearchParams)
+    loadContentData()
+  }
+
+  /**
+   * 处理搜索选择器变化
+   */
   const handleSearchChange = (
     value: Array<{ id: string; name: string; values?: Array<{ id: string; name: string }> }>,
   ) => {
     searchValue.value = value
-    // TODO: 实现搜索逻辑
-    console.log('Search changed:', value)
-  }
-
-  // 处理搜索按钮点击
-  const handleSearch = () => {
-    // TODO: 触发搜索，重新加载数据
-    console.log('Search triggered:', searchValue.value)
+    searchRefresh(true)
   }
 
   /**
@@ -334,8 +495,7 @@ export function useFlowListData(styles?: Styles) {
    */
   function handleClearSearch() {
     searchValue.value = []
-    // TODO: 清空搜索条件
-
+    searchRefresh(true)
   }
 
   function switchExecView() {
@@ -352,6 +512,25 @@ export function useFlowListData(styles?: Styles) {
       onConfirm: async () => {
         // TODO 恢复创作流
       },
+    })
+  }
+
+  /**
+   * 执行创作流
+   */
+  function handleExecute(row: ContentTableItem) {
+    console.log('执行创作流', row)
+    // TODO
+  }
+
+  /**
+   * 跳转到编辑页面
+   * @param row 创作流数据
+   */
+  function goEdit(row: ContentTableItem) {
+    router.push({
+      name: ROUTE_NAMES.FLOW_EDIT_WORKFLOW_ORCHESTRATION,
+      params: { flowId: row.pipelineId },
     })
   }
 
@@ -380,6 +559,7 @@ export function useFlowListData(styles?: Styles) {
     searchData,
     searchPlaceHolder,
     currentGroup,
+    labelsGroup,
 
     // 表格操作方法
     loadContentData,
@@ -389,7 +569,6 @@ export function useFlowListData(styles?: Styles) {
     handlePageChange,
     handleLimitChange,
     handleSearchChange,
-    handleSearch,
     handleClearSearch,
     updateQuery,
     switchExecView,
@@ -397,13 +576,12 @@ export function useFlowListData(styles?: Styles) {
     collectHandler,
     rowMouseEnter,
     rowMouseLeave,
-    
+    goEdit,
+    handleExecute,
+    initSearchFromQuery,
+
     // 操作方法（直接暴露 store 的方法）
-    goEdit: store.goEdit,
-    handleExecute: store.handleExecute,
     closeAllDialogs: store.closeAllDialogs,
-    createNewContent: store.createNewContent,
-    importNewContent: store.importNewContent,
     removeContent: store.removeContent,
     confirmEnableAction: store.confirmEnableAction,
     copyContentItem: store.copyContentItem,

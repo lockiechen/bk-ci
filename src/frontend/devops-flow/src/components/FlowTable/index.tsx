@@ -1,4 +1,5 @@
 import {
+  type AddToFlowGroupParams,
   type ContentTableItem,
   type CopyFlowParams,
   type SaveAsTemplateParams,
@@ -78,6 +79,7 @@ export const FlowTable = defineComponent({
       searchData,
       searchPlaceHolder,
       currentGroup,
+      labelsGroup,
 
       goEdit,
       handleExecute,
@@ -87,42 +89,51 @@ export const FlowTable = defineComponent({
       switchExecView,
       handleRestore,
       updateQuery,
+      getProjectTagList,
       changeSortType,
       closeAllDialogs,
       handleTableSortChange,
       handlePageChange,
       handleLimitChange,
       handleSearchChange,
-      handleSearch,
       handleClearSearch,
       removeContent,
       confirmEnableAction,
       copyContentItem,
       saveContentAsTemplate,
       addContentToFlowGroup,
-      importNewContent,
       setDeleteActionCallback,
       setEnableActionCallback,
+      loadContentData,
       loadContentDataWithGroupId,
+      initSearchFromQuery,
     } = useFlowListData(styles as Styles)
-
-    onMounted(() => {
+    
+    onMounted(async () => {
       updateQuery()
     })
 
     // 使用传入的 groupId 加载数据
     watch(
       () => props.groupId,
-      (newGroupId) => {
+      async (newGroupId, oldGroupId) => {
         if (newGroupId) {
-          loadContentDataWithGroupId(newGroupId)
+          // 切换分组时清空搜索条件
+          if (oldGroupId && newGroupId !== oldGroupId) {
+            searchValue.value = []
+            updateQuery(true)
+          }
+          
+          labelsGroup.value = await getProjectTagList()
+          initSearchFromQuery()
+          loadContentData(newGroupId)
         }
       },
       { immediate: true },
     )
 
     watch([currentSortType, currentCollation], () => {
-      loadContentDataWithGroupId(props.groupId)
+      loadContentData(props.groupId)
       updateQuery()
     })
 
@@ -371,30 +382,28 @@ export const FlowTable = defineComponent({
             </Button>
           ) : (
             <div class={styles.actions}>
-              {
-                !(row.released || row.onlyBranchVersion) ? (
-                  <Button
-                    text
-                    theme="primary"
-                    onClick={() => goEdit(row)}
-                  >
-                    {t('flow.content.edit')}
-                  </Button>
-                ) : (
-                  <Button
-                    text
-                    theme="primary"
-                    disabled={row.disabled}
-                    onClick={() => handleExecute(row)}
-                    v-bk-tooltips={{
-                      content: row.tooltips,
-                      disabled: !row.disabled,
-                    }}
-                  >
-                    {row.lock ? t('flow.content.disabled') : row.canManualStartup ? t('flow.content.execute') : t('flow.content.nonManual') }
-                  </Button>
-                )
-              }
+              {!(row.released || row.onlyBranchVersion) ? (
+                <Button text theme="primary" onClick={() => goEdit(row)}>
+                  {t('flow.content.edit')}
+                </Button>
+              ) : (
+                <Button
+                  text
+                  theme="primary"
+                  disabled={row.disabled}
+                  onClick={() => handleExecute(row)}
+                  v-bk-tooltips={{
+                    content: row.tooltips,
+                    disabled: !row.disabled,
+                  }}
+                >
+                  {row.lock
+                    ? t('flow.content.disabled')
+                    : row.canManualStartup
+                      ? t('flow.content.execute')
+                      : t('flow.content.nonManual')}
+                </Button>
+              )}
               <ExtMenu data={row} config={row.flowAction} />
             </div>
           )}
@@ -519,12 +528,12 @@ export const FlowTable = defineComponent({
 
     function pageChange(current: number) {
       handlePageChange(current)
-      loadContentDataWithGroupId(props.groupId)
+      loadContentData(props.groupId)
     }
 
     function limitChange(limit: number) {
       handleLimitChange(limit)
-      loadContentDataWithGroupId(props.groupId)
+      loadContentData(props.groupId)
     }
 
     // 处理删除操作
@@ -536,7 +545,26 @@ export const FlowTable = defineComponent({
           h('strong', { style: 'font-weight: 700; color: var(--color-text-primary);' }, objectName),
         ],
         onConfirm: async () => {
-          await removeContent(data?.pipelineId)
+          try {
+            const res = await removeContent(data?.pipelineId)
+            const allSuccess = Object.values(res).every((success) => success)
+
+            if (allSuccess) {
+              Message({ theme: 'success', message: t('flow.content.deleteSuccess') })
+              loadContentDataWithGroupId(props.groupId)
+            } else {
+              const failedPipelineIds = Object.entries(res)
+                .filter(([_, success]) => !success)
+                .map(([pipelineId]) => pipelineId)
+
+              Message({
+                theme: 'error',
+                message: `${failedPipelineIds.join(', ')} ${t('flow.content.deleteFail')}`,
+              })
+            }
+          } catch (error: any) {
+            Message({ theme: 'error', message: error?.message || error })
+          }
         },
       })
     }
@@ -547,13 +575,21 @@ export const FlowTable = defineComponent({
       const objectName = data?.name || data?.pipelineId
       showDeleteConfirm({
         message: () => [
-          `${isEnable ? t('flow.content.confirmDisableFlow') : t('flow.content.confirmEnableFlow')}\n${t('flow.content.operationObject')}: `,
+          `${!isEnable ? t('flow.content.confirmDisableFlow') : t('flow.content.confirmEnableFlow')}\n${t('flow.content.operationObject')}: `,
           h('strong', { style: 'font-weight: 700; color: var(--color-text-primary);' }, objectName),
         ],
         theme: 'primary',
         confirmText: t('flow.common.confirm'),
         onConfirm: async () => {
-          await confirmEnableAction(data?.pipelineId, !data.lock)
+          try {
+            const res = await confirmEnableAction(data?.pipelineId, data.lock)
+            if (res) {
+              Message({ theme: 'success', message: t('flow.common.success') })
+              loadContentData(props.groupId)
+            }
+          } catch (error: any) {
+            Message({ theme: 'error', message: error?.message || error })
+          }
         },
       })
     }
@@ -563,48 +599,64 @@ export const FlowTable = defineComponent({
     // 设置启用/禁用操作回调
     setEnableActionCallback(handleEnableAction)
 
-    const handleAddTo = async (flowId: string, groupId: string) => {
+    const handleAddTo = async (pipelineId: string, groupId: string[]) => {
       confirmLoading.value = true
+      const params: AddToFlowGroupParams = {
+        pipelineIds: [pipelineId],
+        viewIds: groupId,
+      }
       try {
-        await addContentToFlowGroup(flowId, groupId)
-        Message({
-          theme: 'success',
-          message: t('flow.content.addTo') + t('flow.common.success'),
-        })
+        const res = await addContentToFlowGroup(params)
+        if (res) {
+          Message({
+            theme: 'success',
+            message: t('flow.content.addTo') + t('flow.common.success'),
+          })
+          loadContentDataWithGroupId(props.groupId)
+          closeAllDialogs()
+        }
       } catch (error: any) {
-        Message({ theme: 'error', message: error || error.message })
+        Message({ theme: 'error', message: error?.message || error })
       } finally {
         confirmLoading.value = false
       }
     }
 
-    const handleCopyFlow = async (flowId: string, params: CopyFlowParams) => {
+    const handleCopyFlow = async (pipelineId: string, param: CopyFlowParams) => {
       confirmLoading.value = true
+      const { dynamicGroup, ...otherParams } = param
       try {
-        const res = await copyContentItem(flowId, params)
+        const params = {
+          ...otherParams,
+          pipelineId: pipelineId,
+        }
+        const res = await copyContentItem(params)
         if (res) {
           Message({
             theme: 'success',
             message: t('flow.content.copyCreationFlow') + t('flow.common.success'),
           })
+          loadContentDataWithGroupId(props.groupId)
+          closeAllDialogs()
         }
       } catch (error: any) {
-        Message({ theme: 'error', message: error || error.message })
+        Message({ theme: 'error', message: error?.message || error })
       } finally {
         confirmLoading.value = false
       }
     }
 
-    const handleSaveAsTemplate = async (flowId: string, params: SaveAsTemplateParams) => {
+    const handleSaveAsTemplate = async (params: SaveAsTemplateParams) => {
       confirmLoading.value = true
       try {
-        await saveContentAsTemplate(flowId, params)
+        await saveContentAsTemplate(params)
         Message({
           theme: 'success',
           message: t('flow.content.saveAsTemplate') + t('flow.common.success'),
         })
+        closeAllDialogs()
       } catch (error: any) {
-        Message({ theme: 'error', message: error || error.message })
+        Message({ theme: 'error', message: error?.message || error })
       } finally {
         confirmLoading.value = false
       }
@@ -617,34 +669,38 @@ export const FlowTable = defineComponent({
         </div>
         <div class={styles.tableContainer}>
           <div class={styles.toolbar}>
-            <Dropdown
-              trigger="click"
-              popover-options={{
-                clickContentAutoHide: true,
-              }}
-            >
-              {{
-                default: () => (
-                  <Button theme="primary">
-                    <SvgIcon name="add-small" size={22} />
-                    {t('flow.content.newFlow')}
-                  </Button>
-                ),
-                content: () => (
-                  <Dropdown.DropdownMenu>
-                    {newFlowList.value.map((item) => (
-                      <Dropdown.DropdownItem
-                        key={item.text}
-                        onClick={item.handler}
-                        class={styles.newFlow}
-                      >
-                        {item.text}
-                      </Dropdown.DropdownItem>
-                    ))}
-                  </Dropdown.DropdownMenu>
-                ),
-              }}
-            </Dropdown>
+            {
+              !isRecycleBin.value && (
+                <Dropdown
+                  trigger="click"
+                  popover-options={{
+                    clickContentAutoHide: true,
+                  }}
+                >
+                  {{
+                    default: () => (
+                      <Button theme="primary">
+                        <SvgIcon name="add-small" size={22} />
+                        {t('flow.content.newFlow')}
+                      </Button>
+                    ),
+                    content: () => (
+                      <Dropdown.DropdownMenu>
+                        {newFlowList.value.map((item) => (
+                          <Dropdown.DropdownItem
+                            key={item.text}
+                            onClick={item.handler}
+                            class={styles.newFlow}
+                          >
+                            {item.text}
+                          </Dropdown.DropdownItem>
+                        ))}
+                      </Dropdown.DropdownMenu>
+                    ),
+                  }}
+                </Dropdown>
+              )
+            }
             {/* <Button>{t('flow.content.batchManage')}</Button> */}
             <div class={styles.searchBox}>
               <SearchSelect
@@ -654,7 +710,6 @@ export const FlowTable = defineComponent({
                 class={styles.searchInput}
                 uniqueSelect
                 onUpdate:modelValue={handleSearchChange}
-                onSearch={handleSearch}
               />
               {!isRecycleBin.value ? (
                 <Dropdown
@@ -736,7 +791,6 @@ export const FlowTable = defineComponent({
             onUpdate:isShow={(val: boolean) => {
               importFlowPopupShow.value = val
             }}
-            onConfirm={importNewContent}
           />
         )}
 

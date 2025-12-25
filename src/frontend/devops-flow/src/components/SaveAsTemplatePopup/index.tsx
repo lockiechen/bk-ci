@@ -26,7 +26,7 @@ export default defineComponent({
     const initFormData = () => {
       return {
         templateName: '',
-        isCopySetting: true,
+        copySetting: true,
       }
     }
     const formData = ref<SaveAsTemplateParams>(initFormData())
@@ -40,7 +40,11 @@ export default defineComponent({
     const onConfirm = async () => {
       const valide = await formRef.value.validate()
       if (valide) {
-        emit('confirm', props.data.id, formData.value)
+        const params: SaveAsTemplateParams = {
+          pipelineId: props.data.pipelineId,
+          ...formData.value,
+        }
+        emit('confirm', params)
       }
     }
 
@@ -49,7 +53,10 @@ export default defineComponent({
         is-show={props.isShow}
         title={t('flow.content.saveAsTemplate')}
         quick-close={false}
+        isLoading={props.loading}
+        zIndex={1000}
         onClosed={onClose}
+        onHidden={onClose}
         onConfirm={onConfirm}
       >
         <Loading loading={props.loading} size="small">
@@ -66,11 +73,11 @@ export default defineComponent({
               ></Input>
             </Form.FormItem>
             <Form.FormItem
-              property="isCopySetting"
+              property="copySetting"
               label={t('flow.dialog.saveAsTemplate.isCopySetting')}
               description={t('flow.dialog.saveAsTemplate.settingTooltip')}
             >
-              <Radio.Group v-model={formData.value.isCopySetting}>
+              <Radio.Group v-model={formData.value.copySetting}>
                 <Radio label={true}>{t('flow.dialog.saveAsTemplate.true')}</Radio>
                 <Radio label={false}>{t('flow.dialog.saveAsTemplate.false')}</Radio>
               </Radio.Group>

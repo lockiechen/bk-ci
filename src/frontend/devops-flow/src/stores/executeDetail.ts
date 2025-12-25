@@ -4,6 +4,7 @@ import {
   requestBuildParams,
   requestPipelineExecDetail,
   requestTerminatePipeline,
+  requestFlowVersion,
   retryFlow,
 } from '@/api/executeDetail'
 import { fetchFlowInfo, updateRemark } from '@/api/flowInfo'
@@ -23,11 +24,10 @@ export const useExecuteDetailStore = defineStore('executeDetail', () => {
   const flowInfo = ref<FlowInfo | null>(null)
 
   async function getExecuteDetail() {
-    // 从路由参数获取实际值，包括 executeCount（从 query 中获取）
     const params = {
       projectId: projectId.value || (route.params.projectId as string),
       buildNo: buildNo.value || (route.params.buildNo as string),
-      flowId: flowId.value || (route.params.flowId as string),
+      pipelineId: flowId.value || (route.params.flowId as string),
       executeCount: route.query.executeCount
         ? Number(route.query.executeCount)
         : undefined,
@@ -36,7 +36,6 @@ export const useExecuteDetailStore = defineStore('executeDetail', () => {
   }
 
   async function getFlowInfoDetail() {
-    // TODO: 从路由参数获取实际值
     return await fetchFlowInfo({
       projectId: projectId.value,
       flowId: flowId.value,
@@ -58,16 +57,29 @@ export const useExecuteDetailStore = defineStore('executeDetail', () => {
       loading.value = false
     }
   }
-
+  /**
+   * 获取指定版本号的流水线编排版本信息
+   */
+  async function  fetchVersionDetail (version: number) {
+      try {
+          const result = await requestFlowVersion({
+              version,
+              projectId: projectId.value,
+              pipelineId: flowId.value,
+          })
+          return result
+      } catch (error) {
+          throw error
+      }
+  }
   /**
    *  终止流水线
    */
   async function stopExecute(buildId: string) {
     try {
-      // TODO: 从路由参数获取实际值
       const res = await requestTerminatePipeline({
         projectId: projectId.value,
-        flowId: flowId.value,
+        pipelineId: flowId.value,
         buildId: buildId,
       })
       return res
@@ -81,14 +93,14 @@ export const useExecuteDetailStore = defineStore('executeDetail', () => {
    */
   async function requestRetryFlow({
     projectId,
-    flowId,
+    pipelineId,
     buildId,
     taskId,
     failedContainer,
     skip,
   }: {
     projectId: string
-    flowId: string
+    pipelineId: string
     buildId: string
     taskId?: string
     failedContainer?: string
@@ -97,7 +109,7 @@ export const useExecuteDetailStore = defineStore('executeDetail', () => {
     try {
       const params = {
         projectId,
-        flowId,
+        pipelineId,
         buildId,
         taskId,
         failedContainer,
@@ -114,19 +126,19 @@ export const useExecuteDetailStore = defineStore('executeDetail', () => {
    */
   async function requestRePlayFlow({
     projectId,
-    flowId,
+    pipelineId,
     buildId,
     forceTrigger,
   }: {
     projectId: string
-    flowId: string
+    pipelineId: string
     buildId: string
     forceTrigger?: boolean
   }) {
     try {
       const params = {
         projectId,
-        flowId,
+        pipelineId,
         buildId,
         forceTrigger,
       }
@@ -138,19 +150,19 @@ export const useExecuteDetailStore = defineStore('executeDetail', () => {
 
   async function requestUpdateRemark({
     projectId,
-    flowId,
+    pipelineId,
     buildId,
     remark,
   }: {
     projectId: string
-    flowId: string
+    pipelineId: string
     buildId: string
     remark: string
   }) {
     try {
       return await updateRemark({
         projectId,
-        flowId,
+        pipelineId,
         buildId,
         remark,
       })
@@ -183,6 +195,7 @@ export const useExecuteDetailStore = defineStore('executeDetail', () => {
     requestRePlayFlow,
     requestRetryFlow,
     requestUpdateRemark,
-    getStartupParams
+    getStartupParams,
+    fetchVersionDetail,
   }
 })
