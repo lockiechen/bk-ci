@@ -1,23 +1,27 @@
 import {
-    apiGetAuthoringEnvList,
-    apiGetAuthoringNodeList,
-    apiGetProjectTemplates,
-    apiGetStoreTemplates,
-    createContent,
-    type AuthoringEnvItem,
-    type AuthoringNodeItem,
-    type CreateContentParams,
-    type CreateContentFormData,
+  apiGetAuthoringEnvList,
+  apiGetAuthoringNodeList,
+  apiGetProjectTemplates,
+  apiGetStoreTemplates,
+  createContent,
+  type AuthoringEnvItem,
+  type AuthoringNodeItem,
+  type CreateContentParams,
+  type CreateContentFormData,
+  type GetStoreTemplatesParams,
+  type StoreTemplateItem,
+  type TemplateObject,
 } from '@/api/flowContentList'
 import { defineStore } from 'pinia'
 import { ref } from 'vue'
 import { useRoute } from 'vue-router'
-import { templateTypeEnum } from "@/utils/flowConst";
+import { templateTypeEnum } from '@/utils/flowConst'
 import { useI18n } from 'vue-i18n'
+import { Message } from 'bkui-vue'
 
 /**
  * 创作流创建流程状态管理
- * 
+ *
  * 注意：不要在 store 中导入 hooks，避免循环依赖
  * 直接调用 API 方法
  */
@@ -49,15 +53,15 @@ export const useNewFlowStore = defineStore('newFlow', () => {
   const nodeListLoading = ref(false)
 
   // 模板相关状态
-  const projectModelList = ref<any[]>([])
-  const storeModelList = ref<any[]>([])
+  const projectModelList = ref<TemplateObject[]>([])
+  const storeModelList = ref<StoreTemplateItem[]>([])
   const projectModelLoading = ref(false)
   const storeModelLoading = ref(false)
 
   /**
    * 获取项目模板列表
    */
-  async function fetchProjectTemplates(projectId: string): Promise<void> {
+  async function fetchProjectTemplates(projectId: string) {
     try {
       projectModelLoading.value = true
       const response = await apiGetProjectTemplates(projectId)
@@ -72,7 +76,12 @@ export const useNewFlowStore = defineStore('newFlow', () => {
           desc: template.desc,
           templateType: template.templateType,
         }))
-        formData.value.templateInfo.activeTemplate = projectModelList.value[0]
+
+        // 如果有模板数据，设置第一个为激活模板
+        const firstTemplate = projectModelList.value[0]
+        if (firstTemplate) {
+          formData.value.templateInfo.activeTemplate = firstTemplate
+        }
       } else {
         projectModelList.value = []
       }
@@ -87,19 +96,24 @@ export const useNewFlowStore = defineStore('newFlow', () => {
   /**
    * 获取商店模板列表
    */
-  async function fetchStoreTemplates(projectId: string): Promise<void> {
+  async function fetchStoreTemplates() {
     try {
       storeModelLoading.value = true
-      const res = await apiGetStoreTemplates(projectId)
+      // TODO: 分页和搜索参数
+      const param: GetStoreTemplatesParams = {
+        page: 1,
+        pageSize: 50,
+        projectCode: route.params.projectId as string,
+        keyword: '',
+      }
+      const res = await apiGetStoreTemplates(param)
 
-      // 将模板数据转换为列表格式
       if (res) {
         storeModelList.value = res.records
-      } else {
-        storeModelList.value = []
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error('获取商店模板列表失败:', error)
+      Message({ theme: 'error', message: error.message || error })
       storeModelList.value = []
     } finally {
       storeModelLoading.value = false
@@ -109,7 +123,7 @@ export const useNewFlowStore = defineStore('newFlow', () => {
   /**
    * 获取创作环境列表
    */
-  async function fetchAuthoringEnvList(): Promise<void> {
+  async function fetchAuthoringEnvList() {
     try {
       envListLoading.value = true
       const params = {
@@ -133,7 +147,7 @@ export const useNewFlowStore = defineStore('newFlow', () => {
   /**
    * 获取创作节点列表
    */
-  async function fetchAuthoringNodeList(envName: string): Promise<void> {
+  async function fetchAuthoringNodeList(envName: string) {
     if (!envName) {
       authoringNodeList.value = []
       return
@@ -204,7 +218,7 @@ export const useNewFlowStore = defineStore('newFlow', () => {
    * 创建创作流
    * 直接调用 API，避免循环依赖
    */
-  async function createNewFlow(params: CreateContentParams): Promise<any> {
+  async function createNewFlow(params: CreateContentParams) {
     projectModelLoading.value = true
     try {
       const result = await createContent(params)

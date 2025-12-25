@@ -130,6 +130,7 @@
       "loadingFlow": "正在加载创作流组件...",
       "toggleFullScreen": "切换全屏",
       "favorite": "收藏",
+      "uncollect": "取消收藏",
       "export": "导出",
       "latest": "最新",
       "executionInfo": "执行信息",

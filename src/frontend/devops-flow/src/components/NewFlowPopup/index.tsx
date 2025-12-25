@@ -1,6 +1,6 @@
 import { defineComponent, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
-import { Dialog, Button, Steps, Message } from 'bkui-vue'
+import { Dialog, Button, Steps } from 'bkui-vue'
 import styles from './Index.module.css'
 import BaseInfo from './BaseInfo'
 import SelectTemplate from './SelectTemplate'
@@ -84,6 +84,7 @@ export default defineComponent({
       <Dialog
         is-show={props.isShow}
         theme="primary"
+        zIndex={1000}
         width={1200}
         quick-close={false}
         onClosed={onClose}

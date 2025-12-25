@@ -95,7 +95,7 @@
 .iconSortButton {
   width: 32px;
   height: 32px;
-  line-height: 32px;
+  line-height: 26px;
   margin-left: var(--spacing-sm);
   background-color: var(--bg-primary);
   border: 1px solid var(--color-text-disabled);

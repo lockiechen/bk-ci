@@ -54,6 +54,7 @@ export default defineComponent({
         title={t('flow.content.saveAsTemplate')}
         quick-close={false}
         isLoading={props.loading}
+        zIndex={1000}
         onClosed={onClose}
         onHidden={onClose}
         onConfirm={onConfirm}

@@ -131,6 +131,7 @@
       "loadingFlow": "Loading creation flow components...",
       "toggleFullScreen": "Toggle Full Screen",
       "favorite": "Favorite",
+      "uncollect": "Unfavorite",
       "export": "Export",
       "latest": "Latest",
       "executionInfo": "Execution Information",

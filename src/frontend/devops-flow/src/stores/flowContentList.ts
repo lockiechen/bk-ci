@@ -7,7 +7,6 @@ import {
   getContentTableData,
   getMatchDynamicView,
   getProjectTags,
-  importContent,
   saveAsTemplate,
   toggleFlowFavorite,
   type DeleteContentParams,
@@ -386,21 +385,6 @@ export const useFlowHomeContentStore = defineStore('flowContentList', () => {
   }
 
   /**
-   * 导入创作流
-   */
-  async function importNewContent(params: ImportContentParams) {
-    try {
-      const importedContent = await importContent(params)
-      const processedContent = processContentItem(importedContent)
-      flowTableList.value.unshift(processedContent)
-      return processedContent
-    } catch (error) {
-      console.error('Failed to import content:', error)
-      throw error
-    }
-  }
-
-  /**
    * 删除创作流
    */
   async function removeContent(flowId: string) {
@@ -496,10 +480,9 @@ export const useFlowHomeContentStore = defineStore('flowContentList', () => {
     }
   }
 
-  async function updateCollect(hasCollect: boolean, flowId: string) {
+  async function updateCollect(type: boolean, pipelineId: string) {
     try {
-      // 调用收藏接口
-      const result = await toggleFlowFavorite(flowId, hasCollect)
+      const result = await toggleFlowFavorite(route.params.projectId as string, pipelineId, type)
       return result
     } catch (error) {
       console.error(error)
@@ -521,7 +504,6 @@ export const useFlowHomeContentStore = defineStore('flowContentList', () => {
     closeAllDialogs,
     fetchFlowList,
     loadContentDetail,
-    importNewContent,
     removeContent,
     confirmEnableAction,
     copyContentItem,

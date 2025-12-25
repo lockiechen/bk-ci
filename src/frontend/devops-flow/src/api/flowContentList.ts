@@ -1,12 +1,18 @@
-import { post, get, del } from '@/utils/http'
-import { PROCESS_API_URL_PREFIX, ENVIRONMENT_API_URL_PREFIX } from '@/utils/apiUrlPrefix'
+import { post, get, del, put } from '@/utils/http'
 import {
-  STATUS,
+  PROCESS_API_URL_PREFIX,
+  ENVIRONMENT_API_URL_PREFIX,
+  STORE_API_URL_PREFIX,
+} from '@/utils/apiUrlPrefix'
+import {
   type StatusType,
   type VersionStatus,
   type StageStatusInfo,
   type FlowPermissions,
   type FlowModel,
+  type Stage,
+  type FlowSettings,
+  type ModelAndSetting,
 } from '@/types/flow'
 
 /**
@@ -117,7 +123,7 @@ export interface CreateContentFormData {
     envName: string
   }
   templateInfo: {
-    activeTemplate: any
+    activeTemplate: TemplateObject
     currentModel: string
     cloneTemplateSet: string[]
     activeMenuItem: string
@@ -139,9 +145,20 @@ export interface CreateContentParams {
 }
 
 export interface ImportContentParams {
-  file: File
-  name?: string
-  description?: string
+  projectId: string
+  version?: number
+  pipelineId?: string
+  actionType?: 'FULL_YAML2MODEL' | 'FULL_MODEL2YAML'
+  modelAndSetting?: ModelAndSetting
+  oldYaml?: string
+  yamlFileName?: string
+}
+
+export interface ImportContentResponse {
+  modelAndSetting?: ModelAndSetting
+  newYaml?: string
+  yamlSupported?: boolean
+  yamlInvalidMsg?: string
 }
 
 export interface MenuItem<T = any> {
@@ -194,7 +211,7 @@ export interface AuthoringEnvItem {
     {
       tagKeyId: number
       tagKeyName: string
-      tagAllowMulValue: true
+      tagAllowMulValue: boolean
       canUpdate: CanUpdate
       tagValues: [
         {
@@ -219,9 +236,9 @@ export interface AuthoringEnvItem {
   createdTime: number
   updatedUser: string
   updatedTime: number
-  canEdit: true
-  canDelete: true
-  canUse: true
+  canEdit: boolean
+  canDelete: boolean
+  canUse: boolean
   projectName: string
 }
 
@@ -234,7 +251,7 @@ export interface AuthoringNodeItem {
   name: string
   ip: string
   nodeStatus: string
-  agentStatus: true
+  agentStatus: boolean
   nodeType: string
   osName: string
   createdUser: string
@@ -243,7 +260,7 @@ export interface AuthoringNodeItem {
   gateway: string
   displayName: string
   bizId: number
-  envEnableNode: true
+  envEnableNode: boolean
   lastModifyTime: number
   nodeName: string
   size: string
@@ -317,6 +334,35 @@ export interface AddToFlowGroupParams {
   viewIds: string[]
 }
 
+export interface TemplateObject {
+  name?: string
+  templateId?: string
+  projectId?: string
+  version?: number
+  versionName?: string
+  templateType?: string
+  templateTypeDesc?: string
+  category?: string[]
+  logoUrl?: string
+  stages?: Stage[]
+  cloneTemplateSettingExist?: {
+    notifySettingExist: boolean
+    concurrencySettingExist: boolean
+    labelSettingExist: boolean
+    inheritedDialect: boolean
+    pipelineDialect: string
+  }
+  desc?: string
+  srcTemplateId?: string
+}
+
+export interface AllTemplatesResponse {
+  count: number
+  page: number
+  pageSize: number
+  templates: Record<string, TemplateObject>
+}
+
 export interface CreateContentResponse {
   pipelineId: string
   pipelineName: string
@@ -334,7 +380,78 @@ export interface CreateContentResponse {
     fileUrl?: string
     status?: string
   }
-  updateBuildNo?: true
+  updateBuildNo?: boolean
+}
+
+export interface GetStoreTemplatesParams {
+  page: number
+  pageSize: number
+  projectCode: string
+  keyword: string
+}
+
+export interface StoreTemplateItem {
+  id: string
+  name: string
+  code: string
+  srcProjectId: string
+  version: string
+  status: string
+  type: string
+  desc?: string
+  rdType?: string
+  classifyCode: string
+  category?: string
+  logoUrl?: string
+  publisher: string
+  os?: string[]
+  downloads?: number
+  score?: number
+  summary?: string
+  flag: boolean
+  publicFlag: boolean
+  buildLessRunFlag?: boolean
+  docsLink?: string
+  modifier: string
+  updateTime: string
+  recommendFlag?: boolean
+  yamlFlag?: boolean
+  installed?: boolean
+  honorInfos?: Array<{
+    honorId: string
+    honorTitle: string
+    honorName: string
+  }>
+  indexInfos?: Array<{
+    indexCode: string
+    iconUrl: string
+    iconColor: string
+    hover: string
+  }>
+  recentExecuteNum?: number
+  hotFlag?: boolean
+  updateFlag?: boolean
+  ownerStoreCode?: string
+  ownerStoreName?: string
+  pipelineCnt?: number
+}
+
+export interface StoreTemplateResponse {
+  count: number
+  page: number
+  pageSize: number
+  records: StoreTemplateItem[]
+}
+
+export interface PluginPropertyItem {
+  atomCode: string
+  os: string[]
+  logoUrl: string
+  buildLessRunFlag: boolean
+}
+
+export interface PluginProperty {
+  [key: string]: PluginPropertyItem
 }
 
 /**
@@ -460,65 +577,45 @@ export async function createContent(params: CreateContentParams): Promise<Create
 }
 
 /**
- * 导入创作流
+ * model与yaml转换
  */
-export async function importContent(params: ImportContentParams): Promise<ContentTableItem> {
-  // TODO: 调用实际接口
-  // const formData = new FormData();
-  // formData.append('file', params.file);
-  // if (params.name) formData.append('name', params.name);
-  // if (params.description) formData.append('description', params.description);
-  // const response = await http.post('/api/flow/content/import', formData);
-  // return response.data;
-
-  // 模拟数据
-  return new Promise((resolve) => {
-    setTimeout(() => {
-      const mockData: ContentTableItem = {
-        projectId: 'fayetest',
-        pipelineId: 'p-68ae025a1a354136948596ab3d09073f',
-        pipelineName: '0420-4',
-        pipelineDesc: '',
-        taskCount: 3,
-        buildCount: 0,
-        lock: false,
-        canManualStartup: true,
-        latestBuildStartTime: 0,
-        latestBuildEndTime: 0,
-        latestBuildNum: 0,
-        latestBuildEstimatedExecutionSeconds: 1,
-        deploymentTime: 1618922545000,
-        createTime: 1618922545000,
-        updateTime: 1618922545000,
-        pipelineVersion: 1,
-        currentTimestamp: 1766136363205,
-        runningBuildCount: 0,
-        hasPermission: true,
-        hasCollect: false,
-        latestBuildUserId: '',
-        instanceFromTemplate: false,
-        updater: 'fayewang',
-        creator: 'fayewang',
-        lastBuildTotalCount: 0,
-        lastBuildFinishCount: 0,
-        delete: false,
-        latestVersionStatus: 'RELEASED',
-        permissions: {
-          canManage: true,
-          canDelete: true,
-          canView: true,
-          canEdit: true,
-          canExecute: true,
-          canDownload: true,
-          canShare: true,
-          canArchive: true,
+export async function apiTransfer(importParams: ImportContentParams): Promise<ImportContentResponse> {
+  try {
+    const { projectId, pipelineId, actionType, ...params } = importParams
+    const res = await post<ImportContentResponse>(
+      `${PROCESS_API_URL_PREFIX}/user/transfer/projects/${projectId}`,
+      params,
+      {
+        params: {
+          pipelineId,
+          actionType,
         },
-        yamlExist: false,
-        archivingFlag: false,
-      }
-      resolve(mockData)
-    }, 300)
-  })
+      },
+    )
+    return res
+  } catch (error) {
+    throw error
+  }
+}
+
+/**
+ * 获取流水线下插件属性列表
+ */
+export async function getPluginProperties(
+  importParams: ImportContentParams,
+): Promise<PluginProperty> {
+  try {
+    const { projectId, pipelineId, actionType, ...params } = importParams
+    const res = await get<PluginProperty>(
+      `/${PROCESS_API_URL_PREFIX}/user/pipeline/projects/${projectId}/pipelines/${pipelineId}/atom/prop/list`,
+      {
+        params: params.version ? { version: params.version } : {},
+      },
+    )
+    return res
+  } catch (error) {
+    throw error
+  }
 }
 
 /**
@@ -663,11 +760,11 @@ export async function apiGetAuthoringNodeList(params: {
 }
 
 /**
- * 获取项目模板
+ * 获取全部项目模板
  */
-export async function apiGetProjectTemplates(projectId: string): Promise<any> {
+export async function apiGetProjectTemplates(projectId: string): Promise<AllTemplatesResponse> {
   try {
-    const res = await get(
+    const res = await get<AllTemplatesResponse>(
       `${PROCESS_API_URL_PREFIX}/user/pipeline/template/v2/${projectId}/allTemplates`,
     )
     return res
@@ -679,9 +776,9 @@ export async function apiGetProjectTemplates(projectId: string): Promise<any> {
 /**
  * 获取默认配置
  */
-export async function apiGetDefaultSetting(): Promise<any> {
+export async function apiGetDefaultSetting(): Promise<FlowSettings> {
   try {
-    const res = await get(`${PROCESS_API_URL_PREFIX}/user/setting/default/get`)
+    const res = await get<FlowSettings>(`${PROCESS_API_URL_PREFIX}/user/setting/default/get`)
     return res
   } catch (error) {
     throw error
@@ -691,35 +788,37 @@ export async function apiGetDefaultSetting(): Promise<any> {
 /**
  * 获取商店模板列表
  */
-export async function apiGetStoreTemplates(projectId: string): Promise<any> {
-  // TODO: 调用实际接口
-  // const response = await http.get(`/api/template/store/${projectId}/templates`);
-  // return response.data;
-
-  // 模拟数据
-  return new Promise((resolve) => {
-    setTimeout(() => {
-      resolve({
-        records: [],
-      })
-    }, 300)
-  })
+export async function apiGetStoreTemplates(
+  params: GetStoreTemplatesParams,
+): Promise<StoreTemplateResponse> {
+  try {
+    const res = await get<StoreTemplateResponse>(
+      `${STORE_API_URL_PREFIX}/user/market/template/list`,
+      { params },
+    )
+    return res
+  } catch (error) {
+    throw error
+  }
 }
 
 /**
  * 收藏/取消收藏创作流
- * @param flowId 创作流ID
- * @param hasCollect 是否收藏（true: 收藏, false: 取消收藏）
+ * @param projectId 项目ID
+ * @param pipelineId 创作流ID
+ * @param type 是否收藏（true: 收藏, false: 取消收藏）
  */
-export async function toggleFlowFavorite(flowId: string, hasCollect: boolean) {
-  // TODO: 调用实际接口
-  // const response = await http.post(`/pipelines/flow/${flowId}/favor?type=${hasCollect}`);
-  // return response.data;
-
-  // 模拟数据
-  return new Promise((resolve) => {
-    setTimeout(() => {
-      resolve(true)
-    }, 300)
-  })
+export async function toggleFlowFavorite(
+  projectId: string,
+  pipelineId: string,
+  type: boolean,
+): Promise<boolean> {
+  try {
+    const res = await put<boolean>(
+      `${PROCESS_API_URL_PREFIX}/user/pipelines/${projectId}/${pipelineId}/favor?type=${type}`,
+    )
+    return res
+  } catch (error) {
+    throw error
+  }
 }

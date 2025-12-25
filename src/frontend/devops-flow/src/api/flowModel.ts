@@ -3,6 +3,7 @@
  */
 
 import type { PluginOutputVariable } from '@/types/variable'
+import type { FlowSettings } from '@/types/flow'
 
 /**
  * Flow 模型数据结构
@@ -34,33 +35,6 @@ export interface FlowModelAndSetting {
   yamlSupported: boolean
   updater: string
   updateTime: number
-}
-
-export interface FlowSettings {
-  creator?: string
-  createTime?: number
-  updateTime?: number
-  name: string
-  desc: string
-  runLockType: string
-  maxConRunningQueueSize: number
-  waitQueueTimeMinute: number
-  maxQueueSize: number
-  concurrencyGroup: string
-  concurrencyCancelInProgress: boolean
-  successSubscriptionList: Subscription[]
-  failSubscriptionList: Subscription[]
-}
-
-export interface Subscription {
-  types: string[]
-  groups: string[]
-  users: string
-  wechatGroupFlag: boolean
-  wechatGroup: string
-  wechatGroupMarkdownFlag: boolean
-  detailFlag: boolean
-  content: string
 }
 
 export interface YamlPreview {

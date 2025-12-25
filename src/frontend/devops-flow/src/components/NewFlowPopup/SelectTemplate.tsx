@@ -227,7 +227,7 @@ export default defineComponent({
 
       if (tabName === 'storeModel' && storeModelList.value.length === 0) {
         // 切换到storeModel时获取商店模板列表
-        fetchStoreTemplates(projectId.value)
+        fetchStoreTemplates()
       }
     }
 
@@ -326,11 +326,6 @@ export default defineComponent({
               <div class="flex-1">
                 <div class={styles.templateName}>
                   {template.name}
-                  {template?.templateType === 'CONSTRAINT' ? (
-                    <span class={styles.templateStore}>
-                      <SvgIcon name="is-store" size={20} />
-                    </span>
-                  ) : null}
                 </div>
                 <div class={styles.templateDesc}>{template.desc || '--'}</div>
               </div>

@@ -2,7 +2,7 @@
  * 创作流组相关 API
  */
 import { post, get, del, put } from '@/utils/http'
-import { PROCESS_API_URL_PREFIX, ENVIRONMENT_API_URL_PREFIX } from '@/utils/apiUrlPrefix'
+import { PROCESS_API_URL_PREFIX } from '@/utils/apiUrlPrefix'
 
 export type ViewType = 1 | 2 | -1 // 1: 动态分组，2: 静态分组，-1: 未分组
 

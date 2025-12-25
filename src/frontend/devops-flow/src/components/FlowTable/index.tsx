@@ -79,6 +79,7 @@ export const FlowTable = defineComponent({
       searchData,
       searchPlaceHolder,
       currentGroup,
+      labelsGroup,
 
       goEdit,
       handleExecute,
@@ -88,42 +89,51 @@ export const FlowTable = defineComponent({
       switchExecView,
       handleRestore,
       updateQuery,
+      getProjectTagList,
       changeSortType,
       closeAllDialogs,
       handleTableSortChange,
       handlePageChange,
       handleLimitChange,
       handleSearchChange,
-      handleSearch,
       handleClearSearch,
       removeContent,
       confirmEnableAction,
       copyContentItem,
       saveContentAsTemplate,
       addContentToFlowGroup,
-      importNewContent,
       setDeleteActionCallback,
       setEnableActionCallback,
+      loadContentData,
       loadContentDataWithGroupId,
+      initSearchFromQuery,
     } = useFlowListData(styles as Styles)
-
-    onMounted(() => {
+    
+    onMounted(async () => {
       updateQuery()
     })
 
     // 使用传入的 groupId 加载数据
     watch(
       () => props.groupId,
-      (newGroupId) => {
+      async (newGroupId, oldGroupId) => {
         if (newGroupId) {
-          loadContentDataWithGroupId(newGroupId)
+          // 切换分组时清空搜索条件
+          if (oldGroupId && newGroupId !== oldGroupId) {
+            searchValue.value = []
+            updateQuery(true)
+          }
+          
+          labelsGroup.value = await getProjectTagList()
+          initSearchFromQuery()
+          loadContentData(newGroupId)
         }
       },
       { immediate: true },
     )
 
     watch([currentSortType, currentCollation], () => {
-      loadContentDataWithGroupId(props.groupId)
+      loadContentData(props.groupId)
       updateQuery()
     })
 
@@ -160,8 +170,14 @@ export const FlowTable = defineComponent({
               if (row.delete) {
                 return
               }
+              let routeName
+              if (row.onlyDraftVersion) {
+                routeName = ROUTE_NAMES.FLOW_EDIT_WORKFLOW_ORCHESTRATION
+              } else {
+                routeName = ROUTE_NAMES.FLOW_DETAIL_EXECUTION_RECORD
+              }
               router.push({
-                name: ROUTE_NAMES.FLOW_DETAIL_EXECUTION_RECORD,
+                name: routeName,
                 params: {
                   flowId: row.pipelineId,
                 },
@@ -497,12 +513,12 @@ export const FlowTable = defineComponent({
 
     function pageChange(current: number) {
       handlePageChange(current)
-      loadContentDataWithGroupId(props.groupId)
+      loadContentData(props.groupId)
     }
 
     function limitChange(limit: number) {
       handleLimitChange(limit)
-      loadContentDataWithGroupId(props.groupId)
+      loadContentData(props.groupId)
     }
 
     // 处理删除操作
@@ -554,7 +570,7 @@ export const FlowTable = defineComponent({
             const res = await confirmEnableAction(data?.pipelineId, data.lock)
             if (res) {
               Message({ theme: 'success', message: t('flow.common.success') })
-              loadContentDataWithGroupId(props.groupId)
+              loadContentData(props.groupId)
             }
           } catch (error: any) {
             Message({ theme: 'error', message: error?.message || error })
@@ -638,34 +654,38 @@ export const FlowTable = defineComponent({
         </div>
         <div class={styles.tableContainer}>
           <div class={styles.toolbar}>
-            <Dropdown
-              trigger="click"
-              popover-options={{
-                clickContentAutoHide: true,
-              }}
-            >
-              {{
-                default: () => (
-                  <Button theme="primary">
-                    <SvgIcon name="add-small" size={22} />
-                    {t('flow.content.newFlow')}
-                  </Button>
-                ),
-                content: () => (
-                  <Dropdown.DropdownMenu>
-                    {newFlowList.value.map((item) => (
-                      <Dropdown.DropdownItem
-                        key={item.text}
-                        onClick={item.handler}
-                        class={styles.newFlow}
-                      >
-                        {item.text}
-                      </Dropdown.DropdownItem>
-                    ))}
-                  </Dropdown.DropdownMenu>
-                ),
-              }}
-            </Dropdown>
+            {
+              !isRecycleBin.value && (
+                <Dropdown
+                  trigger="click"
+                  popover-options={{
+                    clickContentAutoHide: true,
+                  }}
+                >
+                  {{
+                    default: () => (
+                      <Button theme="primary">
+                        <SvgIcon name="add-small" size={22} />
+                        {t('flow.content.newFlow')}
+                      </Button>
+                    ),
+                    content: () => (
+                      <Dropdown.DropdownMenu>
+                        {newFlowList.value.map((item) => (
+                          <Dropdown.DropdownItem
+                            key={item.text}
+                            onClick={item.handler}
+                            class={styles.newFlow}
+                          >
+                            {item.text}
+                          </Dropdown.DropdownItem>
+                        ))}
+                      </Dropdown.DropdownMenu>
+                    ),
+                  }}
+                </Dropdown>
+              )
+            }
             {/* <Button>{t('flow.content.batchManage')}</Button> */}
             <div class={styles.searchBox}>
               <SearchSelect
@@ -675,7 +695,6 @@ export const FlowTable = defineComponent({
                 class={styles.searchInput}
                 uniqueSelect
                 onUpdate:modelValue={handleSearchChange}
-                onSearch={handleSearch}
               />
               {!isRecycleBin.value ? (
                 <Dropdown
@@ -757,7 +776,6 @@ export const FlowTable = defineComponent({
             onUpdate:isShow={(val: boolean) => {
               importFlowPopupShow.value = val
             }}
-            onConfirm={importNewContent}
           />
         )}
 
