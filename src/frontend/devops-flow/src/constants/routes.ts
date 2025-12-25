@@ -31,12 +31,16 @@ export const ROUTE_NAMES = {
   FLOW_DETAIL_PERMISSION_DELEGATION: 'permissionDelegation',
   FLOW_DETAIL_OPERATION_LOG: 'operationLog',
 
+  // Flow Execution Detail 子路由
   FLOW_DETAIL_EXECUTION_DETAIL: 'flowExecutionDetail',
   FLOW_DETAIL_EXECUTION_DETAIL_TAB: 'flowExecutionDetailTab',
   FLOW_DETAIL_ARTIFACTS: 'flowArtifacts',
   FLOW_DETAIL_OUTPUTS: 'flowOutputs',
   FLOW_DETAIL_START_PARAMS: 'flowStartParams',
   FLOW_DETAIL_REPORTS: 'flowReports',
+
+  // Flow Preview (执行预览)
+  FLOW_PREVIEW: 'flowPreview',
 } as const
 
 /**
@@ -69,29 +73,16 @@ export const FLOW_DETAIL_TABS = {
 } as const
 
 /**
- * Flow Execution Detail Tab 常量
- * 执行详情页面的 tab 值
- */
-export const FLOW_EXECUTION_DETAIL_TABS = {
-  EXECUTE_DETAIL: ROUTE_NAMES.FLOW_DETAIL_EXECUTION_DETAIL_TAB,
-  ARTIFACTS: ROUTE_NAMES.FLOW_DETAIL_ARTIFACTS,
-  OUTPUTS: ROUTE_NAMES.FLOW_DETAIL_OUTPUTS,
-  START_PARAMS: ROUTE_NAMES.FLOW_DETAIL_START_PARAMS,
-} as const
-
-/**
  * 默认 tab
  */
 export const DEFAULT_FLOW_EDIT_TAB = FLOW_EDIT_TABS.WORKFLOW_ORCHESTRATION
 export const DEFAULT_FLOW_DETAIL_TAB = FLOW_DETAIL_TABS.EXECUTION_RECORD
-export const DEFAULT_FLOW_EXECUTION_DETAIL_TAB = FLOW_EXECUTION_DETAIL_TABS.EXECUTE_DETAIL
 
 /**
  * 所有合法的 tab 值数组
  */
 export const VALID_FLOW_EDIT_TABS = Object.values(FLOW_EDIT_TABS)
 export const VALID_FLOW_DETAIL_TABS = Object.values(FLOW_DETAIL_TABS)
-export const VALID_FLOW_EXECUTION_DETAIL_TABS = Object.values(FLOW_EXECUTION_DETAIL_TABS)
 
 /**
  * 检查 tab 是否合法
@@ -110,6 +101,16 @@ export function isValidFlowDetailTab(
 
 export function isValidFlowExecutionDetailTab(
   tab: string,
-): tab is (typeof FLOW_EXECUTION_DETAIL_TABS)[keyof typeof FLOW_EXECUTION_DETAIL_TABS] {
-  return VALID_FLOW_EXECUTION_DETAIL_TABS.includes(tab as typeof FLOW_EXECUTION_DETAIL_TABS[keyof typeof FLOW_EXECUTION_DETAIL_TABS])
+): tab is
+  | typeof ROUTE_NAMES.FLOW_DETAIL_EXECUTION_DETAIL_TAB
+  | typeof ROUTE_NAMES.FLOW_DETAIL_ARTIFACTS
+  | typeof ROUTE_NAMES.FLOW_DETAIL_OUTPUTS
+  | typeof ROUTE_NAMES.FLOW_DETAIL_START_PARAMS {
+  const validTabs = [
+    ROUTE_NAMES.FLOW_DETAIL_EXECUTION_DETAIL_TAB,
+    ROUTE_NAMES.FLOW_DETAIL_ARTIFACTS,
+    ROUTE_NAMES.FLOW_DETAIL_OUTPUTS,
+    ROUTE_NAMES.FLOW_DETAIL_START_PARAMS,
+  ]
+  return validTabs.includes(tab as typeof validTabs[number])
 }

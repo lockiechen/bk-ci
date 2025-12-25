@@ -7,6 +7,7 @@
   background: var(--bg-primary);
   flex-shrink: 0;
   box-shadow: var(--shadow-sm);
+  min-height: var(--header-height);
 }
 
 .headerLeft {

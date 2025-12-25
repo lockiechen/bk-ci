@@ -1,12 +1,16 @@
-import { post, get, del, put } from '@/utils/http'
+import { type FlowInfo, type FlowVersion } from '@/types/flow'
 import { PROCESS_API_URL_PREFIX } from '@/utils/apiUrlPrefix'
-import { BuildCancelPolicy, RunLockType, type FlowInfo, type FlowVersion } from '@/types/flow'
+import { get, post } from '@/utils/http'
 
+export interface ResponseWithRecords<T> {
+  records: T[]
+  total: number
+  page: number
+  pageSize: number
+}
 /**
- * 获取创作流基本信息
- * @param projectId 项目ID
- * @param flowId 创作流ID
- * @returns 创作流基本信息
+ * Get flow basic info
+ * Falls back to mock data on API failure when ENABLE_MOCK_FALLBACK is true
  */
 export async function fetchFlowInfo({
   projectId,
@@ -15,35 +19,32 @@ export async function fetchFlowInfo({
   projectId: string
   flowId: string
 }): Promise<FlowInfo> {
-  try {
-    const res = await get<FlowInfo>(
-      `${PROCESS_API_URL_PREFIX}/user/version/projects/${projectId}/pipelines/${flowId}/detail`,
+  return await get<FlowInfo>(
+      `${PROCESS_API_URL_PREFIX}/user/version/projects/${projectId}/pipelines/${flowId}/detail`
     )
-    return res
-  } catch (error) {
-    throw error
-  }
 }
 
-export function getFlowVersionList({
+/**
+ * Get flow version list
+ * Falls back to mock data on API failure when ENABLE_MOCK_FALLBACK is true
+ */
+export async function getFlowVersionList({
   projectId,
   flowId,
 }: {
   projectId: string
   flowId: string
-}): Promise<FlowVersion[]> {
-  return new Promise((resolve) => {
-    setTimeout(() => {
-      resolve([
-        { version: 3, versionName: 'V5 (P2.T3.3)', isLatest: true },
-        { version: 2, versionName: 'V5 (P2.T3.2)' },
-        { version: 1, versionName: 'V5 (P2.T3.1)' },
-      ])
-    }, 500)
-  })
+}): Promise<ResponseWithRecords<FlowVersion>> {
+   const res = await get<ResponseWithRecords<FlowVersion>>(
+      `/process/api/user/version/projects/${projectId}/pipelines/${flowId}/versions`
+    )
+    return res
 }
 
-export function updateRemark({
+/**
+ * Update build remark
+ */
+export async function updateRemark({
   projectId,
   pipelineId,
   buildId,
@@ -54,9 +55,9 @@ export function updateRemark({
   buildId: string
   remark: string
 }): Promise<boolean> {
-  return new Promise((resolve) => {
-    setTimeout(() => {
-      resolve(true)
-    }, 500)
-  })
+  await post(
+      `${PROCESS_API_URL_PREFIX}/user/builds/${projectId}/${pipelineId}/${buildId}/updateRemark`,
+      { remark }
+    )
+    return true
 }

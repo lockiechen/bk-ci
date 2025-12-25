@@ -1,14 +1,14 @@
-import { ref, computed } from 'vue'
-import { defineStore } from 'pinia'
 import {
+  flowModelToYaml,
   getFlowModel,
   saveFlowModel,
-  flowModelToYaml,
   yamlToFlowModel,
   type FlowModel,
-  type SaveFlowModelParams,
   type FlowSettings,
+  type SaveFlowModelParams,
 } from '@/api/flowModel'
+import { defineStore } from 'pinia'
+import { computed, ref } from 'vue'
 
 /**
  * 创作流模型状态管理
@@ -30,6 +30,9 @@ export const useFlowModelStore = defineStore('flowModel', () => {
   // 当前创作流 ID
   const currentFlowId = ref<string>('')
 
+  // 当前版本号
+  const currentVersion = ref<string>('')
+
   // 是否有未保存的更改
   const hasUnsavedChanges = ref(false)
 
@@ -42,16 +45,30 @@ export const useFlowModelStore = defineStore('flowModel', () => {
 
   /**
    * 加载 Flow 模型数据
+   * @param projectId 项目 ID
    * @param flowId 创作流 ID
    * @param version 版本号（可选）
+   * @param forceReload 是否强制重新加载（默认 false）
    */
-  async function loadFlowModel(flowId: string, version?: string) {
+  async function loadFlowModel(projectId: string, flowId: string, version?: string, forceReload = false) {
+    // Skip if already loading
+    if (loading.value) return
+
+    const versionStr = version || ''
+    
+    // Skip if data already exists for this flowId + version and not forcing reload
+    // This prevents tab switching from overwriting edited data
+    const isSameFlow = currentFlowId.value === flowId && currentVersion.value === versionStr
+    if (!forceReload && isSameFlow && flowModel.value !== null) {
+      return
+    }
+    
     loading.value = true
     hasError.value = false
     currentFlowId.value = flowId
-
+    currentVersion.value = versionStr
     try {
-      const model = await getFlowModel(flowId, version)
+      const model = await getFlowModel(projectId, flowId, version)
       flowModel.value = model.modelAndSetting.model
       flowSetting.value = model.modelAndSetting.setting
       yamlContent.value = model.yamlPreview.yaml
@@ -140,6 +157,7 @@ export const useFlowModelStore = defineStore('flowModel', () => {
     loading.value = false
     hasError.value = false
     currentFlowId.value = ''
+    currentVersion.value = ''
     hasUnsavedChanges.value = false
   }
 
@@ -159,6 +177,7 @@ export const useFlowModelStore = defineStore('flowModel', () => {
     loading,
     hasError,
     currentFlowId,
+    currentVersion,
     hasUnsavedChanges,
 
     // 计算属性

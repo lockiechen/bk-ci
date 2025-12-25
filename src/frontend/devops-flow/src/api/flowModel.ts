@@ -1,25 +1,21 @@
 /**
  * 创作流模型相关 API
+ * 
+ * NOTE: Core types (Stage, Container, Element, etc.) are defined in @/types/flow.ts
+ * and re-exported here for backward compatibility.
  */
 
-import type { PluginOutputVariable } from '@/types/variable'
-import type { FlowSettings } from '@/types/flow'
+import { get } from '@/utils/http'
+import type { FlowModel, FlowSettings } from '../types/flow'
 
-/**
- * Flow 模型数据结构
- */
-export interface FlowModel {
-  '@type': string
-  name: string
-  desc: string
-  stages: Stage[]
-  labels: string[]
-  instanceFromTemplate: boolean
-  creator: string
-  events: Record<string, string>
-  staticViews: string[]
-  latestVersion: number
-}
+// Re-export types from types/flow.ts for backward compatibility
+export type {
+  AdditionalOptions, CheckConfig, Container, CustomVariable,
+  DispatchType, Element, FlowModel,
+  FlowSettings, JobControlOption,
+  MatrixControlOption,
+  MutexGroup, Param, Stage, StageControlOption, Subscription
+} from '../types/flow'
 
 export interface FlowModelAndSetting {
   version: number
@@ -39,215 +35,7 @@ export interface FlowModelAndSetting {
 
 export interface YamlPreview {
   yaml: string
-  [key: string]: any
-}
-
-/**
- * Stage 阶段数据结构
- */
-export interface Stage {
-  containers: Container[]
-  id: string
-  name: string
-  tag: string[]
-  fastKill: boolean
-  finally: boolean
-  stageControlOption?: StageControlOption
-  checkIn?: CheckConfig
-  checkOut?: CheckConfig
-}
-
-/**
- * Container 容器数据结构
- */
-export interface Container {
-  jobId?: string
-  '@type': string
-  id: string
-  name: string
-  elements: Element[]
-  containerId: string
-  containerHashId: string
-  matrixGroupFlag: boolean
-  classType: string
-  baseOS?: string
-  vmNames?: string[]
-  maxQueueMinutes?: number
-  maxRunningMinutes?: number
-  buildEnv?: Record<string, string>
-  dispatchType?: DispatchType
-  showBuildResource?: boolean
-  enableExternal?: boolean
-  jobControlOption?: JobControlOption
-  matrixControlOption?: MatrixControlOption
-  mutexGroup?: MutexGroup
-  nfsSwitch?: boolean
-  params?: Param[]
-}
-
-export interface Param {
-  id: string
-  name: string
-  required: boolean
-  constant: boolean
-  type: string
-  defaultValue: unknown
-  options?: unknown[]
-  desc?: string
-  displayCondition?: Record<string, string>
-  readOnly?: boolean
-  valueNotEmpty?: boolean
-  category?: string // User-defined group name for categorization
-  order?: number // Order for sorting variables
-  payload?: {
-    [key: string]: unknown
-  }
-}
-
-export interface CustomVariable {
-  key: string
-  value: string
-}
-
-/**
- * Element 元素数据结构
- */
-export interface Element {
-  '@type'?: string
-  name: string
-  id: string
-  stepId?: string
-  scriptType?: string
-  script?: string
-  continueNoneZero?: boolean
-  enableArchiveFile?: boolean
-  archiveFile?: string
-  additionalOptions?: AdditionalOptions
-  customEnv?: CustomVariable[] // 自定义环境变量
-  executeCount?: number
-  version?: string
-  classType?: string
-  atomCode?: string
-  taskAtom?: string
-  canElementSkip?: boolean
-  useLatestParameters?: boolean
-  data?: {
-    input: Record<string, unknown>
-    output: PluginOutputVariable[]
-  }
-  [key: string]: any
-}
-
-/**
- * 调度类型
- */
-export interface DispatchType {
-  buildType: string
-  value: string
-  performanceUid: string
-  persistence: boolean
-  imageType: string
-  credentialId: string
-  credentialProject: string
-  imageCode: string
-  imageVersion: string
-  imageName: string
-  dockerBuildVersion: string
-  imagePublicFlag: boolean
-  imageRDType: string
-  recommendFlag: boolean
-}
-
-/**
- * Job 控制选项
- */
-export interface JobControlOption {
-  enable: boolean
-  prepareTimeout?: number
-  timeout: number
-  timeoutVar: string
-  runCondition: string
-  customVariables: CustomVariable[]
-  customCondition: string
-  dependOnType: string
-  dependOnId: string[]
-  dependOnName: string
-  continueWhenFailed: boolean
-}
-
-/**
- * 矩阵 Job 控制选项
- */
-export interface MatrixControlOption {
-  strategyStr: string
-  includeCaseStr: string
-  excludeCaseStr: string
-  fastKill: boolean
-  maxConcurrency: number
-}
-
-/**
- * 互斥组配置
- */
-export interface MutexGroup {
-  enable: boolean
-  mutexGroupName: string
-  queueEnable: boolean
-  timeoutVar: string
-  queue: number
-}
-
-/**
- * Stage 控制选项
- */
-export interface StageControlOption {
-  enable: boolean
-  runCondition: string
-  customVariables: CustomVariable[]
-  customCondition: string
-  manualTrigger: boolean
-  triggerUsers: string[]
-  timeout: number
-}
-
-/**
- * 检查配置
- */
-export interface CheckConfig {
-  manualTrigger: boolean
-  timeout: number
-  markdownContent: boolean
-  notifyType: string[]
-}
-
-/**
- * 附加选项
- */
-export interface AdditionalOptions {
-  enable: boolean
-  continueWhenFailed: boolean
-  manualSkip: boolean
-  retryWhenFailed: boolean
-  retryCount: number
-  manualRetry: boolean
-  timeout: number
-  timeoutVar: string
-  runCondition: string
-  pauseBeforeExec: boolean
-  subscriptionPauseUser: string
-  otherTask: string
-  customVariables: CustomVariable[]
-  customCondition: string
-  enableCustomEnv: boolean
-  failControl?: string[] // 失败控制选项数组
-}
-
-/**
- * 自定义变量
- */
-export interface CustomVariable {
-  key: string
-  value: string
+  [key: string]: unknown
 }
 
 /**
@@ -255,17 +43,11 @@ export interface CustomVariable {
  * @param flowId 创作流 ID
  * @param version 版本号（可选）
  */
-export async function getFlowModel(flowId: string, version?: string): Promise<FlowModelAndSetting> {
-  // TODO: 调用实际接口
-  // const response = await http.get(`/api/flow/${flowId}/model`, { params: { version } });
-  // return response.data;
+export async function getFlowModel(projectId: string, flowId: string, version?: string): Promise<FlowModelAndSetting> {
+  const response = await get<FlowModelAndSetting>(`/process/api/user/version/projects/${projectId}/pipelines/${flowId}/versions/${version}`);
+  return response;
 
-  // Mock 数据
-  return new Promise((resolve) => {
-    setTimeout(() => {
-      resolve(getMockFlowModel())
-    }, 500)
-  })
+  
 }
 
 /**
@@ -273,7 +55,7 @@ export async function getFlowModel(flowId: string, version?: string): Promise<Fl
  */
 export interface SaveFlowModelParams {
   projectId: string
-  flowId?: string
+  pipelineId?: string
   baseVersion?: string
   storageType?: 'MODEL' | 'YAML'
   modelAndSetting?: {
@@ -1034,7 +816,7 @@ export function getMockFlowModel(): FlowModelAndSetting {
         latestVersion: 7,
       },
       setting: {
-        name: 'parameters',
+        pipelineName: 'parameters',
         desc: '',
         runLockType: 'GROUP_LOCK',
         maxConRunningQueueSize: 10,

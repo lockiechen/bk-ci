@@ -1,19 +1,18 @@
-import { defineComponent, ref, h } from 'vue'
-import type { PropType } from 'vue'
-import { useI18n } from 'vue-i18n'
-import { Button, Tag, Select } from 'bkui-vue'
-import styles from './index.module.css'
-import { useRoute, useRouter } from 'vue-router'
-import { FLOW_GROUP_TYPES } from '@/constants/flowGroup'
-import { SvgIcon } from '../SvgIcon'
-import ExtMenu from '../ExtMenu'
-import { useFlowListData } from '@/hooks/useFlowListData'
-import { useDeleteConfirm } from '@/hooks/useDeleteConfirm'
-import { deleteContent } from '@/api/flowContentList'
 import type { MenuItem } from '@/api/flowContentList'
+import { deleteContent } from '@/api/flowContentList'
 import { CommonHeader } from '@/components/CommonHeader'
-import type { FlowInfo } from '@/types/flow'
-import type { FlowVersion } from '@/types/flow'
+import { FLOW_GROUP_TYPES } from '@/constants/flowGroup'
+import { useDeleteConfirm } from '@/hooks/useDeleteConfirm'
+import { useFlowListData } from '@/hooks/useFlowListData'
+import type { FlowInfo, FlowVersion } from '@/types/flow'
+import { Button, Select, Tag } from 'bkui-vue'
+import type { PropType } from 'vue'
+import { computed, defineComponent, h, ref } from 'vue'
+import { useI18n } from 'vue-i18n'
+import { useRoute, useRouter } from 'vue-router'
+import ExtMenu from '../ExtMenu'
+import { SvgIcon } from '../SvgIcon'
+import styles from './index.module.css'
 
 const { Option } = Select
 
@@ -26,6 +25,10 @@ export interface VersionOption {
 export const FlowHeader = defineComponent({
   name: 'FlowHeader',
   props: {
+    loading: {
+      type: Boolean,
+      default: false,
+    },
     flowInfo: {
       type: Object as PropType<FlowInfo>,
       required: true,
@@ -48,7 +51,7 @@ export const FlowHeader = defineComponent({
     const { t } = useI18n()
     const router = useRouter()
     const route = useRoute()
-    const selectedVersion = ref(Number(route.params.version) ?? 1)
+    const selectedVersion = ref(Number(route.params.version))
     const { collectHandler } = useFlowListData()
     const { showDeleteConfirm } = useDeleteConfirm()
     const flowList = {
@@ -92,9 +95,10 @@ export const FlowHeader = defineComponent({
       },
     ])
 
-    const currentVersionOption = () => {
+    const currentVersion = computed(() => {
+      console.log('props.versionList:', props.versionList.find((v) => v.version === selectedVersion.value))
       return props.versionList.find((v) => v.version === selectedVersion.value)
-    }
+    })
 
     const renderTag = () => {
       return (
@@ -113,12 +117,9 @@ export const FlowHeader = defineComponent({
       )
     }
 
-    return () => {
-      const currentVersion = currentVersionOption()
-
-      return (
+    return () => (
         <>
-          <CommonHeader workflowName={props.flowInfo?.pipelineName}>
+          <CommonHeader loading={props.loading} workflowName={props.flowInfo?.pipelineName }>
             {{
               'version-selector': () => (
                 <Select
@@ -129,9 +130,9 @@ export const FlowHeader = defineComponent({
                   {{
                     trigger: () => (
                       <span class={styles.versionTrigger}>
-                        {renderCheckIcon(currentVersion?.isLatest)}
-                        {currentVersion?.versionName}
-                        {currentVersion?.isLatest && renderTag()}
+                        {renderCheckIcon(currentVersion.value?.isLatest)}
+                        {currentVersion.value?.versionName || '--'}
+                        {currentVersion.value?.isLatest && renderTag()}
                         <SvgIcon name="angle-down" class={styles.versionSelectToggleIcon} />
                       </span>
                     ),
@@ -165,6 +166,5 @@ export const FlowHeader = defineComponent({
           </CommonHeader>
         </>
       )
-    }
   },
 })

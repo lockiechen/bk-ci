@@ -48,6 +48,21 @@ export { useExecutionRecordStore } from './executionRecord'
 /** 执行详情 */
 export { useExecuteDetailStore } from './executeDetail'
 
+/** 执行预览 */
+export {
+    usePreviewStore,
+    type AtomicState,
+    type BuildNoConfig,
+    type ParamCategory,
+    type ParamsRecord,
+    type PipelineContainer,
+    type PipelineElement,
+    type PipelineModel,
+    type PipelineStage,
+    type ProcessedProperty,
+    type SkipAtomsRecord
+} from './preview'
+
 /** 触发记录 */
 export { useTriggerRecordStore } from './triggerRecord'
 

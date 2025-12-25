@@ -7,7 +7,7 @@ import { useFlowModel } from '@/hooks/useFlowModel'
 import { useUIStore } from '@/stores/ui'
 import 'bkui-pipeline/dist/bkui-pipeline.css'
 import BkPipeline from 'bkui-pipeline/vue3'
-import { Exception } from 'bkui-vue'
+import { Exception, Loading } from 'bkui-vue'
 import { defineComponent, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useRoute } from 'vue-router'
@@ -21,8 +21,38 @@ export default defineComponent({
     const { t } = useI18n()
     const route = useRoute()
     const flowId = route.params.flowId as string
-    const flowModel = useFlowModel({
+    const { 
+      flowModel,
+      loading,
+      isEditingStage,
+      isEditingJob,
+      isEditingPlugin,
+      editingElement,
+      editingStage,
+      editingContainer,
+      isNewStage,
+      isNewJob,
+      editingContainerStage,
+      editingContainerIndex,
+      isEditingFinallyStage,
+      hasFlowStages,
+      flowModelWithoutTriggerStage,
+      handleAddJob,
+      handleAddAtom,
+      handleFlowClick,
+      handleAddStage,
+      handlePipelineChange,
+      updateAtom,
+      handleAtomSelect,
+      handleAddFirstStage,
+      handleClosePanel,
+      handleStageConfirm,
+      handleStageChange,
+      handleJobConfirm,
+    } = useFlowModel({
+      projectId: route.params.projectId as string,
       flowId,
+      version: route.params.version as string,
     })
     const uiStore = useUIStore()
 
@@ -37,25 +67,25 @@ export default defineComponent({
 
     // ========== Lifecycle Hooks ==========
     watch(
-      () => flowModel.isEditingStage.value,
+      () => isEditingStage.value,
       (val) => {
         if (val) isStagePanelVisible.value = true
       },
     )
 
     watch(
-      () => flowModel.isEditingJob.value,
+      () => isEditingJob.value,
       (val) => {
         if (val) isJobPanelVisible.value = true
       },
     )
 
     watch(
-      () => flowModel.isEditingPlugin.value,
+      () => isEditingPlugin.value,
       (val) => {
         if (val) {
           isAtomPanelVisible.value = true
-          if (!flowModel.editingElement.value?.atomCode) {
+          if (!editingElement.value?.atomCode) {
             handleChooseAtom()
           }
         }
@@ -63,20 +93,20 @@ export default defineComponent({
     )
 
     watch(isStagePanelVisible, (val) => {
-      if (!val && flowModel.isEditingStage.value) {
-        flowModel.handleClosePanel()
+      if (!val && isEditingStage.value) {
+        handleClosePanel()
       }
     })
 
     watch(isJobPanelVisible, (val) => {
-      if (!val && flowModel.isEditingJob.value) {
-        flowModel.handleClosePanel()
+      if (!val && isEditingJob.value) {
+        handleClosePanel()
       }
     })
 
     watch(isAtomPanelVisible, (val) => {
-      if (!val && flowModel.isEditingPlugin.value) {
-        flowModel.handleClosePanel()
+      if (!val && isEditingPlugin.value) {
+        handleClosePanel()
       }
     })
 
@@ -100,7 +130,7 @@ export default defineComponent({
     // ========== Functions ==========
     function renderEmptyState() {
       return (
-        <div class={styles.emptyFlowStage} onClick={flowModel.handleAddFirstStage}>
+        <div class={styles.emptyFlowStage} onClick={handleAddFirstStage}>
           <SvgIcon name="add-small" />
           <span>{t('flow.orchestration.clickToAddStage')}</span>
         </div>
@@ -112,17 +142,17 @@ export default defineComponent({
     }
 
     return () => (
-      <div class={[sharedStyles.tabContainer, styles.workflowOrchestration]}>
-        {flowModel.hasFlowStages.value ? (
+      <Loading loading={loading.value} class={[sharedStyles.tabContainer, styles.workflowOrchestration]}>
+        {hasFlowStages.value ? (
           <BkPipeline
-            pipeline={flowModel.flowModelWithoutTriggerStage.value!}
-            onAppendJob={flowModel.handleAddJob}
-            onAddAtom={flowModel.handleAddAtom}
-            onClick={flowModel.handleFlowClick}
-            onAddStage={flowModel.handleAddStage}
-            onChange={flowModel.handlePipelineChange}
+            pipeline={flowModelWithoutTriggerStage.value!}
+            onAppendJob={handleAddJob}
+            onAddAtom={handleAddAtom}
+            onClick={handleFlowClick}
+            onAddStage={handleAddStage}
+            onChange={handlePipelineChange}
           />
-        ) : flowModel.flowModelWithoutTriggerStage.value ? (
+        ) : flowModelWithoutTriggerStage.value ? (
           renderEmptyState()
         ) : (
           <Exception type="empty" scene="part">
@@ -133,39 +163,39 @@ export default defineComponent({
         {/* Stage property panel */}
         <StagePropertyPanel
           v-model={isStagePanelVisible.value}
-          stage={flowModel.editingStage.value}
+          stage={editingStage.value}
           editable={true}
-          isNew={flowModel.isNewStage.value}
-          onChange={flowModel.handleStageChange}
-          onConfirm={flowModel.handleStageConfirm}
+          isNew={isNewStage.value}
+          onChange={handleStageChange}
+          onConfirm={handleStageConfirm}
         />
 
         {/* Job property panel */}
         <JobPropertyPanel
           v-model={isJobPanelVisible.value}
           editable={true}
-          editingContainer={flowModel.editingContainer.value}
-          stage={flowModel.editingContainerStage.value}
-          containerIndex={flowModel.editingContainerIndex.value}
-          isNew={flowModel.isNewJob.value}
-          isFinally={flowModel.isEditingFinallyStage.value}
-          onConfirm={flowModel.handleJobConfirm}
+          editingContainer={editingContainer.value}
+          stage={editingContainerStage.value}
+          containerIndex={editingContainerIndex.value}
+          isNew={isNewJob.value}
+          isFinally={isEditingFinallyStage.value}
+          onConfirm={handleJobConfirm}
         />
 
         {/* Atom property panel */}
         <AtomPropertyPanel
           v-model:visible={isAtomPanelVisible.value}
-          currentElement={flowModel.editingElement.value!}
+          currentElement={editingElement.value!}
           onChooseAtom={handleChooseAtom}
-          onUpdateAtom={flowModel.updateAtom}
+          onUpdateAtom={updateAtom}
         />
 
         {/* Atom selector */}
         <AtomSelector
           v-model:visible={isAtomSelectorVisible.value}
-          onSelect={flowModel.handleAtomSelect}
+          onSelect={handleAtomSelect}
         />
-      </div>
+      </Loading>
     )
   },
 })

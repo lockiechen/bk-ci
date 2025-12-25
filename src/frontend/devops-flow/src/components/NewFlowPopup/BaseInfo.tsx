@@ -1,23 +1,19 @@
-import { defineComponent, ref, watch, onMounted } from 'vue'
-import { useI18n } from 'vue-i18n'
-import { Form, Input } from 'bkui-vue'
+import AuthoringEnv from '@/components/AuthoringEnv'
 import { SvgIcon } from '@/components/SvgIcon'
-import AuthoringContent from '@/views/Flow/Detail/AuthoringEnv/AuthoringContent'
-import { useNewFlow } from '@/hooks/useNewFlow'
+import useAuthoringEnvironment from '@/hooks/useAuthoringEnvironment'
+import { Form, Input } from 'bkui-vue'
+import { defineComponent, ref, watch } from 'vue'
+import { useI18n } from 'vue-i18n'
 import styles from './Index.module.css'
 
 export default defineComponent({
   name: 'BaseInfo',
-  components: {
-    SvgIcon,
-    AuthoringContent,
-  },
   props: {
     modelValue: {
       type: Object,
       default: () => ({
         pipelineName: '',
-        pipelineDesc: '',
+        desc: '',
         envName: '',
       }),
     },
@@ -27,15 +23,16 @@ export default defineComponent({
     const { t } = useI18n()
     const formRef = ref()
     const baseInfoData = ref({ ...props.modelValue })
+
     const {
-      authoringEnvList,
-      authoringNodeList,
-      envListLoading,
+      envSelectList,
+      envListLoading,      
+      nodeList,
       nodeListLoading,
       goEnvironment,
-      fetchAuthoringEnvList,
-      fetchAuthoringNodeList,
-    } = useNewFlow()
+    } = useAuthoringEnvironment({
+      autoLoadEnvList: true,
+    })
 
     expose({
       formRef,
@@ -48,25 +45,6 @@ export default defineComponent({
       },
     )
 
-    /**
-     * 监听创作环境变化，获取对应的创作节点列表
-     */
-    watch(
-      () => baseInfoData.value.envName,
-      (newEnv) => {
-        if (newEnv) {
-          fetchAuthoringNodeList(newEnv)
-        } else {
-          authoringNodeList.value = []
-        }
-      },
-      { immediate: true }
-    )
-
-    onMounted(() => {
-      fetchAuthoringEnvList()
-    })
-
     function handleChange() {
       emit('update:modelValue', baseInfoData.value)
     }
@@ -74,6 +52,10 @@ export default defineComponent({
     function updateAuthoringEnv(env: string) {
       baseInfoData.value.envName = env
       handleChange()
+    }
+
+    function goToEnvironment() {
+      goEnvironment(baseInfoData.value.envName)
     }
 
     return () => (
@@ -92,9 +74,9 @@ export default defineComponent({
               placeholder={t('flow.content.inputFlowName')}
             ></Input>
           </Form.FormItem>
-          <Form.FormItem label={t('flow.content.description')} property="pipelineDesc">
+          <Form.FormItem label={t('flow.content.description')} property="desc">
             <Input
-              v-model={baseInfoData.value.pipelineDesc}
+              v-model={baseInfoData.value.desc}
               onChange={handleChange}
               type="textarea"
             ></Input>
@@ -103,19 +85,19 @@ export default defineComponent({
         <div class={styles.baseItem}>
           <p class={styles.baseTitle}>
             <span>{t('flow.content.creationEnvironment')}</span>
-            <span class={styles.titleSet} onClick={() => goEnvironment()}>
+            <span class={styles.titleSet} onClick={goToEnvironment}>
               <SvgIcon name="jump" size={12} class={styles.jumpIcon} />
               {t('flow.content.environmentManagement')}
             </span>
           </p>
-          <AuthoringContent
+          <AuthoringEnv
             isEdit={true}
             envLoading={envListLoading.value}
-            nodeLoading={nodeListLoading.value}
             modelValue={baseInfoData.value.envName}
             onUpdate:modelValue={updateAuthoringEnv}
-            envList={authoringEnvList.value}
-            nodeList={authoringNodeList.value}
+            envList={envSelectList.value}
+            nodeLoading={nodeListLoading.value}
+            nodeList={nodeList.value}
           />
         </div>
       </Form>

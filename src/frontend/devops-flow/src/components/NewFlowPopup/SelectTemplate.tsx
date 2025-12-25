@@ -1,35 +1,26 @@
-import { computed, defineComponent, onMounted, ref, watch } from 'vue'
-import { useI18n } from 'vue-i18n'
-import { useRoute } from 'vue-router'
-import { Radio, Checkbox, Popover, Tab, Loading } from 'bkui-vue'
+import EmptyPage from '@/components/EmptyPage/index'
 import { SvgIcon } from '@/components/SvgIcon'
 import { useNewFlow } from '@/hooks/useNewFlow'
 import { templateTypeEnum } from '@/utils/flowConst'
-import EmptyPage from '@/components/EmptyPage/index'
-import FlowModel from '@/views/Flow/Detail/FlowModel'
-import AuthoringEnv from '@/views/Flow/Detail/AuthoringEnv'
-import TriggerTab from '@/views/Flow/Detail/TriggerEvent'
-import NoticeTab from '@/views/Flow/Detail/Notice'
+import AuthoringEnvTab from '@/views/Flow/Detail/AuthoringEnvTab'
 import SettingTab from '@/views/Flow/Detail/BasicSetting'
+import FlowModel from '@/views/Flow/Detail/FlowModel'
+import NoticeTab from '@/views/Flow/Detail/Notice'
+import TriggerTab from '@/views/Flow/Detail/TriggerEvent'
+import { Checkbox, Loading, Popover, Radio, Tab } from 'bkui-vue'
+import { computed, defineComponent, onMounted, ref, watch } from 'vue'
+import { useI18n } from 'vue-i18n'
+import { useRoute } from 'vue-router'
 import styles from './Index.module.css'
 type FlowTabTypeEnum =
   | typeof FlowModel
-  | typeof AuthoringEnv
+  | typeof AuthoringEnvTab
   | typeof TriggerTab
   | typeof NoticeTab
   | typeof SettingTab
 
 export default defineComponent({
   name: 'SelectTemplate',
-  components: {
-    SvgIcon,
-    FlowModel,
-    AuthoringEnv,
-    TriggerTab,
-    NoticeTab,
-    SettingTab,
-    EmptyPage,
-  },
   props: {
     modelValue: {
       type: Object,
@@ -156,7 +147,7 @@ export default defineComponent({
         },
         {
           title: t('flow.content.workflowEnvironment'),
-          name: 'authoringEnv',
+          name: 'AuthoringEnvTab',
         },
         {
           title: t('flow.content.triggerEvents'),
@@ -181,7 +172,7 @@ export default defineComponent({
 
     const configComponentMap: Record<string, FlowTabTypeEnum> = {
       flowModel: FlowModel,
-      authoringEnv: AuthoringEnv,
+      AuthoringEnvTab: AuthoringEnvTab,
       trigger: TriggerTab,
       notice: NoticeTab,
       setting: SettingTab,

@@ -1,13 +1,13 @@
-import { ref } from 'vue'
-import { storeToRefs } from 'pinia'
-import { useI18n } from 'vue-i18n'
-import { type CreateContentParams } from '@/api/flowContentList'
+import { type CreateContentParams } from '@/api/flowContentList';
 import { templateTypeEnum } from "@/utils/flowConst";
+import { storeToRefs } from 'pinia';
+import { ref } from 'vue';
+import { useI18n } from 'vue-i18n';
 
-import { useRouter, useRoute } from "vue-router";
-import { ROUTE_NAMES } from '@/constants/routes'
-import { useNewFlowStore } from '@/stores/createFlowStore'
+import { ROUTE_NAMES } from '@/constants/routes';
+import { useNewFlowStore } from '@/stores/createFlowStore';
 import { Message } from 'bkui-vue';
+import { useRoute, useRouter } from "vue-router";
 
 /**
  * NewFlowPopup组件业务逻辑 Hook
@@ -97,8 +97,8 @@ export function useNewFlow() {
       const params: CreateContentParams = {
         projectId: route.params.projectId as string,
         ...formData.value.baseInfo,
-        templateId: formData.value.templateInfo.activeTemplate.templateId,
-        templateVersion: formData.value.templateInfo.activeTemplate.version,
+        templateId: formData.value.templateInfo.activeTemplate.templateId!,
+        templateVersion: formData.value.templateInfo.activeTemplate.version!,
         ...formData.value.templateInfo.cloneTemplateSet.reduce((result, item) => {
           result[item] = true
           return result
@@ -111,7 +111,7 @@ export function useNewFlow() {
       if (res) {
         router.push({
           name: ROUTE_NAMES.FLOW_EDIT_WORKFLOW_ORCHESTRATION,
-          params: { flowId: res.pipelineId },
+          params: { ...route.params, flowId: res.pipelineId, version: res.version },
         })
         store.resetForm()
       }
@@ -121,14 +121,6 @@ export function useNewFlow() {
         theme: 'error',
       })
     }
-  }
-
-  function goEnvironment(envName?: string) {
-    let url = `${location.origin}/console/environment/${route.params.projectId}`
-    if (envName) {
-      url += `/envDetail/${envName}`
-    }
-    window.open(url, '_blank')
   }
 
   return {
@@ -155,7 +147,6 @@ export function useNewFlow() {
     handleNextStep,
     handlePrevStep,
     handleConfirm,
-    goEnvironment,
     resetForm: store.resetForm,
     updateBaseInfo: store.updateBaseInfo,
     updateTemplateInfo: store.updateTemplateInfo,

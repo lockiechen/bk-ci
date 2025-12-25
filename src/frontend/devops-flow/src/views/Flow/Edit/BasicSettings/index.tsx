@@ -1,13 +1,12 @@
-import { defineComponent, ref, computed, watch } from 'vue'
+import type { FlowSettings } from '@/api/flowModel'
+import { useFlowModel } from '@/hooks/useFlowModel'
+import { RunLockType } from '@/types/flow'
+import { Checkbox, Form, Input, Radio } from 'bkui-vue'
+import { defineComponent, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useRoute } from 'vue-router'
-import { Form, Input, Radio, Checkbox } from 'bkui-vue'
-import { SvgIcon } from '@/components/SvgIcon'
-import { useFlowModel } from '@/hooks/useFlowModel'
 import sharedStyles from '../shared.module.css'
 import styles from './BasicSettings.module.css'
-import type { FlowSettings } from '@/api/flowModel'
-import { RunLockType } from '@/types/flow'
 
 const { FormItem } = Form
 
@@ -17,11 +16,11 @@ export default defineComponent({
     const { t } = useI18n()
     const route = useRoute()
     const flowId = route.params.flowId as string
-    const { flowSetting, updateFlowSetting } = useFlowModel({ flowId })
+    const { flowSetting, updateFlowSetting } = useFlowModel({ projectId: route.params.projectId as string, flowId, version: route.params.version as string })
 
     // 表单数据
     const formData = ref<FlowSettings>({
-      name: '',
+      pipelineName: '',
       desc: '',
       runLockType: RunLockType.MULTIPLE,
       maxConRunningQueueSize: 40,
@@ -34,7 +33,7 @@ export default defineComponent({
     })
 
     function initFormData(setting: FlowSettings) {
-      formData.value.name = setting?.name || ''
+      formData.value.pipelineName = setting?.pipelineName || ''
       formData.value.desc = setting?.desc || ''
       formData.value.runLockType = setting?.runLockType || RunLockType.MULTIPLE
       formData.value.maxConRunningQueueSize = setting?.maxConRunningQueueSize || 40
@@ -54,7 +53,10 @@ export default defineComponent({
     )
 
     function handleChange() {
-      updateFlowSetting(formData.value)
+      updateFlowSetting({
+        ...flowSetting.value,
+        ...formData.value,
+      })
     }
 
     return () => (
@@ -64,9 +66,9 @@ export default defineComponent({
             {/* 基础信息 */}
             <div class={styles.section}>
               <div class={styles.sectionTitle}>{t('flow.content.basicInfo')}</div>
-              <FormItem label={t('flow.content.workflowName')} required property="name">
+              <FormItem label={t('flow.content.workflowName')} required property="pipelineName">
                 <Input
-                  v-model={formData.value.name}
+                  v-model={formData.value.pipelineName}
                   placeholder={t('flow.content.workflowNamePlaceholder')}
                   maxlength={128}
                   onChange={handleChange}

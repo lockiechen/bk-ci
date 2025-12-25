@@ -1,16 +1,15 @@
-import { defineComponent, computed } from 'vue'
-import { useI18n } from 'vue-i18n'
-import { useRoute } from 'vue-router'
-import { Loading } from 'bkui-vue'
-import { useModeStore } from '@/stores/flowMode'
-import ModeSwitch from '@/components/ModeSwitch'
-import EmptyPage from '@/components/EmptyPage/index'
 import CodeEditor from '@/components/CodeEditor'
-import SettingContent from './SettingContent'
+import EmptyPage from '@/components/EmptyPage/index'
+import ModeSwitch from '@/components/ModeSwitch'
 import { useFlowConfigCode } from '@/hooks/useFlowConfigCode'
 import { useFlowModel } from '@/hooks/useFlowModel'
-import styles from './SettingTab.module.css'
+import { useModeStore } from '@/stores/flowMode'
 import layoutStyles from '@/styles/layout.module.css'
+import { Loading } from 'bkui-vue'
+import { computed, defineComponent } from 'vue'
+import { useI18n } from 'vue-i18n'
+import { useRoute } from 'vue-router'
+import SettingContent from './SettingContent'
 
 export default defineComponent({
   name: 'SettingTab',
@@ -29,13 +28,15 @@ export default defineComponent({
 
     // Use flow config code hook for Code mode
     const { loading, yamlContent, sectionHighlight, isEmpty, flowSetting } = useFlowConfigCode({
+      projectId: route.params.projectId as string,
       flowId,
+      version: route.params.version as string,
       section: 'basic-setting',
       autoLoad: true,
     })
 
     // Get flowModel for group information
-    const { flowModel } = useFlowModel({ flowId, autoLoad: true })
+    const { flowModel } = useFlowModel({ projectId: route.params.projectId as string, flowId, autoLoad: true })
 
     // Combine flowSetting with group info from flowModel
     const basicSettingsWithGroup = computed(() => {

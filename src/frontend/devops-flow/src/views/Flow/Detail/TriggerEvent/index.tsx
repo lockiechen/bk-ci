@@ -1,16 +1,16 @@
-import { defineComponent, computed } from 'vue'
-import { useI18n } from 'vue-i18n'
-import { useRoute } from 'vue-router'
-import { Loading } from 'bkui-vue'
-import { useModeStore } from '@/stores/flowMode'
-import ModeSwitch from '@/components/ModeSwitch'
-import EmptyPage from '@/components/EmptyPage/index'
+import type { Element } from '@/api/flowModel'
 import CodeEditor from '@/components/CodeEditor'
-import TriggerEventContent from './TriggerEventContent'
+import EmptyPage from '@/components/EmptyPage/index'
+import ModeSwitch from '@/components/ModeSwitch'
 import { useFlowConfigCode } from '@/hooks/useFlowConfigCode'
 import { useFlowModel } from '@/hooks/useFlowModel'
-import type { Element } from '@/api/flowModel'
+import { useModeStore } from '@/stores/flowMode'
 import layoutStyles from '@/styles/layout.module.css'
+import { Loading } from 'bkui-vue'
+import { computed, defineComponent } from 'vue'
+import { useI18n } from 'vue-i18n'
+import { useRoute } from 'vue-router'
+import TriggerEventContent from './TriggerEventContent'
 
 interface TriggerEvent {
   name: string
@@ -36,11 +36,13 @@ export default defineComponent({
     const flowId = route.params.flowId as string
 
     // Use flow model hook to get trigger events
-    const { triggerEvents: triggerElements } = useFlowModel({ flowId, autoLoad: true })
+    const { triggerEvents: triggerElements } = useFlowModel({ projectId: route.params.projectId as string, flowId, autoLoad: true })
 
     // Use flow config code hook for Code mode
     const { loading, yamlContent, sectionHighlight, isEmpty } = useFlowConfigCode({
+      projectId: route.params.projectId as string,
       flowId,
+      version: route.params.version as string,
       section: 'trigger-event',
       autoLoad: true,
     })

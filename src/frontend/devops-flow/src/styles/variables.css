@@ -28,6 +28,7 @@
 
   --border-color: #dcdee5;
   --border-color-light: #e6e6e6;
+  --border-color-lighter: #d8d8d8;
   --border-color-hover: #a3c5fd;
   --border-radius: 2px;
   --border-radius-large: 4px;
@@ -49,6 +50,11 @@
   --line-height-md: 24px;
   --line-height-lg: 28px;
   --line-height-xl: 32px;
+  
+  /* 布局相关变量 */
+  --error-popup-min-height: 42px;
+  --timeline-label-width: 60px;
+  --timeline-offset: 108px;
 
   /* 字体大小变量 */
   --font-size-xs: 12px;
@@ -61,6 +67,7 @@
   --shadow-sm: 0 2px 5px 0 rgba(51, 60, 72, 0.03);
   --shadow-md: 0 4px 8px rgba(0, 0, 0, 0.12);
   --shadow-lg: 0 8px 16px rgba(0, 0, 0, 0.16);
+  --shadow-xl: 0 2px 20px 0 rgba(0, 0, 0, 0.15);
   --shadow-focus: 0 0 0 2px rgba(58, 132, 255, 0.2);
 
   /* 布局变量 */
@@ -80,6 +87,8 @@
   --transition-fast: 0.15s;
   --transition-normal: 0.2s;
   --transition-slow: 0.3s;
+  --transition-medium: 0.5s;
+  --transition-long: 0.6s;
 
   /* 过渡效果 */
   --transition-all: all 0.3s ease;

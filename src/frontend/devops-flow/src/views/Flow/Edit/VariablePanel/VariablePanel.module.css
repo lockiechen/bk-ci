@@ -13,6 +13,7 @@
 .rotate90deg {
   transform: rotate(90deg);
 }
+
 .rotate270deg {
   transform: rotate(270deg);
 }
@@ -22,6 +23,7 @@
   color: var(--color-text-tertiary);
   margin-right: var(--spacing-xs);
 }
+
 /* 面板展开状态 */
 .panelOpen {
   transform: translateX(0);
@@ -47,11 +49,11 @@
   line-height: var(--line-height-xs);
   color: #fff;
   transition: all var(--transition-slow) ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
-.toggleButton .bk-icon {
-  font-size: var(--font-size-sm);
-}
 
 /* 按钮收起状态 */
 .buttonClosed {
@@ -80,6 +82,7 @@
   flex-direction: column;
   padding: var(--spacing-md);
 }
+
 /* Tab 内容区域样式 */
 .variableTab :global(.bk-tab-content) {
   flex: 1;
@@ -145,6 +148,7 @@
   cursor: pointer;
   color: var(--color-primary);
   font-size: 0;
+
   &:hover {
     color: var(--color-primary-hover);
   }
@@ -189,7 +193,9 @@
   display: inline-flex;
   align-items: center;
   justify-content: space-between;
-  width: calc(100% - 26px); /* HACK: 解决Collapse组件header左侧缩进问题 */
+  width: calc(100% - 26px);
+
+  /* HACK: 解决Collapse组件header左侧缩进问题 */
   .categorySum {
     font-size: var(--font-size-xs);
     color: var(--color-text-tertiary);
@@ -212,6 +218,7 @@
   display: flex;
   align-items: center;
   flex-shrink: 0;
+
   &:before {
     content: '';
     display: inline-block;

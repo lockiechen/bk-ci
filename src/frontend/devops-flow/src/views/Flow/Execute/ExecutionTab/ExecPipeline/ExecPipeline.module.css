@@ -20,8 +20,8 @@
 .pipelineExecSummary {
   display: flex;
   align-items: center;
-  padding: 16px 24px;
-  font-size: 12px;
+  padding: var(--spacing-lg) var(--spacing-xxl);
+  font-size: var(--font-size-xs);
   width: 100%;
   max-width: 100%;
   box-sizing: border-box;
@@ -32,14 +32,14 @@
   display: flex;
   align-items: center;
   flex-shrink: 0;
-  font-size: 12px;
+  font-size: var(--font-size-xs);
   font-weight: bold;
 }
 
 .pipelineExecCountSelect {
   width: 88px;
   flex-shrink: 0;
-  margin: 0 8px;
+  margin: 0 var(--spacing-sm);
 }
 
 .execStatusLabel {
@@ -47,17 +47,17 @@
   align-items: center;
   grid-auto-flow: column;
   grid-gap: 6px;
-  margin-right: 8px;
+  margin-right: var(--spacing-sm);
 }
 
 .pipelineExecTimeline {
   width: 666px;
-  max-width: calc(100% - 108px);
+  max-width: calc(100% - var(--timeline-offset));
   min-width: 0;
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
   top: 11px;
-  margin-left: 108px;
+  margin-left: var(--timeline-offset);
   flex-shrink: 1;
   box-sizing: border-box;
 }
@@ -65,37 +65,37 @@
 @media (max-width: 1200px) {
   .pipelineExecTimeline {
     width: auto;
-    max-width: calc(100% - 108px);
-    margin-left: 24px;
+    max-width: calc(100% - var(--timeline-offset));
+    margin-left: var(--spacing-xxl);
   }
 }
 
 .pipelineExecTimelineItem {
   position: relative;
-  padding-left: 20px;
-  font-size: 12px;
+  padding-left: var(--spacing-xl);
+  font-size: var(--font-size-xs);
 }
 
 .pipelineExecTimelineItem > span {
   position: relative;
-  background: white;
-  padding: 0 4px 0 0;
+  background: var(--bg-primary);
+  padding: 0 var(--spacing-xs) 0 0;
   z-index: 2;
-  color: #979ba5;
+  color: var(--color-text-tertiary);
   display: inline-block;
-  margin-bottom: 8px;
+  margin-bottom: var(--spacing-sm);
 }
 
 .pipelineExecTimelineItem:before {
   position: absolute;
   content: "";
   left: 0;
-  top: 2px;
+  top: var(--spacing-xs);
   width: 9px;
   height: 9px;
   border-radius: 50%;
-  background: white;
-  border: 2px solid #d8d8d8;
+  background: var(--bg-primary);
+  border: 2px solid var(--border-color-lighter);
 }
 
 .pipelineExecTimelineItem:not(:last-child) .titleItem {
@@ -104,21 +104,21 @@
 
 .timeStepDivider {
   flex: 1;
-  height: 16px;
+  height: var(--line-height-xs);
   cursor: pointer;
 }
 
 .timeStepDivider:hover p {
-  background: #3a84ff;
+  background: var(--color-primary);
 }
 
 .timeStepDivider p {
   position: relative;
-  top: 8px;
-  left: 4px;
+  top: var(--spacing-sm);
+  left: var(--spacing-xs);
   width: 96%;
   height: 1px;
-  background: #d8d8d8;
+  background: var(--border-color-lighter);
 }
 
 .titleItem {
@@ -128,7 +128,7 @@
 .pipelineExecContent {
   flex: 1;
   position: relative;
-  background: #fafbfd;
+  background: var(--bg-tertiary);
   display: flex;
   flex-direction: column;
   overflow: hidden;
@@ -140,13 +140,13 @@
 .pipelineStyleSettingHeader {
   display: flex;
   align-items: center;
-  font-size: 12px;
-  padding: 16px 24px;
+  font-size: var(--font-size-xs);
+  padding: var(--spacing-lg) var(--spacing-xxl);
   flex-shrink: 0;
 }
 
 .hideSkipPipelineTask {
-  padding: 0 16px 0 0;
+  padding: 0 var(--spacing-lg) 0 0;
   position: relative;
 }
 
@@ -154,14 +154,14 @@
   content: "";
   position: absolute;
   width: 1px;
-  height: 16px;
+  height: var(--line-height-xs);
   right: 7px;
   top: 1px;
-  background: #dcdee5;
+  background: var(--border-color);
 }
 
 .expandJobCheckbox {
-  margin-right: 16px;
+  margin-right: var(--spacing-lg);
 }
 
 .execPipelineScrollBox {
@@ -173,8 +173,8 @@
 }
 
 .execPipelineUiWrapper {
-  padding: 0 24px;
-  padding-bottom: calc(42px + var(--error-popup-height, 0px));
+  padding: var(--spacing-xxl);
+  padding-bottom: calc(var(--error-popup-min-height) + var(--error-popup-height, 0px));
   height: 100%;
   width: 100%;
   max-width: 100%;
@@ -183,6 +183,7 @@
 }
 
 .execPipelineUiWrapper :global(.bk-pipeline) {
+  padding: 0 var(--spacing-xl);
   width: 100%;
   max-width: 100%;
   box-sizing: border-box;
@@ -192,18 +193,18 @@
 .execErrorsPopup {
   position: fixed;
   bottom: 0;
-  left: 24px;
-  right: 24px;
+  left: var(--spacing-xxl);
+  right: var(--spacing-xxl);
   overflow: hidden;
   will-change: auto;
   max-height: 30vh;
-  transition: all 0.5s ease;
-  transform: translateY(calc(100% - 42px));
-  box-shadow: 0 -2px 20px 0 rgba(0, 0, 0, 0.15);
-  background: white;
+  transition: all var(--transition-medium) ease;
+  transform: translateY(calc(100% - var(--error-popup-min-height)));
+  box-shadow: var(--shadow-xl);
+  background: var(--bg-primary);
   z-index: 6;
-  width: calc(100% - 48px);
-  max-width: calc(100% - 48px);
+  width: calc(100% - calc(var(--spacing-xxl) * 2));
+  max-width: calc(100% - calc(var(--spacing-xxl) * 2));
   box-sizing: border-box;
 }
 
@@ -212,7 +213,7 @@
 }
 
 .execErrorsPopup.visible .toggleErrorPopupIcon {
-  transition: transform 0.6s ease;
+  transition: transform var(--transition-long) ease;
   transform: rotate(180deg);
 }
 
@@ -227,7 +228,7 @@
   display: flex;
   align-items: center;
   transform-origin: center;
-  transition: transform 0.6s ease;
+  transition: transform var(--transition-long) ease;
 }
 
 .toggleErrorPopupIcon.rotated {
@@ -235,7 +236,7 @@
 }
 
 .errorContent {
-  padding: 16px 24px;
+  padding: var(--spacing-lg) var(--spacing-xxl);
 }
 
 .execCountSelectOption {
@@ -245,18 +246,18 @@
 }
 
 .execCountTimeCost {
-  margin: 0 8px;
+  margin: 0 var(--spacing-sm);
 }
 
 .execCountSelectOptionUser {
-  color: #979ba5;
+  color: var(--color-text-tertiary);
 }
 
 .queueTimeDetailPopup,
 .timeDetailPopup {
-  font-size: 12px;
+  font-size: var(--font-size-xs);
   width: 160px;
-  padding: 8px;
+  padding: var(--spacing-sm);
 }
 
 .pipelineTimeDetailSum {
@@ -264,20 +265,20 @@
 }
 
 .pipelineTimeDetailSum > span {
-  color: #63656e;
+  color: var(--color-text-secondary);
   text-align: left;
   font-weight: 600;
 }
 
 .pipelineTimeDetailSum > span:first-child {
-  color: #979ba5;
+  color: var(--color-text-tertiary);
   font-weight: normal;
-  width: 60px;
+  width: var(--timeline-label-width);
   flex-shrink: 0;
 }
 
 .timeDetailPopup .pipelineTimeDetailSum {
-  border-bottom: 1px solid #dcdee5;
+  border-bottom: 1px solid var(--border-color);
   padding: 0 0 6px 0;
   margin-bottom: 6px;
 }
@@ -290,17 +291,17 @@
 
 .pipelineTimeDetailSumList > li {
   display: flex;
-  margin-bottom: 8px;
+  margin-bottom: var(--spacing-sm);
 }
 
 .pipelineTimeDetailSumList > li > span {
-  color: #63656e;
+  color: var(--color-text-secondary);
   text-align: left;
 }
 
 .pipelineTimeDetailSumList > li > span:first-child {
-  color: #979ba5;
-  width: 60px;
+  color: var(--color-text-tertiary);
+  width: var(--timeline-label-width);
   flex-shrink: 0;
 }
 
@@ -326,8 +327,8 @@
   width: 80%;
   max-width: 1200px;
   max-height: 80vh;
-  background: white;
-  box-shadow: 0 2px 20px 0 rgba(0, 0, 0, 0.15);
+  background: var(--bg-primary);
+  box-shadow: var(--shadow-xl);
   z-index: 1000;
   display: flex;
   flex-direction: column;
@@ -337,18 +338,18 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 16px 24px;
-  border-bottom: 1px solid #dcdee5;
+  padding: var(--spacing-lg) var(--spacing-xxl);
+  border-bottom: 1px solid var(--border-color);
 }
 
 .completeLogContent {
   flex: 1;
   overflow: auto;
-  padding: 24px;
+  padding: var(--spacing-xxl);
 }
 
 .emptyState {
-  padding: 24px;
+  padding: var(--spacing-xxl);
   text-align: center;
-  color: #979ba5;
+  color: var(--color-text-tertiary);
 }

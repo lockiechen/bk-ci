@@ -1,8 +1,9 @@
+import { FLOW_GROUP_TYPES } from '@/constants/flowGroup'
+import { Loading } from 'bkui-vue'
 import { defineComponent, type PropType } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { RouterLink } from 'vue-router'
 import { SvgIcon } from '../SvgIcon'
-import { FLOW_GROUP_TYPES } from '@/constants/flowGroup'
 import styles from './CommonHeader.module.css'
 
 export interface CommonHeaderProps {
@@ -13,6 +14,10 @@ export interface CommonHeaderProps {
 export const CommonHeader = defineComponent({
   name: 'CommonHeader',
   props: {
+    loading: {
+      type: Boolean,
+      default: false,
+    },
     workflowName: {
       type: String,
       required: true,
@@ -37,6 +42,10 @@ export const CommonHeader = defineComponent({
 
     return () => (
       <header class={styles.header}>
+       { props.loading ? (
+      <Loading mode="spin" size="mini" theme="primary" />
+    ) : (
+      <>
         <div class={styles.headerLeft}>
           {/* Logo/图标 */}
           <RouterLink to={flowList} class={styles.logoLink}>
@@ -76,6 +85,7 @@ export const CommonHeader = defineComponent({
 
         {/* 右侧操作按钮插槽 */}
         <div class={styles.headerRight}>{slots.actions?.()}</div>
+      </>)}
       </header>
     )
   },

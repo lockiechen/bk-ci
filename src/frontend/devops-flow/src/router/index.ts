@@ -23,7 +23,7 @@ const router = createRouter({
         },
         {
           path: 'flow/:flowId',
-          component: () => import('../views/Flow/index'),
+          component: () => import('../views/Flow'),
           children: [
             {
               path: '',
@@ -35,7 +35,7 @@ const router = createRouter({
               }),
             },
             {
-              path: 'detail/:version?',
+              path: 'detail/:version',
               component: () => import('../views/Flow/Detail/index'),
               children: [
                 {
@@ -64,7 +64,7 @@ const router = createRouter({
                 },
                 {
                   path: 'workflow-environment',
-                  component: () => import('../views/Flow/Detail/AuthoringEnv'),
+                  component: () => import('../views/Flow/Detail/AuthoringEnvTab'),
                   name: ROUTE_NAMES.FLOW_DETAIL_WORKFLOW_ENVIRONMENT,
                   props: true,
                 },
@@ -114,7 +114,7 @@ const router = createRouter({
               ],
             },
             {
-              path: 'edit',
+              path: 'edit/:version',
               component: () => import('../views/Flow/Edit/index'),
               children: [
                 {
@@ -171,6 +171,12 @@ const router = createRouter({
               ],
             },
           ],
+        },
+        {
+          path: 'flow/:flowId/preview/:version',
+          component: () => import('../views/Flow/Preview/index'),
+          name: ROUTE_NAMES.FLOW_PREVIEW,
+          props: true,
         },
         {
           path: 'flow/:flowId/execute/:buildNo',

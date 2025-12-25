@@ -1,13 +1,11 @@
-import { defineComponent, ref, computed, type PropType } from 'vue'
-import { useI18n } from 'vue-i18n'
-import { useRoute } from 'vue-router'
-import { Collapse } from 'bkui-vue'
-import { useFlowModel } from '@/hooks/useFlowModel'
-import { useFlowInfo } from '@/hooks/useFlowInfo'
+import type { FlowSettings } from '@/api/flowModel'
 import { RunLockType } from '@/types/flow'
 import { convertTime } from '@/utils/util'
+import { Collapse } from 'bkui-vue'
+import { computed, defineComponent, ref, type PropType } from 'vue'
+import { useI18n } from 'vue-i18n'
+import { useRoute } from 'vue-router'
 import styles from './SettingContent.module.css'
-import type { FlowSettings } from '@/api/flowModel'
 
 export default defineComponent({
   name: 'SettingContent',
@@ -43,7 +41,7 @@ export default defineComponent({
         {
           key: 'workflowName',
           label: t('flow.content.workflowName'),
-          value: props.basicSettings?.name || '--',
+          value: props.basicSettings?.pipelineName || '--',
         },
         {
           key: 'flowGroup',

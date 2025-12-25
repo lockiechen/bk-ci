@@ -103,6 +103,6 @@ export function fetchTriggerModal(
   version: string,
 ): Promise<TriggerModal> {
   return get<TriggerModal>(
-    `${STORE_API_URL_PREFIX}/user/market/trigger/${ownerStoreCode}/${atomCode}/${version}`,
+    `${STORE_API_URL_PREFIX}/user/market/trigger/${atomCode}/${version}`,
   )
 }

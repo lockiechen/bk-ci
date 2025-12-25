@@ -1,6 +1,7 @@
-import { post, get, del, put } from '@/utils/http'
-import { PROCESS_API_URL_PREFIX } from '@/utils/apiUrlPrefix'
-import { type FlowInfo, type ExecuteDetailData } from '@/types/flow'
+import {
+  type ExecuteDetailData
+} from '@/types/flow'
+import { del, get, post } from '@/utils/http'
 
 /**
  * 重试流水线响应数据
@@ -83,36 +84,16 @@ export function requestPipelineExecDetail({
   pipelineId: string
   executeCount?: number
 }): Promise<ExecuteDetailData> {
-  try {
-    const url = executeCount
-    ? `${PROCESS_API_URL_PREFIX}/user/builds/projects/${projectId}/pipelines/${pipelineId}/builds/${buildNo}/record?executeCount=${executeCount}`
-    : `${PROCESS_API_URL_PREFIX}/user/builds/projects/${projectId}/pipelines/${pipelineId}/builds/${buildNo}/record`
-
-    const res = get<ExecuteDetailData>(url)
-    return res
-  } catch (error) {
-    throw error
+  const params: Record<string, any> = {}
+  if (executeCount !== undefined) {
+    params.executeCount = executeCount
   }
-}
+  
+  return get<ExecuteDetailData>(
+    `/process/api/user/builds/projects/${projectId}/pipelines/${pipelineId}/builds/${buildNo}/record`,
 
-/**
- * 获取指定版本号的流水线编排版本信息
- */
-export function requestFlowVersion({
-  projectId,
-  pipelineId,
-  version,
-}: {
-  projectId: string
-  pipelineId: string
-  version: number
-}): Promise<FlowInfo> {
-  try {
-    const res = get<FlowInfo>(`${PROCESS_API_URL_PREFIX}/user/version/projects/${projectId}/pipelines/${pipelineId}/versions/${version}/info`)
-    return res
-  } catch (error) {
-    throw error
-  }
+    { params }
+  )
 }
 
 /**
@@ -131,139 +112,100 @@ export function requestTerminatePipeline({
   pipelineId: string
   buildId: string
 }): Promise<boolean> {
-  // TODO: 调用实际接口
-  // return http.post(`/user/builds/projects/${projectId}/${pipelineId}/${buildId}`)
-  //   .then(res => res.data)
-
-  // Mock 数据
-  return new Promise((resolve) => {
-    setTimeout(() => {
-      // 模拟成功终止
-      resolve(true)
-    }, 500)
-  })
+  return del<boolean>(
+    `/process/api/user/builds/${projectId}/${pipelineId}/${buildId}`
+  )
 }
 
 /**
  * 重试创作流
+ * @param projectId 项目ID
+ * @param flowId 流水线ID
+ * @param buildId 构建ID
+ * @param taskId 任务ID（可选）
+ * @param failedContainer 失败容器（可选）
+ * @param skip 是否跳过（可选）
  */
 export function retryFlow({
   projectId,
   pipelineId,
   buildId,
+  taskId,
+  failedContainer,
+  skip,
 }: {
   projectId: string
   pipelineId: string
   buildId: string
+  taskId?: string
+  failedContainer?: string
+  skip?: boolean
 }): Promise<RetryPipelineResponse> {
-  return new Promise((resolve) => {
-    setTimeout(() => {
-      resolve({
-        id: 'b-d8311316d4a04e349f48102f9553b568',
-        executeCount: 3,
-        projectId: 'default-project',
-        pipelineId: 'p-fc1ba8afdea34eed8a95e668879f4115',
-        num: 3,
-      })
-    }, 500)
-  })
+  const failedContainerStr = failedContainer !== undefined ? `&failedContainer=${failedContainer}` : ''
+  const queryStr = taskId ? `?taskId=${taskId}${failedContainerStr}&skip=${skip}` : ''
+  
+  return post<RetryPipelineResponse>(
+    `/process/api/user/builds/${projectId}/${pipelineId}/${buildId}/retry${queryStr}`
+  )
 }
 
 /**
  * 重放创作流
+ * @param projectId 项目ID
+ * @param flowId 流水线ID
+ * @param buildId 构建ID
+ * @param forceTrigger 是否强制触发（可选）
  */
 export function replayFlow({
   projectId,
   pipelineId,
   buildId,
+  forceTrigger = false,
 }: {
   projectId: string
   pipelineId: string
   buildId: string
+  forceTrigger?: boolean
 }): Promise<ReplayPipelineResponse> {
-  return new Promise((resolve) => {
-    setTimeout(() => {
-      resolve({
-        id: 'b-d8311316d4a04e349f48102f9553b568',
-        status: 'REPLAYING',
-      })
-    }, 500)
-  })
+  return post<ReplayPipelineResponse>(
+    `/process/api/user/builds/${projectId}/${pipelineId}/${buildId}/replayByBuild?forceTrigger=${forceTrigger}`
+  )
 }
 
 /**
  * 获取启动参数值
+ * @param projectId 项目ID
+ * @param pipelineId 流水线ID
+ * @param buildId 构建ID
+ * @param archiveFlag 归档标志（可选）
  */
 export function requestBuildParams({
   projectId,
   pipelineId,
   buildId,
+  archiveFlag,
 }: {
   projectId: string
   pipelineId: string
   buildId: string
+  archiveFlag?: boolean
 }): Promise<BuildParamItem[]> {
-  // TODO: 接入真实接口：return get<BuildParamItem[]>(`/user/builds/${projectId}/${pipelineId}/${buildId}/parameters`, { params })
-  return new Promise((resolve) => {
-    setTimeout(() => {
-      resolve([
-        {
-          key: 'gdsag',
-          value: 'gdsags',
-          valueType: 'STRING',
-          readOnly: false,
-          desc: 'gas',
-          defaultValue: 'gdsags',
-        },
-        {
-          key: 'wenjian',
-          value: '/TestFile/task.json',
-          valueType: 'CUSTOM_FILE',
-          readOnly: false,
-          desc: '',
-          defaultValue: '/TestFile/task.json',
-        },
-        {
-          key: 'jiaoben',
-          value:
-            '# 通过./xxx.sh的方式执行脚本. 即若脚本中未指定解释器，则使用系统默认的shell  # 旧的${}引用变量的方式已升级为${{}}，和bash原生引用变量的方式区分开  # 通过::set-variable命令字设置/修改全局变量 # echo "::set-variable name=<var_name>::<value>" # 在后续的插件表单中使用表达式${{variables.<var_name>}}引用这个变量 # 注意：旧的通过setEnv设置变量的方式仍然保留，但存在一些历史问题，已停止迭代，不再推荐使用  # 通过::set-output命令字设置当前步骤的输出(变量隔离，不会被覆盖) # echo "::set-output name=<output_name>::<value>" # 在后续的插件表单中使用表达式${{jobs.<job_id>.steps.<step_id>.outputs.<output_name>}}引用这个输出，其中job_id和step_id在对应的Job和Task上配置  # 在质量红线中创建自定义指标后，通过setGateValue函数设置指标值 # setGateValue "CodeCoverage" $myValue # 然后在质量红线选择相应指标和阈值。若不满足，流水线在执行时将会被卡住  # cd $WORKSPACE 可进入当前工作空间目录',
-          valueType: 'TEXTAREA',
-          readOnly: false,
-          desc: '',
-          defaultValue:
-            '# 通过./xxx.sh的方式执行脚本. 即若脚本中未指定解释器，则使用系统默认的shell  # 旧的${}引用变量的方式已升级为${{}}，和bash原生引用变量的方式区分开  # 通过::set-variable命令字设置/修改全局变量 # echo "::set-variable name=<var_name>::<value>" # 在后续的插件表单中使用表达式${{variables.<var_name>}}引用这个变量 # 注意：旧的通过setEnv设置变量的方式仍然保留，但存在一些历史问题，已停止迭代，不再推荐使用  # 通过::set-output命令字设置当前步骤的输出(变量隔离，不会被覆盖) # echo "::set-output name=<output_name>::<value>" # 在后续的插件表单中使用表达式${{jobs.<job_id>.steps.<step_id>.outputs.<output_name>}}引用这个输出，其中job_id和step_id在对应的Job和Task上配置  # 在质量红线中创建自定义指标后，通过setGateValue函数设置指标值 # setGateValue "CodeCoverage" $myValue # 然后在质量红线选择相应指标和阈值。若不满足，流水线在执行时将会被卡住  # cd $WORKSPACE 可进入当前工作空间目录',
-        },
-        {
-          key: 'FDDSA',
-          value: 'FDSA',
-          valueType: 'STRING',
-          readOnly: false,
-          desc: '65465',
-          defaultValue: 'FDSA',
-        },
-        {
-          key: 'GDFfds',
-          value: 'gdsagdsadsagdsg',
-          valueType: 'STRING',
-          readOnly: true,
-          desc: '',
-          defaultValue: 'gdsagdsadsagdsg',
-        },
-        {
-          key: 'gadsgdahhhh',
-          value: 'gdsa',
-          valueType: 'STRING',
-          readOnly: true,
-          desc: '',
-          defaultValue: 'gdsa',
-        },
-      ])
-    }, 300)
-  })
+  const params: Record<string, any> = {}
+  if (archiveFlag !== undefined && archiveFlag !== null) {
+    params.archiveFlag = archiveFlag
+  }
+  
+  return get<BuildParamItem[]>(
+    `/process/api/user/builds/${projectId}/${pipelineId}/${buildId}/parameters`,
+    { params }
+  )
 }
 
 /**
  * 获取启动参数组合
+ * @param projectId 项目ID
+ * @param pipelineId 流水线ID
+ * @param buildId 构建ID
  */
 export function requestBuildParamCombination({
   projectId,
@@ -274,89 +216,7 @@ export function requestBuildParamCombination({
   pipelineId: string
   buildId: string
 }): Promise<BuildParamProperty[]> {
-  // TODO: 接入真实接口
-  return new Promise((resolve) => {
-    setTimeout(() => {
-      resolve([
-        {
-          id: 'gdsag',
-          name: 'gdsag',
-          required: false,
-          constant: false,
-          type: 'STRING',
-          defaultValue: 'gdsags',
-          value: 'gdsags',
-          desc: 'gas',
-          readOnly: false,
-          valueNotEmpty: false,
-          removeFlag: false,
-        },
-        {
-          id: 'wenjian',
-          name: 'wenjian',
-          required: false,
-          constant: false,
-          type: 'CUSTOM_FILE',
-          defaultValue: '/TestFile/task.json',
-          value: '/TestFile/task.json',
-          desc: '',
-          readOnly: false,
-          valueNotEmpty: false,
-          removeFlag: false,
-        },
-        {
-          id: 'jiaoben',
-          name: 'jiaoben',
-          required: true,
-          constant: false,
-          type: 'TEXTAREA',
-          defaultValue:
-            '# 通过./xxx.sh的方式执行脚本. 即若脚本中未指定解释器，则使用系统默认的shell  # 旧的${}引用变量的方式已升级为${{}}，和bash原生引用变量的方式区分开  # 通过::set-variable命令字设置/修改全局变量 # echo "::set-variable name=<var_name>::<value>" # 在后续的插件表单中使用表达式${{variables.<var_name>}}引用这个变量 # 注意：旧的通过setEnv设置变量的方式仍然保留，但存在一些历史问题，已停止迭代，不再推荐使用  # 通过::set-output命令字设置当前步骤的输出(变量隔离，不会被覆盖) # echo "::set-output name=<output_name>::<value>" # 在后续的插件表单中使用表达式${{jobs.<job_id>.steps.<step_id>.outputs.<output_name>}}引用这个输出，其中job_id和step_id在对应的Job和Task上配置  # 在质量红线中创建自定义指标后，通过setGateValue函数设置指标值 # setGateValue "CodeCoverage" $myValue # 然后在质量红线选择相应指标和阈值。若不满足，流水线在执行时将会被卡住  # cd $WORKSPACE 可进入当前工作空间目录',
-          value:
-            '# 通过./xxx.sh的方式执行脚本. 即若脚本中未指定解释器，则使用系统默认的shell  # 旧的${}引用变量的方式已升级为${{}}，和bash原生引用变量的方式区分开  # 通过::set-variable命令字设置/修改全局变量 # echo "::set-variable name=<var_name>::<value>" # 在后续的插件表单中使用表达式${{variables.<var_name>}}引用这个变量 # 注意：旧的通过setEnv设置变量的方式仍然保留，但存在一些历史问题，已停止迭代，不再推荐使用  # 通过::set-output命令字设置当前步骤的输出(变量隔离，不会被覆盖) # echo "::set-output name=<output_name>::<value>" # 在后续的插件表单中使用表达式${{jobs.<job_id>.steps.<step_id>.outputs.<output_name>}}引用这个输出，其中job_id和step_id在对应的Job和Task上配置  # 在质量红线中创建自定义指标后，通过setGateValue函数设置指标值 # setGateValue "CodeCoverage" $myValue # 然后在质量红线选择相应指标和阈值。若不满足，流水线在执行时将会被卡住  # cd $WORKSPACE 可进入当前工作空间目录',
-          desc: '',
-          readOnly: false,
-          valueNotEmpty: true,
-          removeFlag: false,
-        },
-        {
-          id: 'FDDSA',
-          name: 'FDSA',
-          required: false,
-          constant: true,
-          type: 'STRING',
-          defaultValue: 'FDSA',
-          desc: '65465',
-          readOnly: false,
-          valueNotEmpty: false,
-          removeFlag: false,
-        },
-        {
-          id: 'GDFfds',
-          name: '运行时只读运行时只读',
-          required: true,
-          constant: false,
-          type: 'STRING',
-          defaultValue: 'gdsagdsadsagdsg',
-          value: 'gdsagdsadsagdsg',
-          desc: '',
-          readOnly: true,
-          valueNotEmpty: false,
-          removeFlag: false,
-        },
-        {
-          id: 'gadsgdahhhh',
-          name: '运行时只读',
-          required: false,
-          constant: false,
-          type: 'STRING',
-          defaultValue: 'gdsa',
-          desc: '',
-          readOnly: true,
-          valueNotEmpty: false,
-          removeFlag: false,
-        },
-      ])
-    }, 300)
-  })
+  return get<BuildParamProperty[]>(
+    `/process/api/user/builds/${projectId}/${pipelineId}/${buildId}/parameters`
+  )
 }

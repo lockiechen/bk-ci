@@ -1,18 +1,27 @@
-import { computed, ref, watch, onMounted } from 'vue'
-import { storeToRefs } from 'pinia'
+import type { Element, Param } from '@/api/flowModel'
+import { getPluginOutputVariables, getSystemVariables, updateFlowModelParams } from '@/api/variable'
 import { useFlowModelStore } from '@/stores/flowModel'
 import type { ReadOnlyVariableGroup } from '@/types/variable'
-import type { Element, Param } from '@/api/flowModel'
-import { updateFlowModelParams, getSystemVariables, getPluginOutputVariables } from '@/api/variable'
+import { storeToRefs } from 'pinia'
+import { computed, onMounted, ref } from 'vue'
+import { useRoute } from 'vue-router'
 
 /**
  * Hook for managing all flow variables (flow variables, plugin output variables, system variables)
  */
 export function useFlowVariables(flowId: string) {
   const flowModelStore = useFlowModelStore()
+  const route = useRoute()
   const { flowModel } = storeToRefs(flowModelStore)
 
   // Flow variables - from flowModel using computed, directly use Param type
+  const projectId = computed(() => {
+    return route.params.projectId as string
+  })
+
+  const currentVersion = computed(() => {
+    return (route.params.version as string) || ''
+  })
   const variables = computed<Param[]>(() => {
     if (!flowModel.value || !flowModel.value.stages || flowModel.value.stages.length === 0) {
       return []
@@ -54,9 +63,7 @@ export function useFlowVariables(flowId: string) {
   const systemVariablesLoading = ref(false)
 
   onMounted(() => {
-    if (!flowModel.value) {
-      flowModelStore.loadFlowModel(flowId)
-    }
+      flowModelStore.loadFlowModel(projectId.value, flowId, currentVersion.value)
   })
 
   // Get all elements from flow model (excluding trigger stage)

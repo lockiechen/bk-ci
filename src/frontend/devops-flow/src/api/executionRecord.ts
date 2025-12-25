@@ -1,7 +1,75 @@
 /**
- * 执行记录相关 API
+ * Execution record related APIs
+ * Reference: devops-pipeline's /process/api/user/builds/{projectId}/{pipelineId}/history/new
  */
 
+import { get } from '@/utils/http'
+
+// Enable mock fallback for development
+const ENABLE_MOCK_FALLBACK = false
+const MOCK_API_DELAY = 300
+
+/**
+ * Stage status from API
+ */
+export interface StageStatusItem {
+  stageId: string
+  name: string
+  status: string
+  startEpoch?: number
+  elapsed?: number
+  tag?: string[]
+}
+
+/**
+ * Build record from API (matching devops-pipeline format)
+ */
+export interface BuildRecord {
+  id: string
+  buildNum: number
+  buildNumAlias?: string
+  userId: string
+  trigger: string
+  status: string
+  stageStatus: StageStatusItem[]
+  queueTime?: number
+  startTime?: number
+  endTime?: number
+  totalTime?: number
+  executeTime?: number
+  errorInfoList?: Array<{
+    errorType?: number
+    errorCode?: number
+    errorMsg?: string
+  }>
+  remark?: string
+  material?: Array<{
+    aliasName?: string
+    branchName?: string
+    newCommitId?: string
+    newCommitComment?: string
+    url?: string
+  }>
+  [key: string]: any
+}
+
+
+/**
+ * API response from /process/api/user/builds/{projectId}/{pipelineId}/history/new
+ */
+export interface BuildHistoryResponse {
+  records: BuildRecord[]
+  count: number
+  totalPages: number
+  page?: number
+  pageSize?: number
+  hasDownloadPermission?: boolean
+  pipelineVersion?: number
+}
+
+/**
+ * ExecutionRecord for display (converted from BuildRecord)
+ */
 export interface ExecutionRecord {
   id: string
   buildNo: number
@@ -21,24 +89,148 @@ export interface ExecutionRecord {
   errorCode: string
 }
 
+/**
+ * Query parameters for execution records
+ */
 export interface ExecutionRecordQueryParams {
-  flowId: string
+  projectId: string
+  pipelineId: string
   page?: number
-  limit?: number
+  pageSize?: number
   startTime?: string
   endTime?: string
   keyword?: string
+  status?: string[]
+  trigger?: string[]
+  debug?: boolean
 }
 
+/**
+ * Response format for execution record list
+ */
 export interface ExecutionRecordListResponse {
   list: ExecutionRecord[]
   count: number
   page: number
   limit: number
+  totalPages: number
 }
 
 /**
- * 生成模拟数据
+ * Convert API status to display status
+ */
+function convertStatus(status: string): 'success' | 'failed' | 'pending' | 'running' {
+  const statusMap: Record<string, 'success' | 'failed' | 'pending' | 'running'> = {
+    SUCCEED: 'success',
+    SUCCEED_WITH_WARN: 'success',
+    STAGE_SUCCESS: 'success',
+    SUCCEED_WITH_QUALITY: 'success',
+    SUCCEED_WITH_QUALITY_FAIL: 'success',
+    FAILED: 'failed',
+    TERMINATE: 'failed',
+    HEARTBEAT_TIMEOUT: 'failed',
+    QUALITY_CHECK_FAIL: 'failed',
+    QUEUE_TIMEOUT: 'failed',
+    EXEC_TIMEOUT: 'failed',
+    QUEUE: 'pending',
+    SKIP: 'pending',
+    PAUSE: 'pending',
+    CANCELED: 'pending',
+    REVIEWING: 'pending',
+    REVIEW_ABORT: 'pending',
+    REVIEW_PROCESSED: 'pending',
+    TRIGGER_REVIEWING: 'pending',
+    RUNNING: 'running',
+    PREPARE_ENV: 'running',
+    CALL_WAITING: 'running',
+    DEPENDENT_WAITING: 'running',
+    LOOP_WAITING: 'running',
+  }
+  return statusMap[status] || 'pending'
+}
+
+/**
+ * Convert timestamp to formatted time string
+ */
+function formatTime(timestamp?: number): string {
+  if (!timestamp) return '--'
+  const date = new Date(timestamp)
+  const month = String(date.getMonth() + 1).padStart(2, '0')
+  const day = String(date.getDate()).padStart(2, '0')
+  const hour = String(date.getHours()).padStart(2, '0')
+  const minute = String(date.getMinutes()).padStart(2, '0')
+  return `${month}-${day} ${hour}:${minute}`
+}
+
+/**
+ * Convert milliseconds to duration string
+ */
+function formatDuration(ms?: number): string {
+  if (!ms || ms <= 0) return '--'
+  const seconds = Math.floor(ms / 1000)
+  const minutes = Math.floor(seconds / 60)
+  const hours = Math.floor(minutes / 60)
+  
+  if (hours > 0) {
+    return `${hours}小时${minutes % 60}分${seconds % 60}秒`
+  } else if (minutes > 0) {
+    return `${minutes}分${seconds % 60}秒`
+  } else {
+    return `${seconds}秒`
+  }
+}
+
+/**
+ * Convert BuildRecord from API to ExecutionRecord for display
+ */
+function convertBuildRecordToExecutionRecord(record: BuildRecord): ExecutionRecord {
+  // Convert stage status
+  const stageStatus = record.stageStatus?.map(stage => ({
+    status: convertStatus(stage.status),
+    progress: stage.status === 'RUNNING' ? Math.floor(Math.random() * 100) : undefined,
+  })) || []
+
+  // Get error code from errorInfoList
+  const errorCode = record.errorInfoList?.[0]?.errorCode?.toString() || ''
+
+  // Format trigger method
+  const triggerMethodMap: Record<string, string> = {
+    MANUAL: '手动触发',
+    TIME_TRIGGER: '定时触发',
+    REMOTE: '远程触发',
+    SERVICE: '服务触发',
+    PIPELINE: '流水线触发',
+    CODE_GIT: 'Git Push',
+    CODE_GITLAB: 'GitLab Push',
+    CODE_SVN: 'SVN',
+    CODE_TGIT: 'TGit',
+    CODE_P4: 'P4',
+    WEB_HOOK: 'WebHook',
+  }
+  const triggerDisplay = triggerMethodMap[record.trigger] || record.trigger || '--'
+  const triggerMethod = ['MANUAL', 'REMOTE'].includes(record.trigger) && record.userId
+    ? `${triggerDisplay}(${record.userId})`
+    : triggerDisplay
+
+  return {
+    id: record.id,
+    buildNo: record.buildNum,
+    checked: false,
+    stageStatus,
+    workflowNode: record.material?.[0]?.branchName || '--',
+    triggerMethod,
+    triggerTime: formatTime(record.queueTime),
+    startTime: formatTime(record.startTime),
+    endTime: formatTime(record.endTime),
+    totalDuration: formatDuration(record.totalTime),
+    executionDuration: formatDuration(record.executeTime),
+    remark: record.remark || '',
+    errorCode,
+  }
+}
+
+/**
+ * Generate mock data (for fallback only)
  */
 function generateMockData(count: number): ExecutionRecord[] {
   const triggerMethods = ['手动触发', '定时触发', '远程触发', 'Git Push', 'Git Tag', '代码合并']
@@ -51,7 +243,6 @@ function generateMockData(count: number): ExecutionRecord[] {
     '功能优化',
     '性能提升',
     '代码重构',
-    '这是很长的一段备注备注备注备注,对执行结果的备注,真的很长很长很长很长很长很长很长很长很长很长很长长,最多可以显示三行...',
   ]
   const errorCodes = ['', 'E001', 'E002', 'E100', 'E200']
 
@@ -92,15 +283,13 @@ function generateMockData(count: number): ExecutionRecord[] {
     const seconds = duration % 60
     const durationStr = minutes > 0 ? `${minutes}分${seconds}秒` : `${seconds}秒`
 
-    // 生成随机的 stage 状态
+    // Generate random stage status
     const stageCount = 6
     const stageStatus: ExecutionRecord['stageStatus'] = []
     for (let j = 0; j < stageCount; j++) {
       if (j < stageCount - 2) {
-        // 前面的 stage 通常是 success
         stageStatus.push({ status: 'success' })
       } else if (j === stageCount - 2) {
-        // 倒数第二个可能是 running 或 failed
         const rand = Math.random()
         if (rand < 0.3) {
           stageStatus.push({ status: 'running', progress: Math.floor(Math.random() * 100) })
@@ -110,7 +299,6 @@ function generateMockData(count: number): ExecutionRecord[] {
           stageStatus.push({ status: 'success' })
         }
       } else {
-        // 最后一个通常是 pending
         stageStatus.push({ status: 'pending' })
       }
     }
@@ -131,7 +319,7 @@ function generateMockData(count: number): ExecutionRecord[] {
     mockData.push({
       id: String(i + 1),
       buildNo,
-      checked: i % 3 === 0,
+      checked: false,
       stageStatus,
       workflowNode: `ins-${workflowNodeId}`,
       triggerMethod: triggerDisplay,
@@ -149,56 +337,90 @@ function generateMockData(count: number): ExecutionRecord[] {
 }
 
 /**
- * 获取执行记录列表
+ * Get execution records from API
+ * API: GET /process/api/user/builds/{projectId}/{pipelineId}/history/new
  */
 export async function getExecutionRecords(
   params: ExecutionRecordQueryParams,
 ): Promise<ExecutionRecordListResponse> {
-  // TODO: 调用实际接口
-  // const response = await http.get('/api/flow/execution-records', { params });
-  // return response.data;
+  const { projectId, pipelineId, page = 1, pageSize = 20, debug = false, ...filterParams } = params
 
-  // 模拟数据
-  return new Promise((resolve) => {
-    setTimeout(() => {
-      const totalCount = 198 // 总数据量
+  // Build query parameters
+  const queryParams = new URLSearchParams()
+  queryParams.append('page', String(page))
+  queryParams.append('pageSize', String(pageSize))
+  
+  if (debug) {
+    queryParams.append('debug', 'true')
+  }
+  
+  // Add filter parameters
+  if (filterParams.status?.length) {
+    filterParams.status.forEach(s => queryParams.append('status', s))
+  }
+  if (filterParams.trigger?.length) {
+    filterParams.trigger.forEach(t => queryParams.append('trigger', t))
+  }
+  if (filterParams.startTime) {
+    queryParams.append('startTimeStartTime', filterParams.startTime)
+  }
+  if (filterParams.endTime) {
+    queryParams.append('endTimeEndTime', filterParams.endTime)
+  }
 
-      // 生成所有模拟数据（只在第一次生成，实际应该缓存）
-      const allMockData = generateMockData(totalCount)
+  try {
+    const response = await get<BuildHistoryResponse>(
+      `/process/api/user/builds/${projectId}/${pipelineId}/history/new`,
+      { params: Object.fromEntries(queryParams) }
+    )
 
-      // 根据关键词过滤（如果提供）
-      let filteredData = allMockData
-      if (params.keyword) {
-        const keyword = params.keyword.toLowerCase()
-        filteredData = allMockData.filter(
-          (item) =>
-            item.buildNo.toString().includes(keyword) ||
-            item.triggerMethod.toLowerCase().includes(keyword) ||
-            item.workflowNode.toLowerCase().includes(keyword) ||
-            item.remark.toLowerCase().includes(keyword) ||
-            item.errorCode.toLowerCase().includes(keyword),
-        )
-      }
+    // Convert API records to display format
+    const list = response.records.map(convertBuildRecordToExecutionRecord)
 
-      // 根据时间范围过滤（如果提供）
-      if (params.startTime && params.endTime) {
-        const start = new Date(params.startTime).getTime()
-        const end = new Date(params.endTime).getTime()
-        filteredData = filteredData.filter((item) => {
-          // 简单的时间匹配，实际应该解析 triggerTime
-          return true // 这里简化处理，实际应该解析时间字符串
-        })
-      }
+    return {
+      list,
+      count: response.count || list.length,
+      page: response.page || page,
+      limit: response.pageSize || pageSize,
+      totalPages: response.totalPages || Math.ceil((response.count || list.length) / pageSize),
+    }
+  } catch (error) {
+    if (ENABLE_MOCK_FALLBACK) {
+      console.warn('[API Fallback] getExecutionRecords failed, using mock data:', error)
+      // Fallback to mock data
+      return new Promise((resolve) => {
+        setTimeout(() => {
+          const totalCount = 50
+          const allMockData = generateMockData(totalCount)
+          
+          // Apply keyword filter if provided
+          let filteredData = allMockData
+          if (filterParams.keyword) {
+            const keyword = filterParams.keyword.toLowerCase()
+            filteredData = allMockData.filter(
+              (item) =>
+                item.buildNo.toString().includes(keyword) ||
+                item.triggerMethod.toLowerCase().includes(keyword) ||
+                item.workflowNode.toLowerCase().includes(keyword) ||
+                item.remark.toLowerCase().includes(keyword) ||
+                item.errorCode.toLowerCase().includes(keyword),
+            )
+          }
 
-      const filteredCount = filteredData.length
+          const filteredCount = filteredData.length
+          const startIndex = (page - 1) * pageSize
+          const paginatedData = filteredData.slice(startIndex, startIndex + pageSize)
 
-      // 返回所有过滤后的数据，让 Table 组件自己处理分页
-      resolve({
-        list: filteredData,
-        count: filteredCount,
-        page: params.page || 1,
-        limit: params.limit || 10,
+          resolve({
+            list: paginatedData,
+            count: filteredCount,
+            page,
+            limit: pageSize,
+            totalPages: Math.ceil(filteredCount / pageSize),
+          })
+        }, MOCK_API_DELAY)
       })
-    }, 300)
-  })
+    }
+    throw error
+  }
 }

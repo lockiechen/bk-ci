@@ -31,7 +31,8 @@ export default defineComponent({
       router.push({
         name: ROUTE_NAMES.FLOW_DETAIL_EXECUTION_RECORD,
         params: {
-          flowId: flowId,
+          flowId,
+          version: flowInfo.value?.releaseVersion
         },
       })
     }
@@ -157,14 +158,16 @@ export default defineComponent({
     const handleEdit = () => {
       router.push({
         name: ROUTE_NAMES.FLOW_EDIT_WORKFLOW_ORCHESTRATION,
-        params: { flowId },
+        params: { flowId, version: flowInfo.value?.version, projectId },
       })
     }
 
     // 执行
     const handleExecute = () => {
-      // TODO: 处理执行逻辑
-      console.log('执行')
+      router.push({
+        name: ROUTE_NAMES.FLOW_PREVIEW,
+        params: { flowId, version: flowInfo.value?.version, projectId },
+      })
     }
 
     return () => (

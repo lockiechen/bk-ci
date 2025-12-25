@@ -19,7 +19,7 @@ export default defineComponent({
     const route = useRoute()
     const flowId = route.params.flowId as string
     const projectCode = route.params.projectId as string
-    const flowModel = useFlowModel({ flowId })
+    const flowModel = useFlowModel({ projectId: projectCode, flowId, version: route.params.version as string })
     const isTriggerPanelVisible = ref(false)
     const editingTriggerIndex = ref<number | null>(null)
     const panelElement = ref<Element | null>(null)

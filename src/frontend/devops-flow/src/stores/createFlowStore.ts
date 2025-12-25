@@ -1,23 +1,26 @@
 import {
-  apiGetAuthoringEnvList,
-  apiGetAuthoringNodeList,
+  fetchAuthoringEnvList as apiFetchEnvList,
+  fetchAuthoringNodeList as apiFetchNodeList,
+  type AuthoringNodeItem,
+  type EnvSelectItem
+} from '@/api/authoringEnvironmentApi';
+import {
   apiGetProjectTemplates,
   apiGetStoreTemplates,
   createContent,
-  type AuthoringEnvItem,
-  type AuthoringNodeItem,
-  type CreateContentParams,
   type CreateContentFormData,
+  type CreateContentParams,
   type GetStoreTemplatesParams,
   type StoreTemplateItem,
-  type TemplateObject,
-} from '@/api/flowContentList'
-import { defineStore } from 'pinia'
-import { ref } from 'vue'
-import { useRoute } from 'vue-router'
-import { templateTypeEnum } from '@/utils/flowConst'
-import { useI18n } from 'vue-i18n'
-import { Message } from 'bkui-vue'
+  type TemplateObject
+} from '@/api/flowContentList';
+import { templateTypeEnum } from "@/utils/flowConst";
+import { defineStore } from 'pinia';
+import { ref } from 'vue';
+import { useI18n } from 'vue-i18n';
+import { useRoute } from 'vue-router';
+
+import { Message } from 'bkui-vue';
 
 /**
  * 创作流创建流程状态管理
@@ -47,7 +50,7 @@ export const useNewFlowStore = defineStore('newFlow', () => {
   const isLoading = ref(false)
 
   // 创作环境相关状态
-  const authoringEnvList = ref<AuthoringEnvItem[]>([])
+  const authoringEnvList = ref<EnvSelectItem[]>([])
   const authoringNodeList = ref<AuthoringNodeItem[]>([])
   const envListLoading = ref(false)
   const nodeListLoading = ref(false)
@@ -122,22 +125,15 @@ export const useNewFlowStore = defineStore('newFlow', () => {
 
   /**
    * 获取创作环境列表
+   * Uses the centralized authoringEnvironmentApi
    */
   async function fetchAuthoringEnvList() {
     try {
       envListLoading.value = true
-      const params = {
-        projectId: route.params.projectId as string,
-        envType: 'CREATE',
-      }
-      const envList = await apiGetAuthoringEnvList(params)
-      authoringEnvList.value = envList.map((item) => ({
-        ...item,
-        value: item.envHashId,
-        label: item.name,
-      }))
+      const projectId = route.params.projectId as string
+      const envList = await apiFetchEnvList({ projectId, envType: 'CREATE' })
     } catch (error) {
-      console.error('获取创作环境列表失败:', error)
+      console.error('Failed to fetch authoring environment list:', error)
       authoringEnvList.value = []
     } finally {
       envListLoading.value = false
@@ -146,6 +142,7 @@ export const useNewFlowStore = defineStore('newFlow', () => {
 
   /**
    * 获取创作节点列表
+   * Uses the centralized authoringEnvironmentApi
    */
   async function fetchAuthoringNodeList(envName: string) {
     if (!envName) {
@@ -155,13 +152,11 @@ export const useNewFlowStore = defineStore('newFlow', () => {
 
     try {
       nodeListLoading.value = true
-      const params = {
-        projectId: route.params.projectId as string,
-        envName: 'CREATE',
-      }
-      const res = await apiGetAuthoringNodeList(params)
-      authoringNodeList.value = res.records
+      const projectId = route.params.projectId as string
+      const res = await apiFetchNodeList({ projectId, envName })
+      authoringNodeList.value = res.records || []
     } catch (error) {
+      console.error('Failed to fetch authoring node list:', error)
       authoringNodeList.value = []
     } finally {
       nodeListLoading.value = false
