@@ -128,7 +128,7 @@ export default defineComponent({
             projectId: projectId.value,
             pipelineId: flowId.value,
             buildId: buildNo.value,
-            remark: tempRemark.value,
+            remark: tempRemark.value as string,
           })
           remark.value = tempRemark.value
           Message({

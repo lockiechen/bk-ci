@@ -444,7 +444,19 @@ export interface ExecutionRecord {
  * 质量红线
  */
 export interface ArtifactQuality {
-  [key: string]: unknown
+  [key: string]: any
+}
+
+/**
+ * TemplateInfo
+ */
+export interface TemplateInfo {
+  templateId: string
+  templateName: string
+  version: number
+  versionName: string
+  instanceType:  'FREEDOM' | 'CONSTRAINT'
+  desc: string
 }
 
 /**
@@ -483,6 +495,7 @@ export interface ExecuteDetailData {
   materials?: Record<string, unknown>[] // 材料列表
   cancelBuildPerm: boolean // 是否有取消构建权限
   errorInfoList: Record<string, unknown>[] // 错误信息列表
+  templateInfo?: TemplateInfo // 模板信息
   [key: string]: unknown
 }
 
