@@ -77,7 +77,7 @@ export const useOutputsStore = defineStore('outputs', () => {
   async function getArtifactDate() {
     const repoList = await requestMetadataLabels({
       projectId: route.params.projectId as string,
-      pipelineId: route.params.pipelineId as string,
+      pipelineId: route.params.flowId as string,
       ...(isDebugExec.value ? { debug: isDebugExec.value } : {}),
     })
 
@@ -100,23 +100,17 @@ export const useOutputsStore = defineStore('outputs', () => {
   }
 
   async function init() {
-    const { projectId, pipelineId, buildNo: buildId } = route.params
+    const { projectId, flowId, buildNo: buildId } = route.params
 
     try {
       isLoading.value = true
       const outputsResponse = await requestOutputs({
         projectId: projectId as string,
-        pipelineId: pipelineId as string,
+        pipelineId: flowId as string,
         buildId: buildId as string,
         qualityMetadata: filterQuery.value,
-        ...pagination.value,
       })
-      const { records, page, pageSize, count } = outputsResponse
-      pagination.value = {
-        page,
-        pageSize,
-        count,
-      }
+      const { records } = outputsResponse
       outputs.value = records.map((item) => {
         const isReportOutput = item.artifactoryType === 'REPORT'
         const isImageOutput = item.artifactoryType === 'IMAGE'
@@ -189,7 +183,7 @@ export const useOutputsStore = defineStore('outputs', () => {
       isLoading.value = true
       const params: GetFileInfoParams = {
         projectId: projectId as string,
-        type: output.artifactoryType,
+        artifactoryType: output.artifactoryType,
         path: output.fullPath,
       }
       const res = await requestFileInfo(params)
@@ -207,8 +201,11 @@ export const useOutputsStore = defineStore('outputs', () => {
         icon: !output.folder ? extForFile(res.name) : 'folder',
         include: getInclude(output),
       }
-    } catch (err) {
-      console.log(err)
+    } catch (err: any) {
+      Message({
+        message: err.message ? err.message : err,
+        theme: 'error',
+      })
     } finally {
       isLoading.value = false
     }

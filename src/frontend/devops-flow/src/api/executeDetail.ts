@@ -239,6 +239,6 @@ export function requestBuildParamCombination({
   buildId: string
 }): Promise<BuildParamProperty[]> {
   return get<BuildParamProperty[]>(
-    `${PROCESS_API_URL_PREFIX}/user/builds/${projectId}/${pipelineId}/${buildId}/parameters`
+    `${PROCESS_API_URL_PREFIX}/user/buildParam/${projectId}/${pipelineId}/${buildId}/getCombinationFromBuild`
   )
 }

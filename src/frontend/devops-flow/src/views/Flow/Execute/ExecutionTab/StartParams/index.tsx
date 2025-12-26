@@ -110,6 +110,18 @@ export default defineComponent({
       isDetailShow.value = false
     }
 
+    function formatParamValue(value: any): string {
+      if (typeof value === 'object' && value !== null) {
+        try {
+          return JSON.stringify(value, null, 2)
+        } catch (error) {
+          return String(value)
+        }
+      }
+
+      return String(value)
+    }
+
     return () => (
       <Loading loading={isLoading.value} class={styles.startupParameterBox}>
         <div class={styles.startupParameterWrapper}>
@@ -139,7 +151,7 @@ export default defineComponent({
                         param.isDiff ? styles.diffParamValue : '',
                       ]}
                     >
-                      {param.value}
+                      {formatParamValue(param.value)}
                     </span>
                     {overflowSpan.value[index] ? (
                       <Button

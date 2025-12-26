@@ -16,11 +16,26 @@ export default defineComponent({
 
     const showContent = computed(() => !loading.value && !!executeDetail.value)
 
-    // 监听路由参数变化，特别是 executeCount，重新加载数据
+    // 监听 buildNo 变化（切换到不同的构建详情时）重新加载数据
     watch(
-      () => [route.query.executeCount, route.params.buildNo],
-      async () => {
-        await initExecuteDetail()
+      () => route.params.buildNo,
+      async (newBuildNo, oldBuildNo) => {
+        // 只有 buildNo 真正变化时才重新加载（避免初始化时重复加载）
+        if (newBuildNo !== oldBuildNo && oldBuildNo !== undefined) {
+          await initExecuteDetail()
+        }
+      },
+      { immediate: false },
+    )
+
+    // 监听 executeCount 变化（轮询或手动刷新）
+    watch(
+      () => route.query.executeCount,
+      async (newCount, oldCount) => {
+        // executeCount 变化时重新加载数据
+        if (newCount !== oldCount && oldCount !== undefined) {
+          await initExecuteDetail()
+        }
       },
       { immediate: false },
     )

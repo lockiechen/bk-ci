@@ -114,7 +114,7 @@ const router = createRouter({
               ],
             },
             {
-              path: 'edit/:version',
+              path: 'edit/:version?',
               component: () => import('../views/Flow/Edit/index'),
               children: [
                 {

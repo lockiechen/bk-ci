@@ -16,23 +16,6 @@ export default defineComponent({
       return route.name as string
     })
 
-    // 监听路由变化，如果 tab 不合法则重定向
-    watch(
-      () => route.name,
-      (routeName) => {
-        const tab = currentTab.value
-        if (!isValidFlowExecutionDetailTab(tab)) {
-          // 如果 tab 不合法，重定向到默认 tab
-          router.replace({
-            name: ROUTE_NAMES.FLOW_DETAIL_EXECUTION_DETAIL_TAB,
-            params: route.params,
-            query: route.query,
-          })
-        }
-      },
-      { immediate: true },
-    )
-
     // Tab 配置（子组件直接从 store 获取数据，不需要传递 props）
     const tabConfig = [
       {
@@ -55,21 +38,19 @@ export default defineComponent({
     ]
 
     // 处理 Tab 切换
-    const handleTabChange = (tabName: string) => {
+    function handleTabChange(tabName: string) {
       if (!isValidFlowExecutionDetailTab(tabName)) {
         // 如果 tab 不合法，重定向到默认 tab
-        router.push({
+        router.replace({
           name: ROUTE_NAMES.FLOW_DETAIL_EXECUTION_DETAIL_TAB,
-          params: {
-            flowId: route.params.flowId,
-            buildNo: route.params.buildNo,
-          },
+          params: route.params,
           query: route.query,
         })
         return
       }
 
-      router.push({
+      // 使用 replace 而不是 push，避免历史记录堆积
+      router.replace({
         name: tabName,
         params: route.params,
         query: route.query,

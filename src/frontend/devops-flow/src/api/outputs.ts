@@ -2,9 +2,8 @@
  * Outputs 相关 API 接口定义
  */
 
-import { get, post } from '@/utils/http'
-
-const ARTIFACTORY_API_URL_PREFIX = '/artifactory/api'
+import { post, get } from '@/utils/http'
+import { ARTIFACTORY_API_URL_PREFIX } from '@/utils/apiUrlPrefix'
 
 /**
  * 制品/报告类型
@@ -106,7 +105,7 @@ export interface GetOutputsParams {
  * 获取制品输出列表响应数据
  */
 export interface GetOutputsResponse {
-  hasDownloadPermission: boolean // 是否有下载权限
+  hasDownloadPermission?: boolean // 是否有下载权限
   records: Output[] // 制品列表
   count: number // 总数
   page: number // 当前页码
@@ -118,7 +117,7 @@ export interface GetOutputsResponse {
  */
 export interface GetFileInfoParams {
   projectId: string // 项目ID
-  type: ArtifactoryType // 制品仓库类型
+  artifactoryType: ArtifactoryType // 制品仓库类型
   path: string // 文件路径
 }
 
@@ -202,171 +201,23 @@ export interface CopyFileParams {
  * @param params 请求参数
  * @returns 制品列表响应数据
  */
-export function requestOutputs(params: GetOutputsParams): Promise<GetOutputsResponse> {
-  const { projectId, pipelineId, buildId, page = 1, pageSize = 20, props = [] } = params
-
-  // TODO: 调用实际接口
-  // const requestParams = {
-  //   page,
-  //   pageSize,
-  //   props,
-  // }
-  // const hasBuildId = !!buildId
-  // return http.post(
-  //   `/user/pipeline/output/${projectId}/${pipelineId}/${hasBuildId ? `${buildId}/` : ''}search`,
-  //   requestParams
-  // ).then(res => res.data)
-
-  // Mock 数据
-  return new Promise((resolve) => {
-    setTimeout(() => {
-      resolve({
-        hasDownloadPermission: true,
-        records: [
-          {
-            artifactoryType: 'PIPELINE',
-            name: '10040714_com.tencent.tmgp.hpjy_a2681256_1.23.21_CoVHUY.apk',
-            fullName: '/归档构件123/21/10040714_com.tencent.tmgp.hpjy_a2681256_1.23.21_CoVHUY.apk',
-            path: '/p-585162853b474062a7227c69fd0ac050/b-b4d32cf3d5dd4de294c8537724f72a80/10040714_com.tencent.tmgp.hpjy_a2681256_1.23.21_CoVHUY.apk',
-            fullPath:
-              '/p-585162853b474062a7227c69fd0ac050/b-b4d32cf3d5dd4de294c8537724f72a80/10040714_com.tencent.tmgp.hpjy_a2681256_1.23.21_CoVHUY.apk',
-            size: 2082359687,
-            folder: false,
-            properties: [
-              {
-                key: 'BK-CI-APP-STAGE',
-                value: 'Alpha',
-              },
-              {
-                key: 'projectId',
-                value: 'test-01',
-              },
-              {
-                key: 'pipelineId',
-                value: 'p-585162853b474062a7227c69fd0ac050',
-              },
-              {
-                key: 'buildId',
-                value: 'b-b4d32cf3d5dd4de294c8537724f72a80',
-              },
-              {
-                key: 'buildNo',
-                value: '21',
-              },
-              {
-                key: 'taskId',
-                value: 'e-e7cddeae25e54b2ab0f50abb4e3945f0',
-              },
-              {
-                key: 'source',
-                value: 'pipeline',
-              },
-              {
-                key: 'appVersion',
-                value: '1.23.21',
-              },
-              {
-                key: 'appTitle',
-                value: '和平精英',
-              },
-              {
-                key: 'bundleIdentifier',
-                value: 'com.tencent.tmgp.pubgmhd',
-              },
-              {
-                key: 'appName',
-                value: '和平精英',
-              },
-              {
-                key: 'appIcon',
-                value:
-                  'https://teststaticfile.woa.com/bkdevops/app-icon/app-icon/apk/f95eb34eb7399ff3e9bcb06c6a560336fd94e0126477692ecabe5b8bffee0afd.png?v=1755655609',
-              },
-              {
-                key: 'sys_ch',
-                value: 'pipeline',
-              },
-            ],
-            appVersion: '1.23.21',
-            shortUrl: '',
-            md5: '7d04ddbe7af2039455ce8908ac61cb60',
-            createTime: 1755655632,
-          },
-          {
-            artifactoryType: 'CUSTOM_DIR',
-            name: '10040714_com.tencent.tmgp.hpjy_a2681256_1.23.21_CoVHUY.apk',
-            fullName: '/haha/10040714_com.tencent.tmgp.hpjy_a2681256_1.23.21_CoVHUY.apk',
-            path: '/haha/10040714_com.tencent.tmgp.hpjy_a2681256_1.23.21_CoVHUY.apk',
-            fullPath: '/haha/10040714_com.tencent.tmgp.hpjy_a2681256_1.23.21_CoVHUY.apk',
-            size: 2082359687,
-            folder: false,
-            properties: [
-              {
-                key: 'projectId',
-                value: 'test-01',
-              },
-              {
-                key: 'pipelineId',
-                value: 'p-585162853b474062a7227c69fd0ac050',
-              },
-              {
-                key: 'buildId',
-                value: 'b-b4d32cf3d5dd4de294c8537724f72a80',
-              },
-              {
-                key: 'buildNo',
-                value: '21',
-              },
-              {
-                key: 'taskId',
-                value: 'e-3e168bee45e0409e978ab2f37c4567d9',
-              },
-              {
-                key: 'source',
-                value: 'pipeline',
-              },
-              {
-                key: 'appVersion',
-                value: '1.23.21',
-              },
-              {
-                key: 'appTitle',
-                value: '和平精英',
-              },
-              {
-                key: 'bundleIdentifier',
-                value: 'com.tencent.tmgp.pubgmhd',
-              },
-              {
-                key: 'appName',
-                value: '和平精英',
-              },
-              {
-                key: 'appIcon',
-                value:
-                  'https://teststaticfile.woa.com/bkdevops/app-icon/app-icon/apk/f95eb34eb7399ff3e9bcb06c6a560336fd94e0126477692ecabe5b8bffee0afd.png?v=1755655578',
-              },
-              {
-                key: 'sys_oc',
-                value: '1',
-              },
-              {
-                key: 'sys_ch',
-                value: 'pipeline',
-              },
-            ],
-            appVersion: '1.23.21',
-            shortUrl: '',
-            md5: '7d04ddbe7af2039455ce8908ac61cb60',
-            createTime: 1755655602,
-          },
-        ],
-        count: 2,
-        page: 1,
-        pageSize: 20,
-      })
-    }, 800)
-  })
+export async function requestOutputs(params: GetOutputsParams): Promise<GetOutputsResponse> {
+  try {
+    const { projectId, pipelineId, buildId, ...otherParams } = params
+    const hasBuildId = !!buildId
+    const data = await post<Output[]>(
+      `${ARTIFACTORY_API_URL_PREFIX}/user/pipeline/output/${projectId}/${pipelineId}/${hasBuildId ? `${buildId}/` : ''}search`,
+      otherParams,
+    )
+    return {
+      page: 1,
+      pageSize: data.length,
+      count: data.length,
+      records: data,
+    }
+  } catch (error) {
+    throw error
+  }
 }
 
 /**
@@ -374,132 +225,16 @@ export function requestOutputs(params: GetOutputsParams): Promise<GetOutputsResp
  * @param params 请求参数
  * @returns 文件元数据数组
  */
-export function requestFileInfo(params: GetFileInfoParams): Promise<FileInfo> {
-  const { projectId, type, path } = params
-
-  // TODO: 调用实际接口
-  // return http.get(`artifactories/${projectId}/${type}/show?path=${encodeURIComponent(path)}`)
-  //   .then(res => res.data)
-
-  // Mock 数据 - 返回元数据数组
-  return new Promise((resolve) => {
-    setTimeout(() => {
-      resolve({
-        name: '10040714_com.tencent.tmgp.hpjy_a2681256_1.23.21_CoVHUY.apk',
-        path: '/p-585162853b474062a7227c69fd0ac050/b-b4d32cf3d5dd4de294c8537724f72a80/',
-        fullName:
-          '/p-585162853b474062a7227c69fd0ac050/b-b4d32cf3d5dd4de294c8537724f72a80/10040714_com.tencent.tmgp.hpjy_a2681256_1.23.21_CoVHUY.apk',
-        fullPath:
-          '/p-585162853b474062a7227c69fd0ac050/b-b4d32cf3d5dd4de294c8537724f72a80/10040714_com.tencent.tmgp.hpjy_a2681256_1.23.21_CoVHUY.apk',
-        size: 2082359687,
-        createdTime: 1755655632,
-        modifiedTime: 1755655632,
-        checksums: {
-          sha256: '14459468ba81efedfd5c6773de45bf0ab1262e8b2795a121824a36769988517e',
-          sha1: '',
-          md5: '7d04ddbe7af2039455ce8908ac61cb60',
-        },
-        meta: {
-          'BK-CI-APP-STAGE': 'Alpha',
-          projectId: 'test-01',
-          pipelineId: 'p-585162853b474062a7227c69fd0ac050',
-          buildId: 'b-b4d32cf3d5dd4de294c8537724f72a80',
-          userId: 'zhangsan',
-          buildNo: '21',
-          taskId: 'e-e7cddeae25e54b2ab0f50abb4e3945f0',
-          source: 'pipeline',
-          appVersion: '1.23.21',
-          appTitle: '和平精英',
-          bundleIdentifier: 'com.tencent.tmgp.pubgmhd',
-          appName: '和平精英',
-          appIcon:
-            'https://teststaticfile.woa.com/bkdevops/app-icon/app-icon/apk/f95eb34eb7399ff3e9bcb06c6a560336fd94e0126477692ecabe5b8bffee0afd.png?v=1755655609',
-          sys_ch: 'pipeline',
-          sys_uid: 'zhangsan',
-        },
-        nodeMetadata: [
-          {
-            key: 'BK-CI-APP-STAGE',
-            value: 'Alpha',
-            system: false,
-          },
-          {
-            key: 'projectId',
-            value: 'test-01',
-            system: false,
-          },
-          {
-            key: 'pipelineId',
-            value: 'p-585162853b474062a7227c69fd0ac050',
-            system: false,
-          },
-          {
-            key: 'buildId',
-            value: 'b-b4d32cf3d5dd4de294c8537724f72a80',
-            system: false,
-          },
-          {
-            key: 'userId',
-            value: 'zhangsan',
-            system: false,
-          },
-          {
-            key: 'buildNo',
-            value: '21',
-            system: false,
-          },
-          {
-            key: 'taskId',
-            value: 'e-e7cddeae25e54b2ab0f50abb4e3945f0',
-            system: false,
-          },
-          {
-            key: 'source',
-            value: 'pipeline',
-            system: false,
-          },
-          {
-            key: 'appVersion',
-            value: '1.23.21',
-            system: false,
-          },
-          {
-            key: 'appTitle',
-            value: '和平精英',
-            system: false,
-          },
-          {
-            key: 'bundleIdentifier',
-            value: 'com.tencent.tmgp.pubgmhd',
-            system: false,
-          },
-          {
-            key: 'appName',
-            value: '和平精英',
-            system: false,
-          },
-          {
-            key: 'appIcon',
-            value:
-              'https://teststaticfile.woa.com/bkdevops/app-icon/app-icon/apk/f95eb34eb7399ff3e9bcb06c6a560336fd94e0126477692ecabe5b8bffee0afd.png?v=1755655609',
-            system: false,
-          },
-          {
-            key: 'sys_ch',
-            value: 'pipeline',
-            system: false,
-          },
-          {
-            key: 'sys_uid',
-            value: 'zhangsan',
-            system: false,
-          },
-        ],
-        url: '/bkrepo/api/user/generic/test-01/pipeline/p-585162853b474062a7227c69fd0ac050/b-b4d32cf3d5dd4de294c8537724f72a80/10040714_com.tencent.tmgp.hpjy_a2681256_1.23.21_CoVHUY.apk?download=true',
-        shortUrl: 'https://test-s.bkdevops.qq.com/1K4BoxpV',
-      })
-    }, 500)
-  })
+export async function requestFileInfo(params: GetFileInfoParams): Promise<FileInfo> {
+  const { projectId, artifactoryType, path } = params
+  try {
+    const res = await get<FileInfo>(
+      `${ARTIFACTORY_API_URL_PREFIX}/user/artifactories/${projectId}/${artifactoryType}/show?path=${encodeURIComponent(path)}`,
+    )
+    return res
+  } catch (error) {
+    throw error
+  }
 }
 
 /**
@@ -507,76 +242,18 @@ export function requestFileInfo(params: GetFileInfoParams): Promise<FileInfo> {
  * @param params 请求参数
  * @returns 元数据标签列表
  */
-export function requestMetadataLabels(params: GetMetadataLabelsParams): Promise<MetadataLabel[]> {
+export async function requestMetadataLabels(
+  params: GetMetadataLabelsParams,
+): Promise<MetadataLabel[]> {
   const { projectId, pipelineId, debug = false } = params
-
-  // TODO: 调用实际接口
-  // return http.get(`/user/artifactories/quality/metadata/${projectId}/pipeline/${pipelineId}?debug=${debug}`)
-  //   .then(res => res.data)
-
-  // Mock 数据
-  return new Promise((resolve) => {
-    setTimeout(() => {
-      resolve([
-        {
-          labelKey: 'BK-CI-APP-STAGE',
-          labelColorMap: {},
-          enumType: false,
-          display: true,
-          category: 'Uncategorized',
-          system: false,
-          enableColorConfig: false,
-          description: 'Auto-generated for an artifact property not defined in project.',
-          createdBy: 'custom',
-          createdDate: '2025-12-09T10:42:39.720832423',
-          lastModifiedBy: 'custom',
-          lastModifiedDate: '2025-12-09T10:42:39.720832805',
-        },
-        {
-          labelKey: 'appIcon',
-          labelColorMap: {},
-          enumType: false,
-          display: true,
-          category: 'Uncategorized',
-          system: false,
-          enableColorConfig: false,
-          description: 'Auto-generated for an artifact property not defined in project.',
-          createdBy: 'custom',
-          createdDate: '2025-12-09T10:42:39.720865309',
-          lastModifiedBy: 'custom',
-          lastModifiedDate: '2025-12-09T10:42:39.720865697',
-        },
-        {
-          labelKey: 'appName',
-          labelColorMap: {},
-          enumType: false,
-          display: true,
-          category: 'Uncategorized',
-          system: false,
-          enableColorConfig: false,
-          description: 'Auto-generated for an artifact property not defined in project.',
-          createdBy: 'custom',
-          createdDate: '2025-12-09T10:42:39.72083046',
-          lastModifiedBy: 'custom',
-          lastModifiedDate: '2025-12-09T10:42:39.720830952',
-        },
-        {
-          labelKey: 'appTitle',
-          labelColorMap: {},
-          enumType: false,
-          display: true,
-          category: 'Uncategorized',
-          system: false,
-          enableColorConfig: false,
-          description: 'Auto-generated for an artifact property not defined in project.',
-          createdBy: 'custom',
-          createdDate: '2025-12-09T10:42:39.720860056',
-          lastModifiedBy: 'custom',
-          lastModifiedDate: '2025-12-09T10:42:39.72086098',
-        },
-      ])
-    }, 500)
-  })
+  try {
+    const res = await get<MetadataLabel[]>(
+      `${ARTIFACTORY_API_URL_PREFIX}/user/artifactories/quality/metadata/${projectId}/pipeline/${pipelineId}?debug=${debug}`,
+    )
+    return res
+  } catch (error) {
+    throw error
+  }
 }
 
 /**
@@ -584,23 +261,18 @@ export function requestMetadataLabels(params: GetMetadataLabelsParams): Promise<
  * @param params 请求参数
  * @returns 下载 URL
  */
-export function requestDownloadUrl(params: GetDownloadUrlParams): Promise<GetDownloadUrlResponse> {
+export async function requestDownloadUrl(
+  params: GetDownloadUrlParams,
+): Promise<GetDownloadUrlResponse> {
   const { projectId, artifactoryType, path } = params
-
-  // TODO: 调用实际接口
-  // return http.post(`/user/artifactories/${projectId}/${artifactoryType}/downloadUrl`, {
-  //   path
-  // }).then(res => res.data)
-
-  // Mock 数据
-  return new Promise((resolve) => {
-    setTimeout(() => {
-      resolve({
-        url: '/bkrepo/api/user/generic/test-01/pipeline/p-585162853b474062a7227c69fd0ac050/b-b4d32cf3d5dd4de294c8537724f72a80/devops_app1.apk?download=true',
-        url2: '/bkrepo/api/user/generic/test-01/pipeline/p-585162853b474062a7227c69fd0ac050/b-b4d32cf3d5dd4de294c8537724f72a80/devops_app1.apk?download=true',
-      })
-    }, 300)
-  })
+  try {
+    const res = await post<GetDownloadUrlResponse>(
+      `${ARTIFACTORY_API_URL_PREFIX}/user/artifactories/${projectId}/${artifactoryType}/downloadUrl?path=${encodeURIComponent(path)}`,
+    )
+    return res
+  } catch (error) {
+    throw error
+  }
 }
 
 /**
@@ -610,55 +282,16 @@ export function requestDownloadUrl(params: GetDownloadUrlParams): Promise<GetDow
  */
 export function requestCustomDirTree(params: GetCustomDirTreeParams): Promise<CustomDirTreeNode> {
   const { projectId, ...restParams } = params
-
-  // return get<CustomDirTreeNode>(`${ARTIFACTORY_API_URL_PREFIX}/user/custom-repo/${projectId}/dir/tree`, {
-  //   params: restParams,
-  // })
-  return new Promise((resolve) => {
-    setTimeout(() => {
-      resolve({
-        name: '',
-        fullPath: '/',
-        children: [
-          {
-            name: 'ABCv',
-            fullPath: '/ABCv',
-            children: [],
-          },
-          {
-            name: 'TestFile',
-            fullPath: '/TestFile',
-            children: [],
-          },
-          {
-            name: '_from_pipeline',
-            fullPath: '/_from_pipeline',
-            children: [],
-          },
-          {
-            name: 'aaa1',
-            fullPath: '/aaa1',
-            children: [],
-          },
-          {
-            name: 'file',
-            fullPath: '/file',
-            children: [],
-          },
-          {
-            name: 'files',
-            fullPath: '/files',
-            children: [],
-          },
-          {
-            name: 'haha',
-            fullPath: '/haha',
-            children: [],
-          },
-        ],
-      })
-    }, 300)
-  })
+  try {
+    return get<CustomDirTreeNode>(
+      `${ARTIFACTORY_API_URL_PREFIX}/user/custom-repo/${projectId}/dir/tree`,
+      {
+        params: restParams,
+      },
+    )
+  } catch (error) {
+    throw error
+  }
 }
 
 /**
@@ -667,11 +300,9 @@ export function requestCustomDirTree(params: GetCustomDirTreeParams): Promise<Cu
  * @returns 是否成功
  */
 export function requestCopyFile(params: CopyFileParams): Promise<boolean> {
-  // return post<boolean>(`${ARTIFACTORY_API_URL_PREFIX}/user/artifactories/file/copy`, params)
-  // Mock 数据
-  return new Promise((resolve) => {
-    setTimeout(() => {
-      resolve(true)
-    }, 300)
-  })
+  try {
+    return post<boolean>(`${ARTIFACTORY_API_URL_PREFIX}/user/artifactories/file/copy`, params)
+  } catch (error) {
+    throw error
+  }
 }

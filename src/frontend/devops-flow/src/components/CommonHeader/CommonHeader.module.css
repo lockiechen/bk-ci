@@ -73,7 +73,7 @@
   text-overflow: ellipsis;
   white-space: nowrap;
   display: inline-block;
-  line-height: 1;
+  line-height: 18px;
 }
 
 .workflowName.clickable {
