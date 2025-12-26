@@ -12,8 +12,8 @@ import {
   type SortType,
   type Collation,
   type ContentTableItem,
-  type GroupResponse,
 } from '@/api/flowContentList'
+import { type GroupResponse } from '@/api/flowLabelGroup'
 import { Message } from 'bkui-vue'
 
 export interface Styles {
