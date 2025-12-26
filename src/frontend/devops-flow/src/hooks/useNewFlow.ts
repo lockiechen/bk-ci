@@ -10,39 +10,40 @@ import { Message } from 'bkui-vue';
 import { useRoute, useRouter } from "vue-router";
 
 /**
- * NewFlowPopup组件业务逻辑 Hook
+ * NewFlowPopup component business logic hook
+ * 
+ * Note: Authoring environment state is managed separately through useAuthoringEnvironment hook.
+ * Components that need environment management should use that hook directly.
  */
 export function useNewFlow() {
   const { t } = useI18n()
   const router = useRouter()
   const route = useRoute()
   const store = useNewFlowStore()
+  
+  // Store state refs
   const {
     currentStep,
     formData,
     isLoading,
-    authoringEnvList,
-    authoringNodeList,
-    envListLoading,
-    nodeListLoading,
     projectModelList,
     storeModelList,
     projectModelLoading,
     storeModelLoading,
   } = storeToRefs(store)
 
-  // 本地状态
+  // Local state
   const baseInfoRef = ref<any>()
 
   /**
-   * 清除表单验证
+   * Clear form validation errors
    */
   function clearFormValidation() {
     baseInfoRef.value?.formRef?.clearValidate?.()
   }
 
   /**
-   * 验证当前步骤
+   * Validate current step
    */
   async function validateCurrentStep(): Promise<boolean> {
     if (currentStep.value === 1) {
@@ -50,7 +51,7 @@ export function useNewFlow() {
         await baseInfoRef.value?.formRef?.validate?.()
         return true
       } catch (error) {
-        console.error('表单验证失败:', error)
+        console.error('Form validation failed:', error)
         return false
       }
     }
@@ -58,12 +59,11 @@ export function useNewFlow() {
   }
 
   /**
-   * 切换步骤
+   * Handle step change
    */
   async function handleStepChange(targetStep: number): Promise<void> {
     if (targetStep === currentStep.value) return
 
-    // 验证当前步骤
     const isValid = await validateCurrentStep()
     if (!isValid) return
 
@@ -71,7 +71,7 @@ export function useNewFlow() {
   }
 
   /**
-   * 下一步
+   * Go to next step
    */
   async function handleNextStep(): Promise<void> {
     const isValid = await validateCurrentStep()
@@ -81,18 +81,20 @@ export function useNewFlow() {
   }
 
   /**
-   * 上一步
+   * Go to previous step
    */
   function handlePrevStep(): void {
     currentStep.value--
   }
 
   /**
-   * 确认创建
+   * Confirm and create the flow
    */
   async function handleConfirm(): Promise<void> {
+    debugger
     const isValid = await validateCurrentStep()
     if (!isValid) return
+    
     try {
       const params: CreateContentParams = {
         projectId: route.params.projectId as string,
@@ -124,34 +126,30 @@ export function useNewFlow() {
   }
 
   return {
-    // Store状态
+    // Store state
     currentStep,
     formData,
     isLoading,
-    authoringEnvList,
-    authoringNodeList,
-    envListLoading,
-    nodeListLoading,
     projectModelList,
     storeModelList,
     projectModelLoading,
     storeModelLoading,
 
-    // 本地状态
+    // Local state
     baseInfoRef,
 
-    // 方法
+    // Step navigation methods
     clearFormValidation,
     validateCurrentStep,
     handleStepChange,
     handleNextStep,
     handlePrevStep,
     handleConfirm,
+    
+    // Store actions
     resetForm: store.resetForm,
     updateBaseInfo: store.updateBaseInfo,
     updateTemplateInfo: store.updateTemplateInfo,
-    fetchAuthoringEnvList: store.fetchAuthoringEnvList,
-    fetchAuthoringNodeList: store.fetchAuthoringNodeList,
     fetchProjectTemplates: store.fetchProjectTemplates,
     fetchStoreTemplates: store.fetchStoreTemplates,
   }

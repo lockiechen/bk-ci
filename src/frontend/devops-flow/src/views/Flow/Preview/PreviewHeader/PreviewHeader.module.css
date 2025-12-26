@@ -15,15 +15,15 @@
 .versionSelectorWrapper {
     display: flex;
     align-items: center;
-    border-left: 1px solid var(--border-color);
-    padding-left: var(--spacing-sm);
+    border: 1px solid var(--border-color);
+
     margin-left: var(--spacing-sm);
 }
 
 .versionLabel {
     font-size: var(--font-size-xs);
     background-color: var(--bg-tertiary);
-    border: 1px solid var(--color-text-disabled);
+    border-right: 1px solid var(--border-color);
     line-height: var(--line-height-xl);
     padding: 0 var(--spacing-sm);
     color: var(--color-text-medium-black);

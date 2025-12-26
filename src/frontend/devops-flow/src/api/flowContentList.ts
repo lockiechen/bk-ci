@@ -1,19 +1,19 @@
-import { post, get, del, put } from '@/utils/http'
 import {
-  PROCESS_API_URL_PREFIX,
-  ENVIRONMENT_API_URL_PREFIX,
-  STORE_API_URL_PREFIX,
-} from '@/utils/apiUrlPrefix'
-import {
-  type StatusType,
-  type VersionStatus,
-  type StageStatusInfo,
-  type FlowPermissions,
   type FlowModel,
-  type Stage,
+  type FlowPermissions,
   type FlowSettings,
   type ModelAndSetting,
+  type Stage,
+  type StageStatusInfo,
+  type StatusType,
+  type VersionStatus,
 } from '@/types/flow'
+import {
+  ENVIRONMENT_API_URL_PREFIX,
+  PROCESS_API_URL_PREFIX,
+  STORE_API_URL_PREFIX,
+} from '@/utils/apiUrlPrefix'
+import { del, get, post, put } from '@/utils/http'
 
 /**
  * 创作流首页内容表格相关 API

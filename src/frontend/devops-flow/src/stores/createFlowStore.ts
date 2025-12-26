@@ -1,10 +1,4 @@
 import {
-  fetchAuthoringEnvList as apiFetchEnvList,
-  fetchAuthoringNodeList as apiFetchNodeList,
-  type AuthoringNodeItem,
-  type EnvSelectItem
-} from '@/api/authoringEnvironmentApi';
-import {
   apiGetProjectTemplates,
   apiGetStoreTemplates,
   createContent,
@@ -17,7 +11,6 @@ import {
 import { templateTypeEnum } from "@/utils/flowConst";
 import { defineStore } from 'pinia';
 import { ref } from 'vue';
-import { useI18n } from 'vue-i18n';
 import { useRoute } from 'vue-router';
 
 import { Message } from 'bkui-vue';
@@ -25,15 +18,22 @@ import { Message } from 'bkui-vue';
 /**
  * 创作流创建流程状态管理
  *
- * 注意：不要在 store 中导入 hooks，避免循环依赖
- * 直接调用 API 方法
+ * Note: Authoring environment related state has been moved to authoringEnvironmentStore.
+ * Use useAuthoringEnvironment hook in components that need environment management.
  */
 export const useNewFlowStore = defineStore('newFlow', () => {
-  const { t } = useI18n()
   const route = useRoute()
 
-  // 状态定义
+  // ============ Core State ============
+  
+  /**
+   * Current step in the creation flow
+   */
   const currentStep = ref(1)
+  
+  /**
+   * Form data for creating a new flow
+   */
   const formData = ref<CreateContentFormData>({
     baseInfo: {
       pipelineName: '',
@@ -47,30 +47,45 @@ export const useNewFlowStore = defineStore('newFlow', () => {
       activeMenuItem: 'flowModel',
     },
   })
+  
+  /**
+   * Loading state for creating flow
+   */
   const isLoading = ref(false)
 
-  // 创作环境相关状态
-  const authoringEnvList = ref<EnvSelectItem[]>([])
-  const authoringNodeList = ref<AuthoringNodeItem[]>([])
-  const envListLoading = ref(false)
-  const nodeListLoading = ref(false)
-
-  // 模板相关状态
+  // ============ Template State ============
+  
+  /**
+   * Project template list
+   */
   const projectModelList = ref<TemplateObject[]>([])
+  
+  /**
+   * Store template list
+   */
   const storeModelList = ref<StoreTemplateItem[]>([])
+  
+  /**
+   * Loading state for project templates
+   */
   const projectModelLoading = ref(false)
+  
+  /**
+   * Loading state for store templates
+   */
   const storeModelLoading = ref(false)
 
+  // ============ Template Actions ============
+
   /**
-   * 获取项目模板列表
+   * Fetch project template list
    */
   async function fetchProjectTemplates(projectId: string) {
     try {
       projectModelLoading.value = true
       const response = await apiGetProjectTemplates(projectId)
 
-      // 将模板数据转换为列表格式
-      if (response && response.templates) {
+      if (response?.templates) {
         projectModelList.value = Object.values(response.templates).map((template: any) => ({
           ...template,
           id: template.templateId,
@@ -80,7 +95,7 @@ export const useNewFlowStore = defineStore('newFlow', () => {
           templateType: template.templateType,
         }))
 
-        // 如果有模板数据，设置第一个为激活模板
+        // Set first template as active if available
         const firstTemplate = projectModelList.value[0]
         if (firstTemplate) {
           formData.value.templateInfo.activeTemplate = firstTemplate
@@ -89,7 +104,7 @@ export const useNewFlowStore = defineStore('newFlow', () => {
         projectModelList.value = []
       }
     } catch (error) {
-      console.error('获取项目模板列表失败:', error)
+      console.error('Failed to fetch project templates:', error)
       projectModelList.value = []
     } finally {
       projectModelLoading.value = false
@@ -97,12 +112,11 @@ export const useNewFlowStore = defineStore('newFlow', () => {
   }
 
   /**
-   * 获取商店模板列表
+   * Fetch store template list
    */
   async function fetchStoreTemplates() {
     try {
       storeModelLoading.value = true
-      // TODO: 分页和搜索参数
       const param: GetStoreTemplatesParams = {
         page: 1,
         pageSize: 50,
@@ -115,7 +129,7 @@ export const useNewFlowStore = defineStore('newFlow', () => {
         storeModelList.value = res.records
       }
     } catch (error: any) {
-      console.error('获取商店模板列表失败:', error)
+      console.error('Failed to fetch store templates:', error)
       Message({ theme: 'error', message: error.message || error })
       storeModelList.value = []
     } finally {
@@ -123,48 +137,10 @@ export const useNewFlowStore = defineStore('newFlow', () => {
     }
   }
 
-  /**
-   * 获取创作环境列表
-   * Uses the centralized authoringEnvironmentApi
-   */
-  async function fetchAuthoringEnvList() {
-    try {
-      envListLoading.value = true
-      const projectId = route.params.projectId as string
-      const envList = await apiFetchEnvList({ projectId, envType: 'CREATE' })
-    } catch (error) {
-      console.error('Failed to fetch authoring environment list:', error)
-      authoringEnvList.value = []
-    } finally {
-      envListLoading.value = false
-    }
-  }
+  // ============ Form Actions ============
 
   /**
-   * 获取创作节点列表
-   * Uses the centralized authoringEnvironmentApi
-   */
-  async function fetchAuthoringNodeList(envName: string) {
-    if (!envName) {
-      authoringNodeList.value = []
-      return
-    }
-
-    try {
-      nodeListLoading.value = true
-      const projectId = route.params.projectId as string
-      const res = await apiFetchNodeList({ projectId, envName })
-      authoringNodeList.value = res.records || []
-    } catch (error) {
-      console.error('Failed to fetch authoring node list:', error)
-      authoringNodeList.value = []
-    } finally {
-      nodeListLoading.value = false
-    }
-  }
-
-  /**
-   * 初始化表单数据
+   * Initialize form data with default values
    */
   function initFormData(): CreateContentFormData {
     return {
@@ -183,38 +159,37 @@ export const useNewFlowStore = defineStore('newFlow', () => {
   }
 
   /**
-   * 重置表单状态
+   * Reset form state to initial values
    */
   function resetForm() {
     formData.value = initFormData()
     currentStep.value = 1
     isLoading.value = false
-    authoringEnvList.value = []
-    authoringNodeList.value = []
     projectModelList.value = []
     storeModelList.value = []
   }
 
   /**
-   * 更新基础信息
+   * Update base info section of form
    */
   function updateBaseInfo(data: { pipelineName: string; pipelineDesc: string; envName: string }) {
     formData.value.baseInfo = { ...formData.value.baseInfo, ...data }
   }
 
   /**
-   * 更新模板信息
+   * Update template info section of form
    */
   function updateTemplateInfo(data: any) {
     formData.value.templateInfo = { ...formData.value.templateInfo, ...data }
   }
 
+  // ============ Flow Creation ============
+
   /**
-   * 创建创作流
-   * 直接调用 API，避免循环依赖
+   * Create a new flow
    */
   async function createNewFlow(params: CreateContentParams) {
-    projectModelLoading.value = true
+    isLoading.value = true
     try {
       const result = await createContent(params)
       return result
@@ -222,32 +197,32 @@ export const useNewFlowStore = defineStore('newFlow', () => {
       console.error('Failed to create new flow:', error)
       throw error
     } finally {
-      projectModelLoading.value = false
+      isLoading.value = false
     }
   }
 
   return {
-    // State
+    // Core State
     currentStep,
     formData,
     isLoading,
-    authoringEnvList,
-    authoringNodeList,
-    envListLoading,
-    nodeListLoading,
+    
+    // Template State
     projectModelList,
     storeModelList,
     projectModelLoading,
     storeModelLoading,
 
-    // Actions
+    // Template Actions
+    fetchProjectTemplates,
+    fetchStoreTemplates,
+    
+    // Form Actions
     resetForm,
     updateBaseInfo,
     updateTemplateInfo,
+    
+    // Flow Creation
     createNewFlow,
-    fetchAuthoringEnvList,
-    fetchAuthoringNodeList,
-    fetchProjectTemplates,
-    fetchStoreTemplates,
   }
 })

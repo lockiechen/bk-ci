@@ -286,56 +286,207 @@ const handleDeleteStage = (stageId) => {
   });
 };
 
+/**
+ * 获取 ref 实例（处理 Vue 2.7 中 ref 可能是数组的情况）
+ */
+const getRefInstance = (ref, key) => {
+  if (!ref || !key) return null;
+  const refValue = ref[key];
+  return Array.isArray(refValue) ? refValue[0] : refValue;
+};
+
+/**
+ * 获取 Stage 组件实例
+ */
+const getStageInstance = (stageId) => {
+  const stageRef = stageRefs.value[stageId];
+  if (!stageRef || !stageRef[0]) {
+    console.warn("Stage instance not found:", stageId);
+    return null;
+  }
+  return stageRef[0];
+};
+
+/**
+ * 获取 StageContainer 组件实例
+ */
+const getContainerInstance = (stageInstance, containerId) => {
+  if (!stageInstance || !containerId) return null;
+  const containerInstance = getRefInstance(stageInstance.$refs, containerId);
+  if (!containerInstance) {
+    console.warn("Container instance not found:", containerId);
+    return null;
+  }
+  return containerInstance;
+};
+
+/**
+ * 获取 Job 或 MatrixGroup 实例（从 StageContainer 的 jobBox ref）
+ */
+const getJobOrMatrixInstance = (containerInstance) => {
+  if (!containerInstance) return null;
+  const instance = containerInstance.jobBox;
+  if (!instance) {
+    console.warn("Job or MatrixGroup instance not found in container");
+    return null;
+  }
+  return instance;
+};
+
+/**
+ * 从 MatrixGroup 中获取 Job 实例
+ */
+const getJobFromMatrixGroup = (matrixGroupInstance, containerId) => {
+  if (!matrixGroupInstance || !containerId) return null;
+  const jobInstance = getRefInstance(matrixGroupInstance.$refs, containerId);
+  if (!jobInstance) {
+    console.warn("Job instance not found in matrix group:", containerId);
+    return null;
+  }
+  return jobInstance;
+};
+
 const expandPostAction = (stageId, matrixId, containerId) => {
   return new Promise((resolve) => {
     try {
-      let jobInstance =
-        stageRefs.value[stageId]?.[0]?.$refs?.[containerId]?.[0]?.$refs?.jobBox;
-      if (matrixId) {
-        jobInstance =
-          stageRefs.value[stageId]?.[0]?.$refs?.[matrixId]?.[0]?.$refs?.jobBox
-            ?.$refs[containerId]?.[0];
+      const stageInstance = getStageInstance(stageId);
+      if (!stageInstance) {
+        resolve(false);
+        return;
       }
-      console.log(jobInstance, "jobInstance");
-      jobInstance?.$refs?.atomList?.expandPostAction?.();
-      nextTick(() => {
-        resolve(true);
-      });
+      
+      let jobInstance = null;
+      
+      if (matrixId) {
+        // 如果有 matrixId，说明是矩阵组中的作业
+        const containerInstance = getContainerInstance(stageInstance, matrixId);
+        if (containerInstance) {
+          const matrixGroupInstance = getJobOrMatrixInstance(containerInstance);
+          if (matrixGroupInstance) {
+            jobInstance = getJobFromMatrixGroup(matrixGroupInstance, containerId);
+          }
+        }
+      } else {
+        // 普通作业
+        const containerInstance = getContainerInstance(stageInstance, containerId);
+        if (containerInstance) {
+          jobInstance = getJobOrMatrixInstance(containerInstance);
+        }
+      }
+      
+      if (!jobInstance) {
+        console.warn("Job instance not found:", { stageId, matrixId, containerId });
+        resolve(false);
+        return;
+      }
+      
+      // 访问 Job 组件内部的 atomList ref
+      const atomListInstance = getRefInstance(jobInstance.$refs, 'atomList');
+      
+      if (atomListInstance && typeof atomListInstance.expandPostAction === 'function') {
+        atomListInstance.expandPostAction();
+        nextTick(() => {
+          resolve(true);
+        });
+      } else {
+        console.warn("atomList or expandPostAction not found");
+        resolve(false);
+      }
     } catch (error) {
-      console.error(error);
+      console.error("expandPostAction error:", error);
       resolve(false);
     }
   });
 };
 
 const expandMatrix = (stageId, matrixId, containerId, expand = true) => {
-  console.log("expandMatrix", stageId, matrixId, containerId);
+  console.log("expandMatrix", stageId, matrixId, containerId, expand);
   return new Promise((resolve) => {
     try {
-      const jobInstance =
-        stageRefs.value[stageId]?.[0]?.$refs?.[matrixId]?.[0]?.$refs?.jobBox;
-      jobInstance?.toggleMatrixOpen?.(expand);
-      nextTick(() => {
-        jobInstance?.$refs[containerId]?.[0]?.toggleShowAtom(expand);
+      const stageInstance = getStageInstance(stageId);
+      if (!stageInstance) {
+        resolve(false);
+        return;
+      }
+      
+      const containerInstance = getContainerInstance(stageInstance, matrixId);
+      if (!containerInstance) {
+        resolve(false);
+        return;
+      }
+      
+      const matrixGroupInstance = getJobOrMatrixInstance(containerInstance);
+      if (!matrixGroupInstance) {
+        console.warn("MatrixGroup instance not found in container:", matrixId);
+        resolve(false);
+        return;
+      }
+      
+      // 调用 toggleMatrixOpen 方法展开/收起矩阵
+      if (typeof matrixGroupInstance.toggleMatrixOpen === 'function') {
+        matrixGroupInstance.toggleMatrixOpen(expand);
+      } else {
+        console.warn("toggleMatrixOpen method not found on matrix group instance");
+        resolve(false);
+        return;
+      }
+      
+      // 如果展开矩阵，还需要展开内部的 Job
+      if (expand && containerId) {
+        nextTick(() => {
+          try {
+            const jobInstance = getJobFromMatrixGroup(matrixGroupInstance, containerId);
+            if (jobInstance && typeof jobInstance.toggleShowAtom === 'function') {
+              jobInstance.toggleShowAtom(expand);
+            }
+          } catch (err) {
+            console.warn("Failed to expand job in matrix:", err);
+          }
+          resolve(true);
+        });
+      } else {
         resolve(true);
-      });
+      }
     } catch (error) {
-      console.error(error);
+      console.error("expandMatrix error:", error);
       resolve(false);
     }
   });
 };
 
 const expandJob = (stageId, containerId, expand = true) => {
-  console.log("expandJob", stageId, containerId);
+  console.log("expandJob", stageId, containerId, expand);
   return new Promise((resolve) => {
     try {
-      const jobInstance =
-        stageRefs.value[stageId]?.[0]?.$refs?.[containerId]?.[0]?.$refs?.jobBox;
-      jobInstance?.toggleShowAtom(expand);
-      resolve(true);
+      const stageInstance = getStageInstance(stageId);
+      if (!stageInstance) {
+        resolve(false);
+        return;
+      }
+      
+      const containerInstance = getContainerInstance(stageInstance, containerId);
+      if (!containerInstance) {
+        resolve(false);
+        return;
+      }
+      
+      const jobInstance = getJobOrMatrixInstance(containerInstance);
+      if (!jobInstance) {
+        console.warn("Job instance not found in container:", containerId);
+        resolve(false);
+        return;
+      }
+      
+      // 调用 toggleShowAtom 方法
+      if (typeof jobInstance.toggleShowAtom === 'function') {
+        jobInstance.toggleShowAtom(expand);
+        resolve(true);
+      } else {
+        console.warn("toggleShowAtom method not found on job instance");
+        resolve(false);
+      }
     } catch (error) {
-      console.error(error);
+      console.error("expandJob error:", error);
       resolve(false);
     }
   });

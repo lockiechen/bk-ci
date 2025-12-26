@@ -1,10 +1,10 @@
+import { useNewFlow } from '@/hooks/useNewFlow'
+import { Button, Dialog, Steps } from 'bkui-vue'
 import { defineComponent, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
-import { Dialog, Button, Steps } from 'bkui-vue'
-import styles from './Index.module.css'
 import BaseInfo from './BaseInfo'
+import styles from './Index.module.css'
 import SelectTemplate from './SelectTemplate'
-import { useNewFlow } from '@/hooks/useNewFlow'
 
 export default defineComponent({
   name: 'NewFlowPopup',
@@ -85,7 +85,7 @@ export default defineComponent({
         is-show={props.isShow}
         theme="primary"
         zIndex={1000}
-        width={1200}
+        width={1000}
         quick-close={false}
         onClosed={onClose}
         class={styles.newFlowPopup}
@@ -110,7 +110,7 @@ export default defineComponent({
               {currentStep.value === 1 ? (
                 <BaseInfo
                   ref={baseInfoRef}
-                  modelValue={formData.value.baseInfo}
+                  v-model={formData.value.baseInfo}
                   onUpdate:modelValue={updateBaseInfo}
                 />
               ) : (

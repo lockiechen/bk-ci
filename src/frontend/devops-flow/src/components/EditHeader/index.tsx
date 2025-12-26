@@ -1,10 +1,11 @@
 import { ReleaseSlider } from '@/components/ReleaseSlider'
 import { ROUTE_NAMES } from '@/constants/routes'
 import { useFlowModel } from '@/hooks/useFlowModel'
-import { Button, Message } from 'bkui-vue'
+import { Button, Message, Tag } from 'bkui-vue'
 import { computed, defineComponent, ref } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useRoute, useRouter } from 'vue-router'
+import { useFlowInfo } from '../../hooks/useFlowInfo'
 import { CommonHeader } from '../CommonHeader'
 import styles from './EditHeader.module.css'
 
@@ -18,6 +19,7 @@ export const EditHeader = defineComponent({
     const projectId = (route.params.projectId as string) || (route.query.projectId as string)
 
     const flowModel = useFlowModel({ projectId, flowId, version: route.params.version as string })
+    const { flowInfo } = useFlowInfo()
     const isSaving = ref(false)
     const isReleaseSliderShow = ref(false)
 
@@ -33,10 +35,20 @@ export const EditHeader = defineComponent({
       return `V${currentVersion.value}`
     })
 
+    // Version name display logic (similar to devops-pipeline EditHeader)
+    const currentVersionName = computed(() => {
+      if (flowInfo.value?.canDebug) {
+        // Draft version: show "Draft (based on VX)"
+        return t('flow.edit.draftVersion', [flowInfo.value?.baseVersionName || baseVersionName.value])
+      }
+      // Released version: show version name directly
+      return flowInfo.value?.versionName || baseVersionName.value
+    })
+
     const handleCancel = () => {
       router.push({
         name: ROUTE_NAMES.FLOW_DETAIL_EXECUTION_RECORD,
-        params: { ...route.params },
+        params: { ...route.params, version: flowInfo.value?.releaseVersion },
       })
     }
 
@@ -115,10 +127,22 @@ export const EditHeader = defineComponent({
       flowModel.loadFlow(projectId, flowId, route.params.version as string, true)
     }
 
+    // Render version tag in breadcrumb area
+    const renderVersionTag = () => (
+      <span class={styles.versionTag}>
+        <Tag>
+          <span class={styles.versionTagText} title={currentVersionName.value}>
+            {currentVersionName.value}
+          </span>
+        </Tag>
+      </span>
+    )
+
     return () => (
       <>
         <CommonHeader workflowName={workflowName.value} onWorkflowNameClick={handleCancel}>
           {{
+            'version-selector': renderVersionTag,
             default: () => (
               <div class={styles.editHeader}>
                 <div class={styles.headerLeft}>

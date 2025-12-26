@@ -1,10 +1,5 @@
 <template>
-  <li
-    :key="atom.id"
-    :class="atomCls"
-    @click.stop="handleAtomClick"
-    :id="atom.id"
-  >
+  <li :key="atom.id" :class="atomCls" @click.stop="handleAtomClick" :id="atom.id">
     <template v-if="isQualityGateAtom">
       <span class="atom-title">
         <i></i>
@@ -13,56 +8,32 @@
       </span>
       <template v-if="isReviewing">
         <Logo v-if="isBusy" name="circle-2-1" size="14" class="spin-icon" />
-        <span
-          v-else
-          :class="{
-            'handler-list': true,
-            'disabled-review': isReviewing && !hasReviewPerm,
-          }"
-        >
+        <span v-else :class="{
+          'handler-list': true,
+          'disabled-review': isReviewing && !hasReviewPerm,
+        }">
           <span class="revire-btn" @click.stop="qualityApprove('PROCESS')">{{
             t("resume")
-          }}</span>
+            }}</span>
           <span class="review-btn" @click.stop="qualityApprove('ABORT')">{{
             t("terminate")
-          }}</span>
+            }}</span>
         </span>
       </template>
     </template>
     <template v-else>
-      <Logo
-        v-if="atom.locateActive"
-        name="location-right"
-        size="18"
-        class="active-atom-location-icon"
-      />
+      <Logo v-if="atom.locateActive" name="location-right" size="18" class="active-atom-location-icon" />
       <p class="atom-retry-indicate-icon-group">
-        <span
-          v-for="item in retryIndicateList"
-          :key="item.retryType"
-          v-bk-tooltips="item.tips"
-          class="atom-retry-indicate-icon"
-        >
+        <span v-for="item in retryIndicateList" :key="item.retryType" v-bk-tooltips="item.tips"
+          class="atom-retry-indicate-icon">
           <Logo :name="item.retryType" size="18" />
         </span>
       </p>
-      <bk-round-progress
-        v-if="showProgress"
-        ext-cls="atom-progress"
-        v-bind="progressConf"
-        :percent="atom.progressRate"
-      />
-      <Logo
-        v-else-if="atom.asyncStatus && atom.asyncStatus !== 'SUCCEED'"
-        class="atom-progress"
-        :name="`sub_pipeline_${atom.asyncStatus.toLowerCase()}`"
-      />
-      <status-icon
-        v-else-if="!isSkip && !!atomStatus"
-        type="element"
-        :status="atomStatus"
-        :is-hook="isHookAtom"
-      />
+      <bk-round-progress v-if="showProgress" ext-cls="atom-progress" v-bind="progressConf"
+        :percent="atom.progressRate" />
+      <Logo v-else-if="atom.asyncStatus && atom.asyncStatus !== 'SUCCEED'" class="atom-progress"
+        :name="`sub_pipeline_${atom.asyncStatus.toLowerCase()}`" />
+      <status-icon v-else-if="!isSkip && !!atomStatus" type="element" :status="atomStatus" :is-hook="isHookAtom" />
 
       <img v-else-if="atom.logoUrl" :src="atom.logoUrl" :class="logoCls" />
       <Logo v-else :class="logoCls" :name="svgAtomIcon" size="18" />
@@ -76,11 +47,7 @@
       </template>
       <Logo v-if="isBusy" name="circle-2-1" size="14" class="spin-icon" />
       <bk-popover :delay="[300, 0]" v-else-if="isReviewing" placement="top">
-        <span
-          @click.stop="reviewAtom"
-          class="atom-reviewing-tips atom-operate-area"
-          :disabled="!hasReviewPerm"
-        >
+        <span @click.stop="reviewAtom" class="atom-reviewing-tips atom-operate-area" :disabled="!hasReviewPerm">
           {{ t("manualCheck") }}
         </span>
         <template slot="content">
@@ -97,11 +64,7 @@
         </template>
       </bk-popover>
       <template v-else-if="atom.status === 'PAUSE'">
-        <bk-popover
-          :delay="[300, 0]"
-          placement="top"
-          :disabled="!Array.isArray(atom.pauseReviewers)"
-        >
+        <bk-popover :delay="[300, 0]" placement="top" :disabled="!Array.isArray(atom.pauseReviewers)">
           <span :class="resumeSpanCls" @click.stop="atomExecute(true)">
             {{ t("resume") }}
           </span>
@@ -120,20 +83,15 @@
         <span v-if="atom.canSkip && !isBusy" @click.stop="skipOrRetry(true)">
           {{ t("SKIP") }}
         </span>
-        <bk-popover
-          v-if="
-            !isSkip &&
-            !isWaiting &&
-            atom.timeCost &&
-            !atom.canSkip &&
-            !atom.canRetry &&
-            !isExecuting &&
-            !reactiveData.editable
-          "
-          :delay="[300, 0]"
-          placement="top"
-          :disabled="!atom.timeCost.executeCost"
-        >
+        <bk-popover v-if="
+          !isSkip &&
+          !isWaiting &&
+          atom.timeCost &&
+          !atom.canSkip &&
+          !atom.canRetry &&
+          !isExecuting &&
+          !reactiveData.editable
+        " :delay="[300, 0]" placement="top" :disabled="!atom.timeCost.executeCost">
           <span class="atom-execute-time">
             {{ formatTime }}
           </span>
@@ -143,30 +101,16 @@
         </bk-popover>
       </span>
 
-      <Logo
-        v-if="reactiveData.editable && !atom.isError"
-        name="clipboard"
-        class="copy"
-        size="14"
-        :title="t('copyAtom')"
-        @click.stop="copyAtom"
-      />
+      <Logo v-if="reactiveData.editable && !atom.isError" name="clipboard" class="copy" size="14" :title="t('copyAtom')"
+        @click.stop="copyAtom" />
 
       <template v-if="reactiveData.editable">
         <i @click.stop="deleteAtom(false)" class="add-plus-icon close" />
-        <Logo
-          v-if="atom.isError"
-          class="atom-invalid-icon"
-          name="exclamation-triangle-shape"
-        />
+        <Logo v-if="atom.isError" class="atom-invalid-icon" name="exclamation-triangle-shape" />
       </template>
       <span v-if="reactiveData.canSkipElement" @click.stop="">
-        <bk-checkbox
-          class="atom-canskip-checkbox"
-          :model-value="atom.canElementSkip"
-          @change="handleAtomSkipChange"
-          :disabled="isSkip"
-        />
+        <bk-checkbox class="atom-canskip-checkbox" :model-value="atom.canElementSkip" @change="handleAtomSkipChange"
+          :disabled="isSkip" />
       </span>
     </template>
   </li>
@@ -174,7 +118,6 @@
 
 <script setup>
 import { ref, computed, inject, watch, onMounted, onBeforeUnmount } from "vue";
-import { bkCheckbox, bkPopover } from "./ui-compat";
 import Logo from "./Logo";
 import StatusIcon from "./StatusIcon";
 import {
@@ -646,6 +589,7 @@ onBeforeUnmount(() => {
 
 <style lang="scss">
 @import "./conf";
+
 .bk-pipeline .bk-pipeline-atom {
   cursor: pointer;
   position: relative;
@@ -676,6 +620,7 @@ onBeforeUnmount(() => {
   }
 
   &.trigger-atom {
+
     &:before,
     &:after {
       display: none;
@@ -687,6 +632,7 @@ onBeforeUnmount(() => {
       top: -16px;
     }
   }
+
   &:before {
     content: "";
     position: absolute;
@@ -713,6 +659,7 @@ onBeforeUnmount(() => {
 
   &.is-intercept {
     border-color: $warningColor;
+
     &:hover {
       border-color: $warningColor;
     }
@@ -721,11 +668,13 @@ onBeforeUnmount(() => {
   &.is-error {
     border-color: $dangerColor;
     color: $dangerColor;
+
     &:hover {
       .atom-invalid-icon {
         display: none;
       }
     }
+
     .atom-invalid-icon {
       margin: 0 12px;
     }
@@ -733,19 +682,23 @@ onBeforeUnmount(() => {
 
   &:not(.readonly):hover {
     border-color: $primaryColor;
+
     .atom-icon.skip-icon {
       color: $fontLighterColor;
     }
+
     .atom-icon,
     .atom-name {
       color: $primaryColor;
     }
+
     .add-plus-icon.close,
     .copy {
       cursor: pointer;
       display: block;
     }
   }
+
   .atom-icon {
     text-align: center;
     margin: 0 14.5px;
@@ -754,16 +707,20 @@ onBeforeUnmount(() => {
     color: $fontWeightColor;
     fill: currentColor;
   }
+
   .atom-icon.skip-icon {
     color: $fontLighterColor;
   }
+
   .atom-name span.skip-name {
     text-decoration: line-through;
     color: $fontLighterColor;
+
     &:hover {
       color: $fontLighterColor;
     }
   }
+
   .pause-button {
     margin-right: 8px;
     color: $primaryColor;
@@ -795,6 +752,7 @@ onBeforeUnmount(() => {
     margin-right: 10px;
     border: none;
     transform: rotate(45deg);
+
     &:before,
     &:after {
       left: 7px;
@@ -806,21 +764,24 @@ onBeforeUnmount(() => {
     display: none;
     margin-right: 10px;
     color: $fontLighterColor;
+
     &:hover {
       color: $primaryColor;
     }
   }
 
-  > .atom-name {
+  >.atom-name {
     flex: 1;
     color: $fontWeightColor;
     @include ellipsis();
     max-width: 188px;
     margin-right: 2px;
+
     span:hover {
       color: $primaryColor;
     }
   }
+
   .disabled {
     cursor: not-allowed;
     color: $fontLighterColor;
@@ -830,6 +791,7 @@ onBeforeUnmount(() => {
     color: $primaryColor;
     font-size: 12px;
   }
+
   .atom-operate-area {
     margin: 0 8px 0 0;
     color: $primaryColor;
@@ -860,32 +822,38 @@ onBeforeUnmount(() => {
     background: transparent;
     border-color: transparent !important;
     font-size: 12px;
+
     &:before {
       height: 40px;
       z-index: 8;
     }
+
     &:after {
       display: none;
     }
+
     &.last-quality-atom {
       &:before {
         height: 22px;
       }
     }
+
     .atom-title {
       display: flex;
       width: 100%;
       align-items: center;
       justify-content: center;
       margin-left: 22px;
-      > span {
+
+      >span {
         border-radius: 12px;
         font-weight: bold;
         border: 1px solid $fontLighterColor;
         padding: 0 12px;
         margin: 0 4px;
       }
-      > i {
+
+      >i {
         height: 0;
         flex: 1;
         border-top: 2px dashed $fontLighterColor;
@@ -895,34 +863,42 @@ onBeforeUnmount(() => {
     .handler-list {
       position: absolute;
       right: 0;
+
       span {
         color: $primaryColor;
         font-size: 12px;
+
         &:first-child {
           margin-right: 5px;
         }
       }
     }
+
     .executing-job {
       position: absolute;
       top: 6px;
       right: 42px;
+
       &:before {
         display: inline-block;
         animation: rotating infinite 0.6s ease-in-out;
       }
     }
+
     .disabled-review span {
       color: $fontLighterColor;
       cursor: default;
     }
   }
+
   &.readonly {
     background-color: white;
+
     .atom-name:hover {
       span {
         color: $fontWeightColor;
       }
+
       .skip-name {
         text-decoration: line-through;
         color: $fontLighterColor;

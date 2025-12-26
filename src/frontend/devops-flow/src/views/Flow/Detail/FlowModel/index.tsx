@@ -15,13 +15,6 @@ import BkPipeline from 'bkui-pipeline/vue3'
 
 export default defineComponent({
   name: 'FlowModel',
-  components: {
-    ModeSwitch,
-    EmptyPage,
-    BkPipeline,
-    CodeEditor,
-    Loading,
-  },
   setup(props, { emit }) {
     const { t } = useI18n()
     const route = useRoute()

@@ -1,20 +1,20 @@
-import { computed, ref, watch } from 'vue'
-import { storeToRefs } from 'pinia'
-import { useRoute, useRouter } from 'vue-router'
-import { useI18n } from 'vue-i18n'
-import { FLOW_GROUP_TYPES } from '@/constants/flowGroup'
-import { useDeleteConfirm } from '@/hooks/useDeleteConfirm'
-import { useFlowGroupData } from '@/hooks/useFlowGroupData'
-import { useFlowHomeContentStore } from '../stores/flowContentList'
-import { ORDER_ENUM, FLOW_SORT_FILED } from '../utils/flowConst'
-import { ROUTE_NAMES } from '@/constants/routes'
 import {
-  type SortType,
   type Collation,
   type ContentTableItem,
   type GroupResponse,
+  type SortType,
 } from '@/api/flowContentList'
+import { FLOW_GROUP_TYPES } from '@/constants/flowGroup'
+import { ROUTE_NAMES } from '@/constants/routes'
+import { useDeleteConfirm } from '@/hooks/useDeleteConfirm'
+import { useFlowGroupData } from '@/hooks/useFlowGroupData'
 import { Message } from 'bkui-vue'
+import { storeToRefs } from 'pinia'
+import { computed, ref, watch } from 'vue'
+import { useI18n } from 'vue-i18n'
+import { useRoute, useRouter } from 'vue-router'
+import { useFlowHomeContentStore } from '../stores/flowContentList'
+import { FLOW_SORT_FILED, ORDER_ENUM } from '../utils/flowConst'
 
 export interface Styles {
   iconStarBtn: string
@@ -519,8 +519,10 @@ export function useFlowListData(styles?: Styles) {
    * 执行创作流
    */
   function handleExecute(row: ContentTableItem) {
-    console.log('执行创作流', row)
-    // TODO
+    router.push({
+      name: ROUTE_NAMES.FLOW_PREVIEW,
+      params: { flowId: row.pipelineId, version: row.pipelineVersion, projectId: row.projectId },
+    })
   }
 
   /**

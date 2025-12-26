@@ -234,6 +234,21 @@
       "noticeGroup": "通知グループ",
       "noticeUser": "通知ユーザー",
       "noticeContent": "通知内容",
+      "editNotification": "通知を編集",
+      "selectNoticeType": "少なくとも1つの通知タイプを選択してください",
+      "wechatGroupId": "WeChatグループID",
+      "wechatGroupIdPlaceholder": "WeChatグループロボットWebhookのキーを入力してください",
+      "wechatGroupAtAll": "グループメッセージで全員をメンション",
+      "wechatGroupMarkdown": "Markdown形式を使用",
+      "noticeGroupPlaceholder": "通知グループを入力（カンマ区切り）",
+      "noticeGroupTip": "複数の通知グループはカンマで区切ってください",
+      "noticeUserPlaceholder": "通知ユーザーを入力（カンマ区切り）",
+      "noticeUserTip": "複数の通知ユーザーはカンマで区切ってください",
+      "noticeDetailFlag": "詳細情報を含める",
+      "noticeContentPlaceholder": "通知内容を入力（変数を使用できます）",
+      "noticeContentTip": "${{variables.xxx}}形式で変数を参照できます",
+      "updateSuccess": "更新成功",
+      "addSuccess": "追加成功",
       "deleteSuccess": "削除成功",
       "deleteFail": "削除に失敗しました",
       "triggerEventDeletedAndRemoved": "このトリガーイベントは削除され、作成フローから削除されました",
@@ -676,6 +691,9 @@
       "executeSuccess": "ビルドが正常に開始されました",
       "executeFailed": "ビルドの開始に失敗しました",
       "pipelinePreviewPlaceholder": "クリエイティブフローオーケストレーションプレビューエリア"
+    },
+    "edit": {
+      "draftVersion": "下書き ({0} に基づく)"
     },
     "release": {
       "releaseFlow": "フローをリリース",

@@ -56,7 +56,7 @@ export default defineComponent({
     const handleEdit = () => {
       router.push({
         name: ROUTE_NAMES.FLOW_EDIT_WORKFLOW_ORCHESTRATION,
-        params: { flowId: flowId.value, version: flowInfo.value?.releaseVersion },
+        params: { flowId: flowId.value, version: flowInfo.value?.version },
       })
     }
 

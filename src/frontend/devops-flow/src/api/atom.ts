@@ -78,7 +78,10 @@ export interface FetchAtomsResponse {
  */
 export function fetchAtoms(params: FetchAtomsParams): Promise<FetchAtomsResponse> {
   return get<FetchAtomsResponse>(`${STORE_API_URL_PREFIX}/user/pipeline/atom`, {
-    params,
+    params: {
+      ...params,
+      serviceScope: 'CREATIVE_STREAM',
+    },
   })
 }
 

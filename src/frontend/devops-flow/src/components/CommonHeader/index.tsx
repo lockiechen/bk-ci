@@ -68,9 +68,6 @@ export const CommonHeader = defineComponent({
 
           <SvgIcon name="exchange-line" class={styles.exchangeIcon} />
 
-          {/* 版本选择器插槽 */}
-          {slots['version-selector']?.()}
-
           {/* 执行详情插槽 */}
           {slots['execution-detail'] && (
             <>
@@ -78,6 +75,9 @@ export const CommonHeader = defineComponent({
               {slots['execution-detail']?.()}
             </>
           )}
+
+            {/* 版本选择器插槽 */}
+          {slots['version-selector']?.()}
         </div>
 
         {/* 中间区域插槽 (如 ModeSwitch) */}
