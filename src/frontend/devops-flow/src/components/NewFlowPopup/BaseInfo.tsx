@@ -74,9 +74,9 @@ export default defineComponent({
               placeholder={t('flow.content.inputFlowName')}
             ></Input>
           </Form.FormItem>
-          <Form.FormItem label={t('flow.content.description')} property="desc">
+          <Form.FormItem label={t('flow.content.description')} property="pipelineDesc">
             <Input
-              v-model={baseInfoData.value.desc}
+              v-model={baseInfoData.value.pipelineDesc}
               onChange={handleChange}
               type="textarea"
             ></Input>

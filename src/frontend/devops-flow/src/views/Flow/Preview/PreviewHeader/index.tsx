@@ -1,28 +1,15 @@
-import { getFlowVersionList } from '@/api/flowInfo'
 import { CommonHeader } from '@/components/CommonHeader'
 import { SvgIcon } from '@/components/SvgIcon'
-import type { FlowInfo, FlowVersion } from '@/types/flow'
-import { Button, Select, Tag } from 'bkui-vue'
-import { computed, defineComponent, onMounted, ref, watch } from 'vue'
+import { useFlowInfo } from '@/hooks/useFlowInfo'
+import type { FlowVersion } from '@/types/flow'
+import { Button, Loading, Select, Tag } from 'bkui-vue'
+import { computed, defineComponent, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useRoute, useRouter } from 'vue-router'
+import { ROUTE_NAMES } from '../../../../constants/routes'
 import styles from './PreviewHeader.module.css'
 
 const { Option } = Select
-
-// ============================================
-// 1. Type Definitions
-// ============================================
-
-interface PreviewHeaderProps {
-  executing: boolean
-  flowInfo: FlowInfo | null
-  pipelineModel: { name?: string } | null
-}
-
-// ============================================
-// 2. Pure Utility Functions
-// ============================================
 
 /**
  * Find latest version from version list (pure function)
@@ -59,17 +46,18 @@ export default defineComponent({
     const router = useRouter()
 
     // ----------------------------------------
+    // Use hook to get version list (filtered out COMMITTING versions)
+    // ----------------------------------------
+    const { releasedVersionList, loading: loadingVersions, flowInfo } = useFlowInfo()
+
+    // ----------------------------------------
     // Local State
     // ----------------------------------------
-    const versionList = ref<FlowVersion[]>([])
     const selectedVersion = ref<number | undefined>(undefined)
-    const loadingVersions = ref(false)
 
     // ----------------------------------------
     // Route Params (Computed)
     // ----------------------------------------
-    const projectId = computed(() => route.params.projectId as string)
-    const flowId = computed(() => route.params.flowId as string)
     const routeVersion = computed(() => {
       const v = route.params.version
       return v ? Number(v) : undefined
@@ -83,43 +71,12 @@ export default defineComponent({
     )
 
     const currentVersionOption = computed(() =>
-      versionList.value.find(v => v.version === selectedVersion.value)
+      releasedVersionList.value.find(v => v.version === selectedVersion.value)
     )
 
     // ----------------------------------------
     // Actions
     // ----------------------------------------
-    
-    /**
-     * Fetch version list from API
-     */
-    const fetchVersionList = async (): Promise<void> => {
-      if (!projectId.value || !flowId.value) return
-
-      try {
-        loadingVersions.value = true
-        const { records: list } = await getFlowVersionList({
-          projectId: projectId.value,
-          flowId: flowId.value,
-        })
-
-        // Update state immutably
-        versionList.value = list || []
-
-        // Set selected version from route or latest
-        if (routeVersion.value) {
-          selectedVersion.value = routeVersion.value
-        } else {
-          const latestVersion = findLatestVersion(list || [])
-          selectedVersion.value = latestVersion?.version ?? list?.[0]?.version
-        }
-      } catch (error) {
-        console.error('Failed to fetch version list:', error)
-        versionList.value = []
-      } finally {
-        loadingVersions.value = false
-      }
-    }
 
     const handleExecute = (): void => {
       emit('execute')
@@ -127,6 +84,16 @@ export default defineComponent({
 
     const handleCancel = (): void => {
       router.back()
+    }
+
+    const goToFlow = (): void => {
+      router.push({
+        name: ROUTE_NAMES.FLOW_DETAIL_EXECUTION_RECORD,
+        params: {
+          ...route.params,
+          version: flowInfo.value?.releaseVersion
+        },
+      })
     }
 
     const handleVersionChange = (version: number): void => {
@@ -174,7 +141,7 @@ export default defineComponent({
                 </span>
               ),
               default: () =>
-                versionList.value.map(version => (
+                releasedVersionList.value.map(version => (
                   <Option key={version.version} value={version.version} label={version.versionName}>
                     <div class={styles.versionOption}>
                       {renderCheckIcon(version.isLatest)}
@@ -215,15 +182,21 @@ export default defineComponent({
     )
 
     // ----------------------------------------
-    // Lifecycle
+    // Watchers
     // ----------------------------------------
-    watch([projectId, flowId], () => {
-      fetchVersionList()
-    })
-
-    onMounted(() => {
-      fetchVersionList()
-    })
+    
+    // Initialize selected version when version list is loaded
+    watch(releasedVersionList, (list) => {
+      if (list.length > 0 && selectedVersion.value === undefined) {
+        // Set selected version from route or latest
+        if (routeVersion.value) {
+          selectedVersion.value = routeVersion.value
+        } else {
+          const latestVersion = findLatestVersion(list)
+          selectedVersion.value = latestVersion?.version ?? list[0]?.version
+        }
+      }
+    }, { immediate: true })
 
     // ----------------------------------------
     // Main Render
@@ -233,13 +206,13 @@ export default defineComponent({
       if (!props.flowName) {
         return (
           <header class={styles.previewHeader}>
-            <i class={[styles.spinIcon, 'bk-icon', 'icon-loading']} />
+            <Loading size="mini" mode="spin" />
           </header>
         )
       }
 
       return (
-        <CommonHeader workflowName={props.flowName}>
+        <CommonHeader workflowName={props.flowName} onWorkflowNameClick={goToFlow}>
           {{
             'version-selector': renderVersionSelector,
             'execution-detail': renderExecutionTitle,

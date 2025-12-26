@@ -55,10 +55,6 @@ export {
     type BuildNoConfig,
     type ParamCategory,
     type ParamsRecord,
-    type PipelineContainer,
-    type PipelineElement,
-    type PipelineModel,
-    type PipelineStage,
     type ProcessedProperty,
     type SkipAtomsRecord
 } from './preview'

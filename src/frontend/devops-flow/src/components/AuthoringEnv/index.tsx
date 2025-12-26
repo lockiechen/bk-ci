@@ -1,7 +1,7 @@
 import { SvgIcon } from '@/components/SvgIcon'
 import useAuthoringEnvironment from '@/hooks/useAuthoringEnvironment'
 import { Loading, Select, Tag } from 'bkui-vue'
-import { defineComponent, nextTick, ref, watch } from 'vue'
+import { defineComponent, nextTick, onMounted, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import styles from './AuthoringEnv.module.css'
 
@@ -53,6 +53,12 @@ export default defineComponent({
         }
       },
     )
+
+    onMounted(() => {
+      if (envName.value) {
+        loadNodeList(envName.value)
+      }
+    })
 
     function handleChange() {
       emit('update:modelValue', envName.value)

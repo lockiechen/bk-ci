@@ -177,16 +177,15 @@ export function useFlowModel(options: UseFlowModelOptions) {
   }
 
   const addJob = () => {
-    const { stageIndex, containerIndex } = realEditingPos.value
+    const { stageIndex } = realEditingPos.value
     const stage = flowModel.value?.stages[stageIndex]
     if (!stage) return
 
     if (!stage.containers) stage.containers = []
     const newContainer = tempEditingObject.value as Container
     stage.containers = [
-      ...stage.containers.slice(0, containerIndex!),
+      ...stage.containers, 
       newContainer,
-      ...stage.containers.slice(containerIndex!),
     ]
     emitChange()
     return newContainer
@@ -337,7 +336,8 @@ export function useFlowModel(options: UseFlowModelOptions) {
       name: `Job-${containerIndex + 1}`,
       jobId: generateId('job'),
     })
-    setEditingPos({ stageIndex, containerIndex: 0 })
+    console.log('handleAddJob', stageIndex, containerIndex, newContainer, stage.containers.length)
+    setEditingPos({ stageIndex, containerIndex: stage.containers.length })
     tempEditingObject.value = newContainer
     isNewJob.value = true
   }

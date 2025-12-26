@@ -234,6 +234,21 @@
       "noticeGroup": "Notification Group",
       "noticeUser": "Notification User",
       "noticeContent": "Notification Content",
+      "editNotification": "Edit Notification",
+      "selectNoticeType": "Please select at least one notification type",
+      "wechatGroupId": "WeChat Group ID",
+      "wechatGroupIdPlaceholder": "Enter the key of the WeChat group robot Webhook",
+      "wechatGroupAtAll": "@All in group message",
+      "wechatGroupMarkdown": "Use Markdown format",
+      "noticeGroupPlaceholder": "Enter notification groups, separated by commas",
+      "noticeGroupTip": "Multiple notification groups should be separated by commas",
+      "noticeUserPlaceholder": "Enter notification users, separated by commas",
+      "noticeUserTip": "Multiple notification users should be separated by commas",
+      "noticeDetailFlag": "Include detailed information",
+      "noticeContentPlaceholder": "Enter notification content, variables can be used",
+      "noticeContentTip": "Supports using ${{variables.xxx}} format to reference variables",
+      "updateSuccess": "Update successful",
+      "addSuccess": "Add successful",
       "deleteSuccess": "Deletion successful",
       "deleteFail": "Deletion failed",
       "triggerEventDeletedAndRemoved": "This trigger event has been deleted and removed from the creation flow",
@@ -712,6 +727,9 @@
       "executeFailed": "Failed to start build",
       "pipelinePreviewPlaceholder": "Creation flow orchestration preview area",
       "noPipelineStages": "No pipeline stages"
+    },
+    "edit": {
+      "draftVersion": "Draft (based on {0})"
     },
     "release": {
       "releaseFlow": "Release Flow",

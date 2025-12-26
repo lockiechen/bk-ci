@@ -84,6 +84,7 @@
       <stage-container
         v-for="(container, index) in computedContainer"
         :key="container.containerId"
+        :ref="container.containerId"
         :stage-index="stageIndex"
         :container-index="index"
         :stage-length="stageLength"
@@ -158,14 +159,14 @@
 
 <script setup>
 import {
-  computed,
-  getCurrentInstance,
-  inject,
-  nextTick,
-  onBeforeUnmount,
-  onMounted,
-  onUpdated,
-  ref,
+    computed,
+    getCurrentInstance,
+    inject,
+    nextTick,
+    onBeforeUnmount,
+    onMounted,
+    onUpdated,
+    ref,
 } from "vue";
 import { VueDraggable } from "vue-draggable-plus";
 import AppendMenu from "./AppendMenu.vue";
@@ -175,21 +176,21 @@ import Logo from "./Logo";
 import StageCheckIcon from "./StageCheckIcon";
 import StageContainer from "./StageContainer";
 import {
-  ADD_STAGE,
-  APPEND_JOB,
-  CLICK_EVENT_NAME,
-  COPY_EVENT_NAME,
-  DELETE_EVENT_NAME,
-  STAGE_RETRY,
-  STATUS_MAP,
+    ADD_STAGE,
+    APPEND_JOB,
+    CLICK_EVENT_NAME,
+    COPY_EVENT_NAME,
+    DELETE_EVENT_NAME,
+    STAGE_RETRY,
+    STATUS_MAP,
 } from "./constants";
 import { t } from "./locale";
 import {
-  eventBus,
-  getOuterHeight,
-  hashID,
-  isTriggerContainer,
-  randomString,
+    eventBus,
+    getOuterHeight,
+    hashID,
+    isTriggerContainer,
+    randomString,
 } from "./util";
 
 const props = defineProps({
