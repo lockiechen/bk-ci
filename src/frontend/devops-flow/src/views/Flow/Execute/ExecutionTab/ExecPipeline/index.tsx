@@ -546,6 +546,7 @@ export default defineComponent({
                   <BkPipeline
                     ref={bkPipelineRef}
                     editable={false}
+                    isCreativeStream={true}
                     isExecDetail={true}
                     currentExecCount={executeCount.value}
                     cancelUserId={cancelUserId.value as string}

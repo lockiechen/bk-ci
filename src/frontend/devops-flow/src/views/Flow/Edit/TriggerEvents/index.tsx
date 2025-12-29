@@ -70,7 +70,7 @@ export default defineComponent({
       // 创建新的触发事件元素
       const newElement = createDefaultElement(nextIndex, { 
         ...trigger, 
-        '@type': trigger.atomCode
+        '@type': 'marketEvent'
       })
 
       // 设置启用状态

@@ -146,6 +146,7 @@ export default defineComponent({
         {hasFlowStages.value ? (
           <BkPipeline
             pipeline={flowModelWithoutTriggerStage.value!}
+            isCreativeStream={true}
             onAppendJob={handleAddJob}
             onAddAtom={handleAddAtom}
             onClick={handleFlowClick}

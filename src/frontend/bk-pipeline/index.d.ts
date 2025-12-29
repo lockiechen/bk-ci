@@ -258,6 +258,8 @@ export interface BkPipelineProps {
    */
   userName?: string;
 
+  isCreativeStream?: boolean;
+
   /**
    * Match rules array
    * @default []

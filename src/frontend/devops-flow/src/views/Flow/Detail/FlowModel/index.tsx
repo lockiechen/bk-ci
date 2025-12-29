@@ -52,7 +52,7 @@ export default defineComponent({
               ) : (
                 <div class={styles.uiModeWrapper}>
                   {!isFlowEmpty.value && flowModelWithoutTriggerStage.value ? (
-                    <BkPipeline editable={false} pipeline={flowModelWithoutTriggerStage.value} />
+                    <BkPipeline editable={false} isCreativeStream={true} pipeline={flowModelWithoutTriggerStage.value} />
                   ) : (
                     <EmptyPage
                       title={t('flow.content.blankTemplateNoOrchestration')}

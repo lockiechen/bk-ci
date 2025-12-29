@@ -73,8 +73,8 @@
                     "{projectRoot}"
                 ],
                 "outputs": [
-                    "{workspaceRoot}/frontend/creative",
-                    "{workspaceRoot}/frontend/entry's/creative.json"
+                    "{workspaceRoot}/frontend/creative-stream",
+                    "{workspaceRoot}/frontend/entry's/creative-stream.json"
                 ]
             }
         }

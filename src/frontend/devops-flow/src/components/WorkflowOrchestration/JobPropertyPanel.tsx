@@ -82,9 +82,18 @@ export default defineComponent({
     const nameEditing = ref(false)
 
     // ========== Computed ==========
-    const title = computed(() =>
-      props.isNew ? t('flow.orchestration.addJob') : t('flow.orchestration.editJob'),
-    )
+    // 根据 Job 类型显示不同的标题
+    const title = computed(() => {
+      if (!props.isNew) {
+        return t('flow.orchestration.editJob')
+      }
+      // 新建模式下，根据 container 的 @type 显示不同标题
+      const containerType = formData.value?.['@type']
+      if (containerType === 'devCloud') {
+        return t('flow.orchestration.addCloudJob')
+      }
+      return t('flow.orchestration.addCreateJob')
+    })
 
     // 运行条件选项（区分普通阶段和 Finally 阶段）
     const runConditionOptions = computed(() =>
@@ -133,7 +142,6 @@ export default defineComponent({
     watch(
       () => props.editingContainer,
       (container) => {
-        console.log(1)
         formData.value = container ? { ...container } : null
       },
       { immediate: true },
@@ -189,6 +197,7 @@ export default defineComponent({
       }
 
       if (formData.value) {
+        debugger
         emit('confirm', formData.value)
         closePanel()
       }
@@ -549,6 +558,18 @@ export default defineComponent({
             formData.value && (
               <div class={styles.jobPanelContent}>
                 <Form ref={formRef} form-type="vertical" model={formData.value}>
+                  {/* Job Name - 仅在新建模式下显示 */}
+                  {props.isNew && (
+                    <FormItem label={t('flow.orchestration.jobName')} required>
+                      <Input
+                        v-model={formData.value.name}
+                        maxlength={30}
+                        placeholder={t('flow.orchestration.jobNamePlaceholder')}
+                        disabled={!props.editable}
+                      />
+                    </FormItem>
+                  )}
+
                   {/* Job ID */}
                   <FormItem label={t('flow.orchestration.jobId')} property="jobId" required>
                     <Input

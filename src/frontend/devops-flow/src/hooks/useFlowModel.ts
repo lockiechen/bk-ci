@@ -146,9 +146,12 @@ export function useFlowModel(options: UseFlowModelOptions) {
 
   // ========== 基础操作方法 (CRUD) ==========
 
-  const addStage = () => {
+  const addStage = (stage?: Stage) => {
     const { stageIndex } = realEditingPos.value
-    const newStage = createDefaultStage(stageIndex)
+    const newStage = {
+      ...tempEditingObject.value as Stage,
+      ...stage,
+    }
     if (flowModel.value) {
       flowModel.value.stages = [
         ...flowModel.value.stages.slice(0, stageIndex),
@@ -176,13 +179,16 @@ export function useFlowModel(options: UseFlowModelOptions) {
     }
   }
 
-  const addJob = () => {
+  const addJob = (container: Partial<Container>) => {
     const { stageIndex } = realEditingPos.value
     const stage = flowModel.value?.stages[stageIndex]
     if (!stage) return
 
     if (!stage.containers) stage.containers = []
-    const newContainer = tempEditingObject.value as Container
+    const newContainer = {
+      ...tempEditingObject.value as Container,
+      ...container
+    }
     stage.containers = [
       ...stage.containers, 
       newContainer,
@@ -315,7 +321,7 @@ export function useFlowModel(options: UseFlowModelOptions) {
   const handleStageConfirm = (stage: Stage) => {
     // 使用传入的 stage 进行保存
     if (isNewStage.value) {
-      addStage()
+      addStage(stage)
     } else {
       updateStage(stage)
     }
@@ -326,15 +332,21 @@ export function useFlowModel(options: UseFlowModelOptions) {
 
   /**
    * 处理添加 Job (打开面板)
+   * @param payload.jobType - Job 类型: 'create' (创作任务) 或 'cloud' (云任务)
    */
-  const handleAddJob = (payload: AddStageEventPayload) => {
-    const { stageIndex } = payload
+  const handleAddJob = (payload: AddStageEventPayload & { jobType?: string }) => {
+    const { stageIndex, jobType = 'create' } = payload
     const stage = flowModel.value?.stages[stageIndex]
     if (!stage) return
     const containerIndex = stage.containers?.length || 0
+    
+    // 根据 jobType 设置 @type 和 classType
+    const containerType = jobType === 'cloud' ? 'devCloud' : 'vmBuild'
     const newContainer = createDefaultContainer(containerIndex, {
       name: `Job-${containerIndex + 1}`,
       jobId: generateId('job'),
+      '@type': containerType,
+      classType: containerType,
     })
     console.log('handleAddJob', stageIndex, containerIndex, newContainer, stage.containers.length)
     setEditingPos({ stageIndex, containerIndex: stage.containers.length })
@@ -347,7 +359,7 @@ export function useFlowModel(options: UseFlowModelOptions) {
    */
   const handleJobConfirm = (container: Partial<Container>) => {
     if (isNewJob.value) {
-      addJob()
+      addJob(container)
     } else {
       updateJob(container)
     }

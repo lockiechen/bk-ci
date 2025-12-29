@@ -1,4 +1,4 @@
-import type { Stage, Container, Element } from '@/api/flowModel'
+import type { Container, Element, Stage } from '@/api/flowModel'
 
 export enum AtomRunCondition {
   PRE_TASK_SUCCESS = 'PRE_TASK_SUCCESS',
@@ -72,7 +72,7 @@ export function createDefaultContainer(index: number, partial?: Partial<Containe
     containerHashId: '',
     matrixGroupFlag: false,
     classType: 'vmBuild',
-    baseOS: 'LINUX',
+    baseOS: 'WINDOWS',
     vmNames: [],
     maxQueueMinutes: 60,
     maxRunningMinutes: 480,
@@ -105,7 +105,6 @@ export function createDefaultContainer(index: number, partial?: Partial<Containe
       queue: 0,
     },
     nfsSwitch: false,
-    params: [],
     ...partial,
   }
 }

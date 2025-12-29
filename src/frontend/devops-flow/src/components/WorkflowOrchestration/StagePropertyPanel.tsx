@@ -216,6 +216,17 @@ export default defineComponent({
           default: () => (
             <div class={styles.stagePanelContent}>
               <Form form-type="vertical" model={formData.value}>
+                {/* Stage Name - 仅在新建模式下显示 */}
+                {props.isNew && (
+                  <FormItem label={t('flow.orchestration.stageName')} required>
+                    <Input
+                      v-model={formData.value.name}
+                      maxlength={30}
+                      placeholder={t('flow.orchestration.stageNamePlaceholder')}
+                      disabled={!props.editable}
+                    />
+                  </FormItem>
+                )}
                 {!isTriggerStage.value && !isFinallyStage.value && (
                   <div class={sharedStyles.flowControlSection}>
                     <Collapse useBlockTheme list={collapses}>

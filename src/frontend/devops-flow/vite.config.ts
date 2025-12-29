@@ -7,7 +7,7 @@ import { defineConfig } from 'vite';
 import vueDevTools from 'vite-plugin-vue-devtools';
 
 // Production public path
-const PUBLIC_PATH = 'creative';
+const PUBLIC_PATH = 'creative-stream';
 
 export default defineConfig(({ mode }) => ({
   base: mode === 'production' ? `/${PUBLIC_PATH}/` : '/',
