@@ -7,7 +7,7 @@
             <i class="add-plus" />
             <span class="trigger-text">{{ t('append') }}</span>
         </div>
-        <transition name="menu-fade">
+        <transition name="menu-fade" v-if="reactiveData.isCreativeStream">
             <div
                 v-if="isMenuVisible"
                 class="append-menu-dropdown"
@@ -32,9 +32,10 @@
 </template>
 
 <script setup>
-    import { ref, onMounted, onBeforeUnmount } from 'vue'
-    import { t } from './locale'
-    import { APPEND_JOB } from './constants'
+    import { inject, onBeforeUnmount, onMounted, ref } from 'vue'
+import { ADD_STAGE, APPEND_JOB } from './constants'
+import { t } from './locale'
+import { eventBus } from './util'
 
     const props = defineProps({
         stageIndex: {
@@ -44,11 +45,20 @@
     })
 
     const emit = defineEmits([APPEND_JOB])
+    const reactiveData = inject("reactiveData");
 
     const isMenuVisible = ref(false)
 
     const toggleMenu = () => {
-        isMenuVisible.value = !isMenuVisible.value
+        if (reactiveData.isCreativeStream) {
+            isMenuVisible.value = !isMenuVisible.value
+        } else {
+            eventBus.$emit(ADD_STAGE, {
+                stageIndex: props.stageIndex,
+                isParallel: true,
+                isFinally: false,
+            });
+        }
     }
 
     const handleMenuClick = (type) => {
@@ -72,7 +82,7 @@
     })
 </script>
 
-<style lang="scss" scoped>
+<style lang="scss">
 @import './conf';
 
 .append-menu-wrapper {

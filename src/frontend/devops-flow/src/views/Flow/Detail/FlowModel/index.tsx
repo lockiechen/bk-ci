@@ -10,7 +10,7 @@ import { useI18n } from 'vue-i18n'
 import { useRoute } from 'vue-router'
 import styles from './FlowModel.module.css'
 
-import 'bkui-pipeline/dist/bkui-pipeline.css'
+import 'bkui-pipeline/dist/bk-pipeline.css'
 import BkPipeline from 'bkui-pipeline/vue3'
 
 export default defineComponent({

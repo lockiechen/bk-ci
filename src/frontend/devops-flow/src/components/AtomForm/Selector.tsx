@@ -1,9 +1,9 @@
-import { defineComponent, computed } from 'vue'
-import { Select } from 'bkui-vue'
+import { Select } from 'bkui-vue';
+import { defineComponent, type PropType } from 'vue';
 const { Option } = Select
 
 export default defineComponent({
-  name: 'Selector',
+  name: 'flow-selector',
   props: {
     value: {
       type: [String, Number, Array, Boolean],

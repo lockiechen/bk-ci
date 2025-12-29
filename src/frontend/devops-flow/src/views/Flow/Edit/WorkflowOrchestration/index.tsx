@@ -5,7 +5,7 @@ import JobPropertyPanel from '@/components/WorkflowOrchestration/JobPropertyPane
 import StagePropertyPanel from '@/components/WorkflowOrchestration/StagePropertyPanel'
 import { useFlowModel } from '@/hooks/useFlowModel'
 import { useUIStore } from '@/stores/ui'
-import 'bkui-pipeline/dist/bkui-pipeline.css'
+import 'bkui-pipeline/dist/bk-pipeline.css'
 import BkPipeline from 'bkui-pipeline/vue3'
 import { Exception, Loading } from 'bkui-vue'
 import { defineComponent, ref, watch } from 'vue'

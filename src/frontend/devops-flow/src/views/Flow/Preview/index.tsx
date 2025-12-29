@@ -1,7 +1,7 @@
 import type { AuthoringNodeItem, StartupProperty } from '@/api/preview'
 import { SvgIcon } from '@/components/SvgIcon'
 import { usePreview, type ParamType } from '@/hooks/usePreview'
-import 'bkui-pipeline/dist/bkui-pipeline.css'
+import 'bkui-pipeline/dist/bk-pipeline.css'
 import BkPipeline, { type PipelineModel } from 'bkui-pipeline/vue3'
 import { Alert, Checkbox, Exception, Input, Loading, Select } from 'bkui-vue'
 import { defineComponent } from 'vue'

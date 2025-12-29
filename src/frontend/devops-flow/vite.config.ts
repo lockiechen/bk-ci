@@ -1,11 +1,16 @@
-import { fileURLToPath, URL } from 'node:url'
+import { fileURLToPath, URL } from 'node:url';
 
-import { defineConfig } from 'vite'
-import vue from '@vitejs/plugin-vue'
-import vueJsx from '@vitejs/plugin-vue-jsx'
-import vueDevTools from 'vite-plugin-vue-devtools'
+import vue from '@vitejs/plugin-vue';
+import vueJsx from '@vitejs/plugin-vue-jsx';
+import path from 'path';
+import { defineConfig } from 'vite';
+import vueDevTools from 'vite-plugin-vue-devtools';
 
-export default defineConfig({
+// Production public path
+const PUBLIC_PATH = 'creative';
+
+export default defineConfig(({ mode }) => ({
+  base: mode === 'production' ? `/${PUBLIC_PATH}/` : '/',
   plugins: [vue(), vueJsx(), vueDevTools()],
   resolve: {
     alias: {
@@ -29,4 +34,14 @@ export default defineConfig({
   optimizeDeps: {
     exclude: ['bkui-pipeline'],
   },
-})
+  
+  build: {
+    outDir: path.resolve(__dirname, `../frontend/${PUBLIC_PATH}`),
+    emptyOutDir: true,
+    rollupOptions: {
+      output: {
+        manualChunks: undefined,
+      },
+    },
+  },
+}));

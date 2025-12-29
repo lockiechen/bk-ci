@@ -143,6 +143,7 @@ export interface Element {
   classType?: string
   atomCode?: string
   taskAtom?: string
+  ownerStoreCode?: string
   canElementSkip?: boolean
   useLatestParameters?: boolean
   data?: {
@@ -397,8 +398,8 @@ export interface FlowSettings {
   cancelSubscriptionList?: Subscription[]
   // Publish subscription list
   publishSubscriptionList?: Subscription[]
-  projectId: string
-  pipelineId: string
+  projectId?: string
+  pipelineId?: string
   version?: number
   labels?: string[]
   labelNames?: string[]

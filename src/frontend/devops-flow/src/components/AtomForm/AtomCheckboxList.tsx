@@ -1,7 +1,7 @@
-import { defineComponent, PropType } from 'vue'
 import { Checkbox } from 'bkui-vue'
-const { Group: CheckboxGroup } = Checkbox
+import { defineComponent, type PropType } from 'vue'
 import styles from './AtomCheckboxList.module.css'
+const { Group: CheckboxGroup } = Checkbox
 
 export default defineComponent({
   name: 'AtomCheckboxList',

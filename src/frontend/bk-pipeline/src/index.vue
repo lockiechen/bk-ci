@@ -135,6 +135,10 @@ const props = defineProps({
     type: Boolean,
     default: true,
   },
+  isCreativeStream: {
+    type: Boolean,
+    default: false,
+  },
 });
 
 // 使用 ref 存储 stage refs
@@ -156,6 +160,7 @@ const keys = [
   "canSkipElement",
   "cancelUserId",
   "isExpandAllMatrix",
+  "isCreativeStream"
 ];
 
 keys.forEach((key) => {

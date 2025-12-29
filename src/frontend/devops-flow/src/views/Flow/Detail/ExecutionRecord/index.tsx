@@ -3,6 +3,7 @@ import { ROUTE_NAMES } from '@/constants/routes'
 import { useExecutionRecordData } from '@/hooks/useExecutionRecordData'
 import SearchSelect from '@blueking/search-select-v3'
 import { DatePicker, Table } from 'bkui-vue'
+import type { Column } from 'bkui-vue/lib/table/props'
 import { computed, defineComponent, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useRoute, useRouter } from 'vue-router'
@@ -286,7 +287,7 @@ export default defineComponent({
         <div class={styles.tableWrapper}>
           <Table
             data={tableData.value}
-            columns={tableColumns.value}
+            columns={tableColumns.value as Column[]}
             class={styles.table}
             pagination={{
               current: pagination.value.current,

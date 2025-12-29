@@ -1,5 +1,5 @@
-import { defineComponent, PropType } from 'vue'
 import { DatePicker } from 'bkui-vue'
+import { defineComponent, type PropType } from 'vue'
 
 export default defineComponent({
   name: 'AtomDatePicker',
@@ -39,7 +39,7 @@ export default defineComponent({
 
     return () => (
       <DatePicker
-        modelValue={props.value}
+        modelValue={props.value as unknown as Date | [Date, Date]}
         placeholder={props.placeholder}
         disabled={props.disabled}
         type={props.type}

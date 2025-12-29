@@ -19,6 +19,8 @@ interface HighlightRange {
 
 interface UseYamlHighlightOptions {
   flowId?: string
+  version: string
+  projectId: string
   autoLoad?: boolean
 }
 
@@ -114,10 +116,15 @@ function calculateSectionHighlight(yaml: string, section: FlowConfigSection): Hi
  * const authoringEnvHighlight = getSectionHighlight('authoring-env')
  * ```
  */
-export function useYamlHighlight(options: UseYamlHighlightOptions = {}) {
-  const { flowId, autoLoad = true } = options
+export function useYamlHighlight(options: UseYamlHighlightOptions) {
+  if (!options) {
+    throw new Error('options is required')
+  }
+  const { flowId, version, projectId, autoLoad = true } = options
 
   const { yamlContent, loading, flowModel, flowSetting } = useFlowModel({
+    projectId,
+    version,
     flowId,
     autoLoad,
   })

@@ -17,7 +17,8 @@
     "lint:oxlint": "oxlint . --fix -D correctness --ignore-path .gitignore",
     "lint:eslint": "eslint . --fix --cache",
     "lint": "run-s lint:*",
-    "format": "prettier --write src/"
+    "format": "prettier --write src/",
+    "public:master": "pnpm run build"
   },
   "dependencies": {
     "@blueking/crontab": "0.0.2-beta.7",
@@ -62,5 +63,20 @@
     "vitest": "^3.2.4",
     "vue-draggable-plus": "^0.6.0",
     "vue-tsc": "^3.1.1"
-  }
+  },
+  "nx": {
+        "targets": {
+            "public:master": {
+                "inputs": [
+                    "{workspaceRoot}/locale/flow/*.json",
+                    "{workspaceRoot}/locale/index.js",
+                    "{projectRoot}"
+                ],
+                "outputs": [
+                    "{workspaceRoot}/frontend/creative",
+                    "{workspaceRoot}/frontend/entry's/creative.json"
+                ]
+            }
+        }
+    }
 }

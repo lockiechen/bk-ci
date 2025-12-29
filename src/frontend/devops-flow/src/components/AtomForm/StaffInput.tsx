@@ -1,5 +1,5 @@
-import { defineComponent, PropType, ref, watch } from 'vue'
 import { TagInput } from 'bkui-vue'
+import { defineComponent, type PropType } from 'vue'
 
 export default defineComponent({
   name: 'StaffInput',
