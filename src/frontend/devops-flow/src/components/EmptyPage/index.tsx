@@ -15,12 +15,13 @@ export default defineComponent({
       default: '',
     },
   },
-  setup(props, { emit }) {
+  setup(props, { slots }) {
     const { t } = useI18n()
     return () => (
       <Exception type="empty" class={styles.exceptionCont}>
         <div class={styles.exception}>{props.title ? props.title : t('flow.common.noData')}</div>
         {props.desc ? <p class={styles.desc}>{props.desc}</p> : null}
+        {slots.default?.()}
       </Exception>
     )
   },

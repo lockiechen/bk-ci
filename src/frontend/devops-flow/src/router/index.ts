@@ -230,6 +230,11 @@ const router = createRouter({
           component: () => import('../views/Template'),
           name: ROUTE_NAMES.TEMPLATE,
         },
+        {
+          path: 'group',
+          component: () => import('../views/FlowLabelGroup/index'),
+          name: ROUTE_NAMES.FLOW_LABEL_GROUP,
+        },
       ],
     },
     // 全局 404 兜底

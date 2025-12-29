@@ -1,9 +1,9 @@
 import {
   type Collation,
   type ContentTableItem,
-  type GroupResponse,
   type SortType,
 } from '@/api/flowContentList'
+import { type GroupResponse } from '@/api/flowLabelGroup'
 import { FLOW_GROUP_TYPES } from '@/constants/flowGroup'
 import { ROUTE_NAMES } from '@/constants/routes'
 import { useDeleteConfirm } from '@/hooks/useDeleteConfirm'

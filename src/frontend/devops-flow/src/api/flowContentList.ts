@@ -291,27 +291,6 @@ export interface DeleteContentParams {
   pipelineIds: string[]
 }
 
-export interface GroupLabel {
-  id: string
-  groupId: string
-  name: string
-  createTime: number
-  uptimeTime: number
-  createUser: string
-  updateUser: string
-}
-
-export interface GroupResponse {
-  id: string
-  projectId: string
-  name: string
-  createTime: number
-  updateTime: number
-  createUser: string
-  updateUser: string
-  labels: GroupLabel[]
-}
-
 /**
  * 获取已选中的tree数据接口返回格式
  */
@@ -579,7 +558,9 @@ export async function createContent(params: CreateContentParams): Promise<Create
 /**
  * model与yaml转换
  */
-export async function apiTransfer(importParams: ImportContentParams): Promise<ImportContentResponse> {
+export async function apiTransfer(
+  importParams: ImportContentParams,
+): Promise<ImportContentResponse> {
   try {
     const { projectId, pipelineId, actionType, ...params } = importParams
     const res = await post<ImportContentResponse>(
@@ -687,20 +668,6 @@ export async function getMatchDynamicView(
     const res = await post<string[]>(
       `${PROCESS_API_URL_PREFIX}/user/pipelineViews/projects/${projectId}/matchDynamicView`,
       params,
-    )
-    return res
-  } catch (error) {
-    throw error
-  }
-}
-
-/**
- * 获取项目标签数据
- */
-export async function getProjectTags(projectId: string): Promise<GroupResponse[]> {
-  try {
-    const res = await get<GroupResponse[]>(
-      `${PROCESS_API_URL_PREFIX}/user/pipelineGroups/groups?projectId=${projectId}`,
     )
     return res
   } catch (error) {

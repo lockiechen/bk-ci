@@ -6,7 +6,6 @@ import {
   getContentDetail,
   getContentTableData,
   getMatchDynamicView,
-  getProjectTags,
   saveAsTemplate,
   toggleFlowFavorite,
   type DeleteContentParams,
@@ -14,10 +13,10 @@ import {
   type ContentTableParams,
   type CopyFlowParams,
   type MatchDynamicViewParams,
-  type ImportContentParams,
   type SaveAsTemplateParams,
   type AddToFlowGroupParams,
 } from '@/api/flowContentList'
+import { getProjectGroups } from "@/api/flowLabelGroup";
 import { useRoute } from 'vue-router'
 import { ROUTE_NAMES } from '@/constants/routes'
 import { STATUS, type StageStatusInfo } from '@/types/flow'
@@ -472,7 +471,7 @@ export const useFlowHomeContentStore = defineStore('flowContentList', () => {
   }
   async function getProjectTagList() {
     try {
-      const result = await getProjectTags(route.params.projectId as string)
+      const result = await getProjectGroups(route.params.projectId as string)
       return result
     } catch (error) {
       console.error('Failed to get project tag list:', error)

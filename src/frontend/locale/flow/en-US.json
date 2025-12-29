@@ -524,6 +524,28 @@
         "noLabels": "No tags available in the current project"
       }
     },
+    "labelGroup": {
+      "title": "Label Management",
+      "hint": "Note: You can add up to 10 label groups; a single group can have up to 12 labels; a label can contain up to 20 characters",
+      "addGroup": "Add Label Group",
+      "addTag": "Add Label",
+      "groupName": "Label Group Name",
+      "groupNamePlaceholder": "Please enter the label group name, no more than 20 characters",
+      "tagNamePlaceholder": "Please enter the label name, no more than 20 characters",
+      "rename": "Rename",
+      "delete": "Delete",
+      "save": "Save",
+      "cancel": "Cancel",
+      "addSuccess": "Addition successful",
+      "modifySuccess": "Modification successful",
+      "deleteSuccess": "Deletion successful",
+      "deleteGroupConfirm": "Are you sure you want to delete this label group?",
+      "deleteTagConfirm": "Are you sure you want to delete this label?",
+      "emptyTitle": "Create a Label Group",
+      "desc": "Assigning reasonable labels to pipelines helps in quickly locating and managing pipelines. Please be aware of the following constraints:",
+      "contentOne": "1. Up to 10 groups can be added under a single project",
+      "contentTwo": "2. Up to 12 labels can be added under a single group"
+    },
     "actions": {
       "rename": "Rename",
       "pinToTop": "Pin to Top",

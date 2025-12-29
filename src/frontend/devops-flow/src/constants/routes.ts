@@ -41,6 +41,9 @@ export const ROUTE_NAMES = {
 
   // Flow Preview (执行预览)
   FLOW_PREVIEW: 'flowPreview',
+
+  //Flow Label Group (标签管理)
+  FLOW_LABEL_GROUP: 'flowLabelGroup',
 } as const
 
 /**

@@ -7,6 +7,7 @@ import { type CopyFlowParams, type DynamicParamLables, type MatchDynamicViewPara
 import { useFlowGroupData } from '@/hooks/useFlowGroupData'
 import { useFlowListData } from '@/hooks/useFlowListData'
 import styles from './CopyFlowPopup.module.css'
+import { useRoute } from "vue-router";
 
 interface FormFieldConfig {
   property: keyof CopyFlowParams
@@ -39,6 +40,7 @@ export default defineComponent({
   emits: ['update:isShow', 'confirm'],
   setup(props, { emit }) {
     const { t } = useI18n()
+    const route = useRoute()
     const { getMatchDynamicData, getProjectTagList } = useFlowListData()
     const {
       flowGroups: dynamicGroupList,
@@ -166,7 +168,7 @@ export default defineComponent({
     }
 
     const handleAddLabel = () => {
-      // TODO:跳转到标签设置页
+      window.open(`${window.location.origin}/creative-stream/${route.params.projectId}/group`, '_blank')
     }
 
     async function handleRefresh() {
