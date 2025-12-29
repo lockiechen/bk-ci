@@ -288,8 +288,14 @@ export function useFlowModel(options: UseFlowModelOptions) {
   /**
    * 处理添加 Stage (打开面板)
    */
-  const handleAddStage = ({ stageIndex }: AddStageEventPayload) => {
-    const newStage = createDefaultStage(stageIndex, { name: `Stage-${stageIndex}` })
+  const handleAddStage = ({ stageIndex, isParallel }: AddStageEventPayload) => {
+    if (isParallel) {
+      handleAddJob({ stageIndex })
+      return
+    }
+    const newStage = createDefaultStage(stageIndex, { name: `Stage-${stageIndex}`, containers: [
+      createDefaultContainer(0, { name: 'Job1' }),
+    ] })
 
     tempEditingObject.value = newStage
     isNewStage.value = true

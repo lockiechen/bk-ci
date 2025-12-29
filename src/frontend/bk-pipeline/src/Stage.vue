@@ -102,7 +102,7 @@
       >
       </stage-container>
     </VueDraggable>
-    <div v-if="reactiveData.editable" class="append-stage-wrapper">
+    <div v-if="reactiveData.editable && stageIndex === 0" class="append-stage-wrapper">
       <append-menu
         :stage-index="stageIndex"
         @append-job="handleAppendJob"
@@ -239,7 +239,6 @@ const stageRef = ref(null);
 const isAddMenuShow = ref(false);
 const lastAddMenuShow = ref(false);
 const cruveHeight = ref(0);
-const failedContainer = ref(false);
 const isStageError = computed(() => {
   try {
     return props.stage.isError;

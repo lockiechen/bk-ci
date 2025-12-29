@@ -91,7 +91,6 @@ export function useNewFlow() {
    * Confirm and create the flow
    */
   async function handleConfirm(): Promise<void> {
-    debugger
     const isValid = await validateCurrentStep()
     if (!isValid) return
     

@@ -197,7 +197,6 @@ export default defineComponent({
       }
 
       if (formData.value) {
-        debugger
         emit('confirm', formData.value)
         closePanel()
       }
