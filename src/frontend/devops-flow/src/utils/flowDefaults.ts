@@ -72,7 +72,10 @@ export function createDefaultContainer(index: number, partial?: Partial<Containe
     containerHashId: '',
     matrixGroupFlag: false,
     classType: 'vmBuild',
-    baseOS: 'WINDOWS',
+    dispatchType: {
+      buildType: 'CREATE_AGENT_ENV',
+      value: '${{BK_CI_CREATIVE_STREAM_NODE_AGENT_ID}}',
+    },
     vmNames: [],
     maxQueueMinutes: 60,
     maxRunningMinutes: 480,

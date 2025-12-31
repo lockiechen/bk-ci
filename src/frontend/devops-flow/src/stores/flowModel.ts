@@ -127,18 +127,32 @@ export const useFlowModelStore = defineStore('flowModel', () => {
     loading.value = true
 
     try {
+      const modelCopy = JSON.parse(JSON.stringify(flowModel.value))
+      
+      // 为每个 stage 的每个 container 添加 dispatchType 并删除 baseOS
+      modelCopy.stages?.forEach((stage: any) => {
+        stage.containers?.forEach((container: any) => {
+          if (!container.dispatchType) {
+            // TODO：暂时先写死，后续产品要求变更在相应更改
+            container.dispatchType = {
+              buildType: 'CREATE_AGENT_ENV',
+              value: '${{BK_CI_CREATIVE_STREAM_NODE_AGENT_ID}}',
+            }
+          }
+          // 删除 baseOS 字段
+          if (container.baseOS) {
+            delete container.baseOS
+          }
+        })
+      })
+
       const saveParams: SaveFlowModelParams = {
         ...params,
         modelAndSetting: {
-          model: flowModel.value,
+          model: modelCopy,
           setting: flowSetting.value!,
         },
         storageType: params.storageType || 'MODEL',
-        // TODO: 这里暂时写死，后续需要根据产品要求修改
-        dispatchType: {
-          buildType: "CREATE_AGENT_ENV",
-          value: "${{BK_CI_CREATIVE_STREAM_NODE_AGENT_ID}}"
-        }
       }
 
       const response = await saveFlowModel(saveParams)

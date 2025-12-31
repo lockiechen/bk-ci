@@ -165,18 +165,18 @@ export interface Element {
 export interface DispatchType {
   buildType: string
   value: string
-  performanceUid: string
-  persistence: boolean
-  imageType: string
-  credentialId: string
-  credentialProject: string
-  imageCode: string
-  imageVersion: string
-  imageName: string
-  dockerBuildVersion: string
-  imagePublicFlag: boolean
-  imageRDType: string
-  recommendFlag: boolean
+  performanceUid?: string
+  persistence?: boolean
+  imageType?: string
+  credentialId?: string
+  credentialProject?: string
+  imageCode?: string
+  imageVersion?: string
+  imageName?: string
+  dockerBuildVersion?: string
+  imagePublicFlag?: boolean
+  imageRDType?: string
+  recommendFlag?: boolean
 }
 
 /**

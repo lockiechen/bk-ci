@@ -284,7 +284,7 @@ export default defineComponent({
                       {authoringNodes.value.map((node: AuthoringNodeItem) => (
                         <Select.Option
                           key={node.agentId}
-                          value={node.agentId}
+                          value={node.agentHashId}
                           label={node.displayName || `${node.name} (${node.ip})`}
                           disabled={!node.envEnableNode}
                         >

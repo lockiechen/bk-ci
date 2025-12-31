@@ -374,7 +374,7 @@ export const usePreview = (options: UsePreviewOptions = {}): UsePreviewReturn =>
         (node: AuthoringNodeItem) => node.agentStatus && node.envEnableNode
       )
       if (availableNodes.length > 0 && !selectedNode.value) {
-        selectedNode.value = availableNodes[0]!.agentId
+        selectedNode.value = availableNodes[0]!.agentHashId
       }
     } catch (error: unknown) {
       console.error('Failed to load authoring nodes:', error)
