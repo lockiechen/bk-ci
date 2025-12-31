@@ -63,6 +63,10 @@ export interface SaveFlowModelParams {
     setting?: FlowSettings
   }
   yaml?: string
+  dispatchType: {
+    buildType: string
+    value: string
+  }
 }
 
 /**

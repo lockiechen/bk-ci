@@ -134,6 +134,11 @@ export const useFlowModelStore = defineStore('flowModel', () => {
           setting: flowSetting.value!,
         },
         storageType: params.storageType || 'MODEL',
+        // TODO: 这里暂时写死，后续需要根据产品要求修改
+        dispatchType: {
+          buildType: "CREATE_AGENT_ENV",
+          value: "${{BK_CI_CREATIVE_STREAM_NODE_AGENT_ID}}"
+        }
       }
 
       const response = await saveFlowModel(saveParams)
