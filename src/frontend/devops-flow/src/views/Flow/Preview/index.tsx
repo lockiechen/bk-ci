@@ -289,7 +289,7 @@ export default defineComponent({
                           disabled={!node.envEnableNode}
                         >
                           <div class={styles.nodeOption}>
-                            <span class={styles.nodeName}>{node.name}</span>
+                            <span class={styles.nodeName}>{node.displayName}</span>
                             <span class={styles.nodeIp}>({node.ip})</span>
                             {!node.agentStatus && (
                               <span class={styles.nodeOffline}>[{t('flow.preview.offline')}]</span>

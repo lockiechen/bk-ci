@@ -6,6 +6,7 @@
     "clearFilterCriteria": "フィルター条件をクリア",
     "MODEL": "UIモード",
     "YAML": "コードモード",
+    "changeModeFail": "{0} への切り替えに失敗しました",
     "tabs": {
       "template": "テンプレート"
     },

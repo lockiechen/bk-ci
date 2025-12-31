@@ -15,11 +15,7 @@ export default defineComponent({
     const projectId = route.params.projectId as string
 
     // Use flowModel to update settings
-    const { flowSetting, updateFlowSetting } = useFlowModel({
-      projectId,
-      flowId,
-      version: route.params.version as string,
-    })
+    const { flowSetting, updateFlowSetting } = useFlowModel()
 
     const { 
       envSelectList,

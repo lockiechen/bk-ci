@@ -183,38 +183,28 @@ export const ReleaseSlider = defineComponent({
 
     return () => (
       <>
-        <Sideslider
-          isShow={isVisible.value}
-          width={640}
-          title=""
-          onClosed={handleClose}
-        >
+        <Sideslider isShow={isVisible.value} width={640} title="" onClosed={handleClose}>
           {{
             header: () => (
               <div class={styles.releaseHeader}>
                 <span>{t('flow.release.releaseFlow')}</span>
                 <div class={styles.releaseVersionInfo}>
-                  <span>{t('flow.release.newVersion')}: {newVersionName.value}</span>
-                  <span>{t('flow.release.baseVersion')}: {props.baseVersionName}</span>
+                  <span class={styles.newVersion}>
+                    {t('flow.release.newVersion')}: {newVersionName.value}
+                  </span>
+                  <span>
+                    {t('flow.release.baseVersion')}: {props.baseVersionName}
+                  </span>
                 </div>
               </div>
             ),
             default: () => (
               <Loading loading={isLoading.value}>
                 <div class={styles.releaseContent}>
-                  <Form
-                    class={styles.releaseForm}
-                    model={releaseForm.value}
-                    labelWidth={0}
-                  >
-                    <FormItem
-                      label=""
-                      property="description"
-                    >
+                  <Form class={styles.releaseForm} model={releaseForm.value} labelWidth={0}>
+                    <FormItem label="" property="description">
                       <div class={styles.formItem}>
-                        <label class={styles.formLabel}>
-                          {t('flow.release.releaseNote')}
-                        </label>
+                        <label class={styles.formLabel}>{t('flow.release.releaseNote')}</label>
                         <Input
                           v-model={releaseForm.value.description}
                           type="textarea"
@@ -239,10 +229,7 @@ export const ReleaseSlider = defineComponent({
                 >
                   {t('flow.release.release')}
                 </Button>
-                <Button
-                  disabled={isReleasing.value}
-                  onClick={handleClose}
-                >
+                <Button disabled={isReleasing.value} onClick={handleClose}>
                   {t('flow.common.cancel')}
                 </Button>
               </div>
@@ -254,29 +241,37 @@ export const ReleaseSlider = defineComponent({
         <Dialog
           isShow={showSuccessDialog.value}
           title=""
-          width={480}
+          width={600}
           showFooter={false}
           onClosed={handleCloseSuccessDialog}
         >
-          <div class={styles.successDialog}>
-            <div class={styles.successIcon}>
-              <SvgIcon name="check-circle" />
-            </div>
-            <div class={styles.successTitle}>
-              {t('flow.release.releaseSuccess')}
-            </div>
-            <div class={styles.successVersion}>
-              {t('flow.release.releaseSuccessTip', { version: releaseResult.value?.versionName || newVersionName.value })}
-            </div>
-            <div class={styles.successActions}>
-              <Button theme="primary" onClick={handleGoToExecution}>
-                {t('flow.release.goToExecute')}
-              </Button>
-              <Button onClick={handleGoToDetail}>
-                {t('flow.release.viewFlow')}
-              </Button>
-            </div>
-          </div>
+          {{
+            header: () => (
+              <div class="text-center">
+                <div class={styles.successIcon}>
+                  <SvgIcon name="check-circle" size={42} />
+                </div>
+                <div class={styles.successTitle}>{t('flow.release.releaseSuccess')}</div>
+              </div>
+            ),
+            default: () => (
+              <div class="text-center">
+                <div class={styles.successVersion}>
+                  {t('flow.release.releaseSuccessTip', {
+                    version: releaseResult.value?.versionName || newVersionName.value,
+                  })}
+                </div>
+              </div>
+            ),
+            footer: () => (
+              <div class={styles.successActions}>
+                <Button theme="primary" onClick={handleGoToExecution}>
+                  {t('flow.release.goToExecute')}
+                </Button>
+                <Button onClick={handleGoToDetail}>{t('flow.release.viewFlow')}</Button>
+              </div>
+            ),
+          }}
         </Dialog>
       </>
     )

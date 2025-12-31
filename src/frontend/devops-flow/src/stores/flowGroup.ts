@@ -68,7 +68,10 @@ export const useFlowGroupStore = defineStore('flowGroup', () => {
       ]);
       
       // 前置数据处理：为每个组添加图标等
-      flowGroups.value = groups.map(processFlowGroup);
+      // flowGroups.value = groups.map(processFlowGroup);
+
+      // TODO: 一期暂时屏蔽分组，只保留未分组数据
+      flowGroups.value = groups.slice(0, 1).filter((group): group is FlowGroupItem => group !== undefined).map(processFlowGroup);
       counts.value = countsData;
     } catch (error) {
       console.error('Failed to load flow group data:', error);

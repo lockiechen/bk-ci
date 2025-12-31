@@ -49,11 +49,7 @@ export default defineComponent({
       handleStageConfirm,
       handleStageChange,
       handleJobConfirm,
-    } = useFlowModel({
-      projectId: route.params.projectId as string,
-      flowId,
-      version: route.params.version as string,
-    })
+    } = useFlowModel()
     const uiStore = useUIStore()
 
     // ========== Refs ==========

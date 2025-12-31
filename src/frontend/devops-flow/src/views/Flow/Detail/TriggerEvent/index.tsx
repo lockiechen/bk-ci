@@ -36,16 +36,16 @@ export default defineComponent({
     const flowId = route.params.flowId as string
 
     // Use flow model hook to get trigger events
-    const { triggerEvents: triggerElements } = useFlowModel({ projectId: route.params.projectId as string, flowId, autoLoad: true })
+    const { triggerEvents: triggerElements } = useFlowModel()
 
     // Use flow config code hook for Code mode
-    const { loading, yamlContent, sectionHighlight, isEmpty } = useFlowConfigCode({
-      projectId: route.params.projectId as string,
-      flowId,
-      version: route.params.version as string,
-      section: 'trigger-event',
-      autoLoad: true,
-    })
+    const { loading, yamlContent, sectionHighlight, isEmpty, flowSetting, flowModel } =
+      useFlowConfigCode({
+        projectId: route.params.projectId as string,
+        flowId,
+        version: route.params.version as string,
+        section: 'trigger-event',
+      })
 
     // 将 Element[] 转换为 TriggerEvent[] 格式
     const triggerEvents = computed<TriggerEvent[]>(() => {
@@ -85,7 +85,18 @@ export default defineComponent({
 
     return () => (
       <div class={layoutStyles.detailContainerWithRightPadding}>
-        <ModeSwitch></ModeSwitch>
+        <ModeSwitch
+          projectId={route.params.projectId as string}
+          pipelineId={route.params.flowId as string}
+          modelAndSetting={
+            flowModel.value && flowSetting.value
+              ? {
+                  model: flowModel.value,
+                  setting: flowSetting.value,
+                }
+              : undefined
+          }
+        />
 
         <div class={layoutStyles.detailContent}>
           {loading.value ? (

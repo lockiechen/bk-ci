@@ -1,10 +1,11 @@
 import { FlowHeader } from '@/components/FlowHeader'
 import { FLOW_DETAIL_TABS, isValidFlowDetailTab, ROUTE_NAMES } from '@/constants/routes'
 import { useFlowInfo } from '@/hooks/useFlowInfo'
+import { useFlowModelStore } from '@/stores/flowModel'
 import layoutStyles from '@/styles/layout.module.css'
 import type { FlowInfo, FlowVersion } from '@/types/flow'
 import { VERSION_STATUS_ENUM } from '@/utils/flowConst'
-import { computed, defineComponent, watch } from 'vue'
+import { computed, defineComponent, watch, onMounted } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { RouterView, useRoute, useRouter } from 'vue-router'
 import styles from './Detail.module.css'
@@ -17,7 +18,9 @@ export default defineComponent({
     const router = useRouter()
     const flowId = computed(() => route.params.flowId as string)
     const projectId = computed(() => route.params.projectId as string)
+    const version = computed(() => route.params.version as string)
     const { flowInfo, flowVersionList, loading } = useFlowInfo()
+     const store = useFlowModelStore()
 
     /**
      * Check if the flow only has draft version (no released version)
@@ -45,6 +48,10 @@ export default defineComponent({
       },
       { immediate: true }
     )
+
+    onMounted(() => {
+      store.loadFlowModel(projectId.value, flowId.value, version.value)
+    })
 
     const handleVersionChange = (version: number) => {
       router.push({

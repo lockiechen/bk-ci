@@ -26,9 +26,10 @@ export interface FlowModelAndSetting {
     model: FlowModel
     setting: FlowSettings
   }
-  yamlPreview: YamlPreview
+  yamlPreview?: YamlPreview
   canDebug: boolean
   yamlSupported: boolean
+  yamlInvalidMsg?: string
   updater: string
   updateTime: number
 }

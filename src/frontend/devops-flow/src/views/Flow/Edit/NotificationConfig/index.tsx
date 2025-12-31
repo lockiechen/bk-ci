@@ -21,11 +21,7 @@ export default defineComponent({
     const projectId = route.params.projectId as string
 
     // Use flowModel to get and update settings
-    const { flowSetting, updateFlowSetting, loading } = useFlowModel({
-      projectId,
-      flowId,
-      version: route.params.version as string,
-    })
+    const { flowSetting, updateFlowSetting, loading } = useFlowModel()
 
     // Notification data (from flowSetting)
     const successSubscriptionList = ref<Subscription[]>([])

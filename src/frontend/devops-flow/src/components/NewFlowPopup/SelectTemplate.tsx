@@ -134,9 +134,7 @@ export default defineComponent({
     )
 
     onMounted(() => {
-      if (!templateInfoData.value.activeTemplate.name) {
-        fetchProjectTemplates(projectId.value)
-      }
+      fetchProjectTemplates(projectId.value)
     })
 
     const configList = computed(() =>
@@ -197,7 +195,8 @@ export default defineComponent({
     const isModelListShow = ref(false)
     const panels = ref([
       { name: 'projectModel', label: t('flow.content.projectTemplate') },
-      { name: 'storeModel', label: t('flow.content.storeTemplate') },
+      // TODO: 一期暂时屏蔽
+      // { name: 'storeModel', label: t('flow.content.storeTemplate') },
     ])
 
     const active = ref('projectModel')

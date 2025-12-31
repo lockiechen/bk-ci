@@ -39,17 +39,17 @@ export function useFlowGroupData() {
   const myFlowGroupMenuItems = computed(() => {
     return [
       {
-        id: FLOW_GROUP_TYPES.MY_FAVORITES,
-        icon: 'star',
-        name: t('flow.sidebar.myFavorites'),
-        pipelineCount: counts.value.myFavoriteCount,
-        showAction: false,
-      },
-      {
         id: FLOW_GROUP_TYPES.MY_CREATED,
         icon: 'user',
         name: t('flow.sidebar.myCreated'),
         pipelineCount: counts.value.myPipelineCount,
+        showAction: false,
+      },
+      {
+        id: FLOW_GROUP_TYPES.MY_FAVORITES,
+        icon: 'star',
+        name: t('flow.sidebar.myFavorites'),
+        pipelineCount: counts.value.myFavoriteCount,
         showAction: false,
       },
       ...personalFlowGroups.value,

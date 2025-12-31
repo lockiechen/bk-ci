@@ -120,14 +120,8 @@ export function useYamlHighlight(options: UseYamlHighlightOptions) {
   if (!options) {
     throw new Error('options is required')
   }
-  const { flowId, version, projectId, autoLoad = true } = options
 
-  const { yamlContent, loading, flowModel, flowSetting } = useFlowModel({
-    projectId,
-    version,
-    flowId,
-    autoLoad,
-  })
+  const { yamlContent, loading, flowModel, flowSetting } = useFlowModel()
 
   /**
    * 获取指定配置区域的高亮范围

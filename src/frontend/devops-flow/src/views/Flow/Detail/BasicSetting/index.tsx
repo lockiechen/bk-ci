@@ -32,11 +32,10 @@ export default defineComponent({
       flowId,
       version: route.params.version as string,
       section: 'basic-setting',
-      autoLoad: true,
     })
 
     // Get flowModel for group information
-    const { flowModel } = useFlowModel({ projectId: route.params.projectId as string, flowId, autoLoad: true })
+    const { flowModel } = useFlowModel()
 
     // Combine flowSetting with group info from flowModel
     const basicSettingsWithGroup = computed(() => {
@@ -51,7 +50,18 @@ export default defineComponent({
 
     return () => (
       <div class={layoutStyles.detailContainerWithRightPadding}>
-        <ModeSwitch></ModeSwitch>
+        <ModeSwitch
+          projectId={route.params.projectId as string}
+          pipelineId={route.params.flowId as string}
+          modelAndSetting={
+            flowModel.value && flowSetting.value
+              ? {
+                  model: flowModel.value,
+                  setting: flowSetting.value,
+                }
+              : undefined
+          }
+        />
 
         <div class={layoutStyles.detailContent}>
           {loading.value ? (

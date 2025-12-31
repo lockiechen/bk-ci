@@ -37,18 +37,29 @@ export default defineComponent({
       yamlContent,
       sectionHighlight,
       isEmpty,
-      flowSetting
+      flowSetting,
+      flowModel,
     } = useFlowConfigCode({
       projectId: route.params.projectId as string,
       flowId: route.params.flowId as string,
       version: route.params.version as string,
       section: 'authoring-env',
-      autoLoad: true,
     })
 
     return () => (
       <div class={layoutStyles.detailContainer}>
-        <ModeSwitch></ModeSwitch>
+        <ModeSwitch
+          projectId={route.params.projectId as string}
+          pipelineId={route.params.flowId as string}
+          modelAndSetting={
+            flowModel.value && flowSetting.value
+              ? {
+                  model: flowModel.value,
+                  setting: flowSetting.value,
+                }
+              : undefined
+          }
+        />
 
         <div class={layoutStyles.detailContent}>
           {loading.value ? (

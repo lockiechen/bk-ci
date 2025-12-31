@@ -6,6 +6,7 @@
     "clearFilterCriteria": "清空筛选条件",
     "MODEL": "UI方式",
     "YAML": "Code方式",
+    "changeModeFail": "切换到{0}失败",
     "tabs": {
       "template": "模板"
     },

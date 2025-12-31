@@ -8,6 +8,7 @@ import {
   type StoreTemplateItem,
   type TemplateObject
 } from '@/api/flowContentList';
+import { useFlowModel } from '@/hooks/useFlowModel'
 import { templateTypeEnum } from "@/utils/flowConst";
 import { defineStore } from 'pinia';
 import { ref } from 'vue';
@@ -18,12 +19,12 @@ import { Message } from 'bkui-vue';
 /**
  * 创作流创建流程状态管理
  *
- * Note: Authoring environment related state has been moved to authoringEnvironmentStore.
  * Use useAuthoringEnvironment hook in components that need environment management.
  */
 export const useNewFlowStore = defineStore('newFlow', () => {
   const route = useRoute()
 
+    const { updateFlowModel, updateFlowSetting } = useFlowModel()
   // ============ Core State ============
   
   /**
@@ -99,6 +100,18 @@ export const useNewFlowStore = defineStore('newFlow', () => {
         const firstTemplate = projectModelList.value[0]
         if (firstTemplate) {
           formData.value.templateInfo.activeTemplate = firstTemplate
+          const flowModel: any = {
+            name: firstTemplate.name || '',
+            desc: firstTemplate.desc || '',
+            stages: firstTemplate.stages || [],
+            labels: [],
+          }
+          updateFlowModel(flowModel)
+          updateFlowSetting({
+            envName: formData.value.baseInfo.envName, 
+            pipelineName: formData.value.baseInfo.pipelineName,
+            desc: formData.value.baseInfo.pipelineDesc || '',
+          })
         }
       } else {
         projectModelList.value = []

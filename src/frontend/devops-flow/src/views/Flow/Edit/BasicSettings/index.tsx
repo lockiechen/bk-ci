@@ -16,11 +16,7 @@ export default defineComponent({
     const { t } = useI18n()
     const route = useRoute()
     const flowId = route.params.flowId as string
-    const { flowSetting, updateFlowSetting } = useFlowModel({ 
-      projectId: route.params.projectId as string,
-      flowId,
-      version: route.params.version as string
-    })
+    const { flowSetting, updateFlowSetting } = useFlowModel()
 
     // 表单数据
     const formData = ref<FlowSettings>({

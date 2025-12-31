@@ -1,6 +1,7 @@
 import { ReleaseSlider } from '@/components/ReleaseSlider'
 import { ROUTE_NAMES } from '@/constants/routes'
 import { useFlowModel } from '@/hooks/useFlowModel'
+import { useUIStore } from '@/stores/ui'
 import { Button, Message, Tag } from 'bkui-vue'
 import { computed, defineComponent, ref } from 'vue'
 import { useI18n } from 'vue-i18n'
@@ -18,8 +19,9 @@ export const EditHeader = defineComponent({
     const flowId = route.params.flowId as string
     const projectId = (route.params.projectId as string) || (route.query.projectId as string)
 
-    const flowModel = useFlowModel({ projectId, flowId, version: route.params.version as string })
+    const flowModel = useFlowModel()
     const { flowInfo } = useFlowInfo()
+    const uiStore = useUIStore()
     const isSaving = ref(false)
     const isReleaseSliderShow = ref(false)
 
@@ -120,6 +122,7 @@ export const EditHeader = defineComponent({
         return
       }
       isReleaseSliderShow.value = true
+      uiStore.setVariablePanelOpen(false)
     }
 
     const handleReleased = () => {

@@ -710,23 +710,6 @@ export async function apiGetAuthoringEnvList(params: {
 }
 
 /**
- * 获取创作节点列表
- */
-export async function apiGetAuthoringNodeList(params: {
-  projectId: string
-  envName: string
-}): Promise<AuthoringNodeResponse> {
-  try {
-    const res = await get<AuthoringNodeResponse>(
-      `${ENVIRONMENT_API_URL_PREFIX}/user/environment/${params.projectId}/listNodesNew?envName=${params.envName}`,
-    )
-    return res
-  } catch (error) {
-    throw error
-  }
-}
-
-/**
  * 获取全部项目模板
  */
 export async function apiGetProjectTemplates(projectId: string): Promise<AllTemplatesResponse> {

@@ -9,9 +9,8 @@ import {
   generateId,
 } from '@/utils/flowDefaults'
 import { storeToRefs } from 'pinia'
-import { computed, onMounted, ref } from 'vue'
+import { computed, ref } from 'vue'
 import { useEditingPos } from './useEditingPos'
-
 import {
   diffAtomVersions,
   getAtomDefaultValue,
@@ -21,15 +20,7 @@ import {
 import type { AddAtomEventPayload, AddStageEventPayload, ClickEventPayload } from 'bkui-pipeline'
 import { DEFAULT_VERSION } from './useAtomVersion'
 
-export interface UseFlowModelOptions {
-  projectId: string
-  flowId?: string
-  version?: string
-  autoLoad?: boolean
-}
-
-export function useFlowModel(options: UseFlowModelOptions) {
-  const { projectId, flowId, version, autoLoad = true } = options
+export function useFlowModel() {
 
   const store = useFlowModelStore()
   const atomStore = useAtomStore()
@@ -129,10 +120,6 @@ export function useFlowModel(options: UseFlowModelOptions) {
     return flowModel.value?.stages[stageIndex]?.containers?.[containerIndex!]?.elements?.[
       elementIndex!
     ]
-  })
-
-  onMounted(() => {
-    if (autoLoad && flowId && version) store.loadFlowModel(projectId, flowId, version)
   })
 
   /**

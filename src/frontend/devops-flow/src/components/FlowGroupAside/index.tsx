@@ -280,9 +280,10 @@ export const FlowGroupAside = defineComponent({
           <span class={styles.groupTitle}>
             {title} ({total})
           </span>
-          <div onClick={(e) => handleGroupAction(e, key)}>
+          {/* TODO: 二期功能，一期暂时屏蔽 */}
+          {/* <div onClick={(e) => handleGroupAction(e, key)}>
             <SvgIcon name="increase" class={[styles.icon, styles.increaseIcon]} />
-          </div>
+          </div> */}
         </div>
       )
     }

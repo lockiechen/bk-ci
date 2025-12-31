@@ -50,7 +50,7 @@ export const CommonHeader = defineComponent({
           {/* Logo/图标 */}
           <RouterLink to={flowList} class={styles.logoLink}>
             <div class={styles.logo}>
-              <img src="/devops-flow-logo.svg" alt="flow" class={styles.logoIcon} />
+              <img src={`${import.meta.env.BASE_URL}devops-flow-logo.svg`} alt="flow" class={styles.logoIcon} />
             </div>
             {/* 创作流文本 */}
             <span class={styles.flowLabel}>{t('flow.title')}</span>

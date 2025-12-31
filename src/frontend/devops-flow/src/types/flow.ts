@@ -359,7 +359,7 @@ export interface StageStatusInfo {
 export interface FlowModel {
   '@type'?: string
   name: string
-  desc: string
+  desc?: string
   stages: Stage[]
   labels?: string[]
   instanceFromTemplate?: boolean

@@ -6,6 +6,7 @@
     "clearFilterCriteria": "clear filter criteria",
     "MODEL": "UI Mode",
     "YAML": "Code Mode",
+    "changeModeFail": "Failed to switch to {0}",
     "tabs": {
       "template": "Template"
     },

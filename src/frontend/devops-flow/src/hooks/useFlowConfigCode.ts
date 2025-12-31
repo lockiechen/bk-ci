@@ -27,13 +27,8 @@ export interface UseFlowConfigCodeOptions {
  * Hook to manage flow configuration code display with highlighting
  */
 export function useFlowConfigCode(options: UseFlowConfigCodeOptions) {
-  const { flowId, section, autoLoad = true } = options
-  const { yamlContent, loading, flowSetting } = useFlowModel({
-    projectId: options.projectId,
-    flowId,
-    version: '',
-    autoLoad,
-  })
+  const { section } = options
+  const { yamlContent, loading, flowSetting, flowModel } = useFlowModel()
 
   /**
    * Calculate highlight ranges for specific configuration section
@@ -136,6 +131,7 @@ export function useFlowConfigCode(options: UseFlowConfigCodeOptions) {
   return {
     loading,
     flowSetting,
+    flowModel,
     yamlContent,
     sectionHighlight,
     isEmpty,

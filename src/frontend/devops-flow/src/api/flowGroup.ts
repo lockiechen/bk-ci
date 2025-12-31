@@ -47,7 +47,7 @@ export interface EditGroupParams {
  */
 export async function getFlowGroups(projectId: string): Promise<FlowGroupItem[]> {
   try {
-    const res = get<FlowGroupItem[]>(
+    const res = await get<FlowGroupItem[]>(
       `${PROCESS_API_URL_PREFIX}/user/pipelineViews/projects/${projectId}/list`,
     )
     return res
@@ -61,7 +61,7 @@ export async function getFlowGroups(projectId: string): Promise<FlowGroupItem[]>
  */
 export async function getFlowGroupsCount(projectId: string): Promise<FlowGroupCounts> {
   try {
-    const res = get<FlowGroupCounts>(
+    const res = await get<FlowGroupCounts>(
       `${PROCESS_API_URL_PREFIX}/user/pipelines/projects/${projectId}/getCount`,
     )
     return res
@@ -78,7 +78,7 @@ export async function createFlowGroup(
   params: EditGroupParams,
 ): Promise<FlowGroupItem> {
   try {
-    const res = post<FlowGroupItem>(
+    const res = await post<FlowGroupItem>(
       `${PROCESS_API_URL_PREFIX}/user/pipelineViews/projects/${projectId}`,
       params,
     )
@@ -93,7 +93,7 @@ export async function createFlowGroup(
  */
 export async function deleteFlowGroup(projectId: string, viewId: string): Promise<boolean> {
   try {
-    const res = del<boolean>(`${PROCESS_API_URL_PREFIX}/user/pipelineViews/projects/${projectId}/views/${viewId}`)
+    const res = await del<boolean>(`${PROCESS_API_URL_PREFIX}/user/pipelineViews/projects/${projectId}/views/${viewId}`)
     return res
   } catch (error) {
     throw error
@@ -105,7 +105,7 @@ export async function deleteFlowGroup(projectId: string, viewId: string): Promis
  */
 export async function renameFlowGroup(projectId: string, viewId: string, params: EditGroupParams,): Promise<boolean> {
   try {
-    const res = put<boolean>(`${PROCESS_API_URL_PREFIX}/user/pipelineViews/projects/${projectId}/views/${viewId}`, params)
+    const res = await put<boolean>(`${PROCESS_API_URL_PREFIX}/user/pipelineViews/projects/${projectId}/views/${viewId}`, params)
     return res
   } catch (error) {
     throw error
@@ -117,7 +117,7 @@ export async function renameFlowGroup(projectId: string, viewId: string, params:
  */
 export async function pinFlowGroup(projectId: string, viewId: string, enabled: boolean): Promise<boolean> {
   try {
-    const res = post<boolean>(`${PROCESS_API_URL_PREFIX}/user/pipelineViews/projects/${projectId}/views/${viewId}/top`, {enabled})
+    const res = await post<boolean>(`${PROCESS_API_URL_PREFIX}/user/pipelineViews/projects/${projectId}/views/${viewId}/top`, {enabled})
     return res
   } catch (error) {
     throw error

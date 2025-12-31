@@ -9,11 +9,14 @@ import {
 } from '@/api/flowModel'
 import { defineStore } from 'pinia'
 import { computed, ref } from 'vue'
+import { useModeStore } from '@/stores/flowMode'
+import { UI_MODE } from '@/utils/flowConst'
 
 /**
  * 创作流模型状态管理
  */
 export const useFlowModelStore = defineStore('flowModel', () => {
+  const modeStore = useModeStore()
   // Flow 模型数据
   const flowModel = ref<FlowModel | null>(null)
   const flowSetting = ref<FlowSettings | null>(null)
@@ -71,7 +74,10 @@ export const useFlowModelStore = defineStore('flowModel', () => {
       const model = await getFlowModel(projectId, flowId, version)
       flowModel.value = model.modelAndSetting.model
       flowSetting.value = model.modelAndSetting.setting
-      yamlContent.value = model.yamlPreview.yaml
+      yamlContent.value = model.yamlPreview?.yaml || ''
+      if (!model.yamlSupported) {
+        modeStore.setMode(UI_MODE)
+      }
       hasUnsavedChanges.value = false
     } catch (error) {
       console.error('Failed to load flow model:', error)
