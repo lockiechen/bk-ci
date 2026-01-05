@@ -10,7 +10,6 @@ import BkPipeline from 'bkui-pipeline/vue3'
 import { Exception, Loading } from 'bkui-vue'
 import { defineComponent, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
-import { useRoute } from 'vue-router'
 import sharedStyles from '../shared.module.css'
 import styles from './index.module.css'
 
@@ -19,10 +18,7 @@ export default defineComponent({
   setup() {
     // ========== Hooks ==========
     const { t } = useI18n()
-    const route = useRoute()
-    const flowId = route.params.flowId as string
-    const { 
-      flowModel,
+    const {  
       loading,
       isEditingStage,
       isEditingJob,

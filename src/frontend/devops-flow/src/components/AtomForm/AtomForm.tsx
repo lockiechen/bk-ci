@@ -1,8 +1,8 @@
-import { defineComponent, defineAsyncComponent, type PropType } from 'vue'
-import { Form } from 'bkui-vue'
-const { FormItem } = Form
-import type { Container, Element } from '@/api/flowModel'
+import type { Element } from '@/api/flowModel'
 import { rely } from '@/utils/atom'
+import { Form } from 'bkui-vue'
+import { defineAsyncComponent, defineComponent, type PropType } from 'vue'
+const { FormItem } = Form
 
 // 动态导入组件
 const VuexInput = defineAsyncComponent(() => import('./VuexInput'))
@@ -15,6 +15,8 @@ const AtomAceEditor = defineAsyncComponent(() => import('./AtomAceEditor'))
 const AtomCheckboxList = defineAsyncComponent(() => import('./AtomCheckboxList'))
 const StaffInput = defineAsyncComponent(() => import('./StaffInput'))
 const AtomDatePicker = defineAsyncComponent(() => import('./AtomDatePicker'))
+const CronTab = defineAsyncComponent(() => import('./CronTab'))
+const SubParameter = defineAsyncComponent(() => import('./SubParameter'))
 
 // 组件映射表
 const COMPONENT_MAP: Record<string, any> = {
@@ -41,6 +43,9 @@ const COMPONENT_MAP: Record<string, any> = {
   'date-picker': AtomDatePicker,
   'time-picker': AtomDatePicker,
   'code-editor': AtomAceEditor,
+  'timer-cron-tab': CronTab,
+  'sub-parameter': SubParameter,
+  'request-selector': Selector,
 }
 
 export default defineComponent({
@@ -107,7 +112,7 @@ export default defineComponent({
 
     return () => (
       <Form formType="vertical">
-        {Object.entries(props.atomPropsModel).map(([key, obj]: [string, any]) => {
+        {Object.entries(props.atomPropsModel).map(([key, obj]: [string, any]) => {          
           if (isHidden(obj, props.element)) return null
 
           const Component = COMPONENT_MAP[obj.component] || COMPONENT_MAP[obj.type] || VuexInput
@@ -127,6 +132,7 @@ export default defineComponent({
                 disabled={props.disabled}
                 placeholder={getPlaceholder(obj)}
                 handleChange={handleChange}
+                atomValue={props.atomValue}
                 {...obj}
               />
             </FormItem>

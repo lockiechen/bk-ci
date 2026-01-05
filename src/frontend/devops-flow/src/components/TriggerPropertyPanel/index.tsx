@@ -1,20 +1,17 @@
 import type { Element } from '@/api/flowModel'
 import AtomForm from '@/components/AtomForm/AtomForm'
 import { SvgIcon } from '@/components/SvgIcon'
-import { useAtomStore } from '@/stores/atom'
 import { createDefaultElement } from '@/utils/flowDefaults'
-import CronTab from '@blueking/crontab'
-import '@blueking/crontab/vue3/vue3.css'
 import {
   Button,
   Checkbox,
   Form,
   Input,
   Loading,
-  Radio,
+  Popover,
   Select,
   Sideslider,
-  Switcher,
+  Switcher
 } from 'bkui-vue'
 import { computed, defineComponent, ref, watch, type PropType } from 'vue'
 import { useI18n } from 'vue-i18n'
@@ -22,11 +19,6 @@ import { useRoute } from 'vue-router'
 import type { TriggerModal } from '../../api/trigger'
 import { useTriggerManager } from '../../hooks/useTriggerManager'
 import styles from './TriggerPropertyPanel.module.css'
-
-interface StartParam {
-  key: string
-  value: string
-}
 
 const cloneElement = (element: Element): Element => JSON.parse(JSON.stringify(element))
 
@@ -45,12 +37,13 @@ export default defineComponent({
   emits: ['update:visible', 'save'],
   setup(props, { emit }) {
     const route = useRoute()
-    const projectCode = route.params.projectId as string
-    const { t, locale } = useI18n()
+    const { t } = useI18n()
     const { FormItem } = Form
-    const atomStore = useAtomStore()
     const localElement = ref<Element | null>(null)
     const atomModal = ref<TriggerModal | null>(null)
+    const isLoadingModalState = ref(false)
+    const nameEditing = ref(false)
+    const editingName = ref('')
     const defaultAdditionalOptions = createDefaultElement(0).additionalOptions!
     const triggerManager = useTriggerManager()
 
@@ -96,29 +89,19 @@ export default defineComponent({
       return t('flow.content.triggerEvents')
     })
 
+    const getTriggerName = () => {
+      if (localElement.value?.name) {
+        return localElement.value.name
+      }
+      if (triggerType.value === 'manualTrigger') return t('flow.content.manualTrigger')
+      if (triggerType.value === 'timerTrigger') return t('flow.content.timerTrigger')
+      return triggerType.value || t('flow.content.triggerEvents')
+    }
+
     const isManualTrigger = computed(() => triggerType.value === 'manualTrigger')
-    const isTimerTrigger = computed(() => triggerType.value === 'timerTrigger')
-    const isCloudDesktopTrigger = computed(() => triggerType.value.toLowerCase().includes('cloud'))
 
     const atomCode = computed(() => triggerType.value)
     const atomVersion = computed(() => localElement.value?.version || '1.latest')
-
-    const triggerInputs = computed<Record<string, any>>(() => {
-      return (localElement.value?.data?.input as Record<string, any>) || {}
-    })
-
-    const timerStartNodeType = computed(() => triggerInputs.value.startNodeType || 'assign')
-    const timerStartNodeValue = computed(() => triggerInputs.value.startNode || '')
-    const timerParams = computed<StartParam[]>(() => triggerInputs.value.startParams || [])
-
-    const cronLocale = computed(() =>
-      locale.value?.toLowerCase().startsWith('zh') ? 'zh-CN' : 'en',
-    )
-    const cronExpression = computed({
-      get: () => triggerInputs.value.cronExpression || '',
-      set: (val: string) => updateTimerInput('cronExpression', val),
-    })
-
     const versionOptions = computed(() => {
       const version = localElement.value?.version || '1.latest'
       return [
@@ -131,6 +114,33 @@ export default defineComponent({
 
     const handleClose = () => {
       emit('update:visible', false)
+    }
+
+    // Name editing handlers
+    const handleEditIconClick = () => {
+      editingName.value = getTriggerName()
+      nameEditing.value = true
+    }
+
+    const handleNameChange = (value: string) => {
+      editingName.value = value
+    }
+
+    const handleNameBlur = () => {
+      if (localElement.value && editingName.value !== getTriggerName()) {
+        localElement.value.name = editingName.value
+      }
+      nameEditing.value = false
+    }
+
+    const handleNameEnter = () => {
+      handleNameBlur()
+    }
+
+    // StepId handler
+    const handleStepIdChange = (value: string) => {
+      if (!localElement.value) return
+      localElement.value.stepId = value
     }
 
     const handleEnableChange = (value: boolean) => {
@@ -152,40 +162,11 @@ export default defineComponent({
       ;(localElement.value as any)[field] = value
     }
 
-    const updateTimerInput = (key: string, value: any) => {
+    const updateInput = (key: string, value: any) => {
       ensureElementStructure()
       if (!localElement.value) return
       if (!localElement.value.data) return
       localElement.value.data.input[key] = value
-    }
-
-    const handleTimerStartNodeTypeChange = (value: string) => {
-      updateTimerInput('startNodeType', value)
-    }
-
-    const handleTimerStartNodeChange = (value: string) => {
-      updateTimerInput('startNode', value)
-    }
-
-    const handleTimerParamChange = (index: number, field: keyof StartParam, value: string) => {
-      const params: StartParam[] = timerParams.value.map((item) => ({ ...item }))
-      const target = params[index] || { key: '', value: '' }
-      params[index] = {
-        ...target,
-        [field]: value,
-      }
-      updateTimerInput('startParams', params)
-    }
-
-    const handleAddTimerParam = () => {
-      const params: StartParam[] = [...timerParams.value, { key: '', value: '' }]
-      updateTimerInput('startParams', params)
-    }
-
-    const handleRemoveTimerParam = (index: number) => {
-      const params: StartParam[] = [...timerParams.value]
-      params.splice(index, 1)
-      updateTimerInput('startParams', params)
     }
 
     const handleSave = () => {
@@ -200,8 +181,7 @@ export default defineComponent({
     const renderManualSection = () => {
       if (!isManualTrigger.value) return null
       return (
-        <div class={styles.section}>
-          <Form form-type="vertical">
+          <Form form-type="vertical" class={styles.manualForm}>
             <FormItem>
               <Checkbox
                 modelValue={localElement.value?.canElementSkip ?? false}
@@ -219,109 +199,22 @@ export default defineComponent({
               </Checkbox>
             </FormItem>
           </Form>
-        </div>
       )
     }
-
-    const renderTimerSection = () => {
-      if (!isTimerTrigger.value) return null
-      return (
-        <div class={styles.section}>
-          <Form form-type="vertical">
-            <FormItem label={t('flow.triggerPanel.timerRule')}>
-              <CronTab v-model={cronExpression.value} local={cronLocale.value} />
-            </FormItem>
-
-            <FormItem label={t('flow.triggerPanel.startNode')}>
-              <Radio.Group
-                modelValue={timerStartNodeType.value}
-                onChange={handleTimerStartNodeTypeChange}
-              >
-                <Radio label="assign">{t('flow.triggerPanel.startNodeSpecify')}</Radio>
-                <Radio label="inherit">{t('flow.triggerPanel.startNodeFollowEnv')}</Radio>
-              </Radio.Group>
-              {timerStartNodeType.value === 'assign' && (
-                <Input
-                  value={timerStartNodeValue.value}
-                  placeholder={t('flow.triggerPanel.startNodePlaceholder')}
-                  onChange={handleTimerStartNodeChange}
-                />
-              )}
-            </FormItem>
-
-            <FormItem label={t('flow.triggerPanel.startParams')}>
-              <div class={styles.paramHeader}>
-                <Button text theme="primary" onClick={handleAddTimerParam}>
-                  {t('flow.triggerPanel.addStartParam')}
-                </Button>
-              </div>
-              {timerParams.value.length === 0 && (
-                <div class={styles.paramEmpty}>{t('flow.triggerPanel.paramEmpty')}</div>
-              )}
-              {timerParams.value.map((param, index) => (
-                <div class={styles.paramRow} key={index}>
-                  <Input
-                    value={param.key}
-                    placeholder={t('flow.triggerPanel.paramKeyPlaceholder')}
-                    onChange={(val: string) => handleTimerParamChange(index, 'key', val)}
-                  />
-                  <Input
-                    value={param.value}
-                    placeholder={t('flow.triggerPanel.paramValuePlaceholder')}
-                    onChange={(val: string) => handleTimerParamChange(index, 'value', val)}
-                  />
-                  <Button text theme="danger" onClick={() => handleRemoveTimerParam(index)}>
-                    {t('flow.common.delete')}
-                  </Button>
-                </div>
-              ))}
-            </FormItem>
-          </Form>
-        </div>
-      )
-    }
-
-    const renderCloudSection = () => {
-      if (!isCloudDesktopTrigger.value) return null
-      const fields = [
-        { key: 'listenDesktops', label: t('flow.triggerPanel.cloudListenDesktop') },
-        { key: 'ignoreDesktops', label: t('flow.triggerPanel.cloudIgnoreDesktop') },
-        { key: 'triggerUsers', label: t('flow.triggerPanel.cloudTriggerUsers') },
-        { key: 'ignoreUsers', label: t('flow.triggerPanel.cloudIgnoreUsers') },
-      ]
-
-      return (
-        <div class={styles.section}>
-          <div class={styles.infoBanner}>
-            <SvgIcon name="info-circle" size={16} />
-            <span>{t('flow.triggerPanel.cloudRequirement', { version: '1.3.0' })}</span>
-          </div>
-          <Form form-type="vertical">
-            {fields.map((field) => (
-              <FormItem key={field.key} label={field.label}>
-                <Input
-                  type="textarea"
-                  rows={3}
-                  value={triggerInputs.value[field.key] || ''}
-                  placeholder={t('flow.triggerPanel.textareaPlaceholder')}
-                  onChange={(val: string) => updateTimerInput(field.key, val)}
-                />
-              </FormItem>
-            ))}
-          </Form>
-        </div>
-      )
-    }
-
     const loadAtomModal = async () => {
+      if (isManualTrigger.value) return
       const code = atomCode.value
       const version = atomVersion.value
       if (!code || !version || !props.visible) return
+      
+      isLoadingModalState.value = true
       try {
         const modal = await triggerManager.fetchModal(localElement.value?.ownerStoreCode || '', code, version)
         atomModal.value = modal
       } catch (error) {
         console.error('Failed to load trigger atom modal:', error)
+      } finally {
+        isLoadingModalState.value = false
       }
     }
 
@@ -343,25 +236,23 @@ export default defineComponent({
     })
 
     const handleAtomFormChange = (name: string, value: any) => {
-      updateTimerInput(name, value)
+      updateInput(name, value)
     }
 
     const hasAtomFormConfig = computed(() => Object.keys(atomPropsModel.value || {}).length > 0)
-    const isLoadingModal = computed(() => {
-      const code = atomCode.value
-      const version = atomVersion.value
-      if (!code || !version) return false
-      return atomStore.isLoadingAtomModal(code, version)
-    })
+    const isLoadingModal = computed(() => isLoadingModalState.value)
 
     const renderDynamicFormSection = () => {
       if (!localElement.value) return null
       if (isLoadingModal.value) {
         return (
-          <div class={styles.section}>
+          <div class={styles.loadingContainer}>
             <Loading loading={true} />
           </div>
         )
+      }
+      if (isManualTrigger.value) {
+        return renderManualSection()
       }
       if (hasAtomFormConfig.value) {
         return (
@@ -387,13 +278,37 @@ export default defineComponent({
       return (
         <div class={styles.panelBody}>
           <div class={styles.fieldGroup}>
-            <div class={styles.fieldRow}>
-              <span>{t('flow.content.version')}</span>
-              <Select
-                modelValue={localElement.value.version || '1.latest'}
-                list={versionOptions.value}
-                onChange={handleVersionChange}
-              />
+            {/* Step ID 和版本选择 - 一行两列布局 */}
+            <div class={[styles.stepIdAndVersionRow, isLoadingModal.value && styles.disabled]}>
+              {/* Step ID 列 */}
+              <div class={styles.stepIdColumn}>
+                <div class={styles.labelWithIcon}>
+                  <span>{t('flow.orchestration.stepId')}</span>
+                  <Popover content={t('flow.orchestration.stepIdDesc')} placement="top">
+                    <span class={styles.infoIcon}>
+                      <SvgIcon name="info-circle" size={14} />
+                    </span>
+                  </Popover>
+                </div>
+                <Input
+                  modelValue={localElement.value?.stepId || ''}
+                  placeholder={t('flow.orchestration.stepIdPlaceholder')}
+                  disabled={isLoadingModal.value}
+                  onChange={handleStepIdChange}
+                  class={styles.stepIdInput}
+                />
+              </div>
+              
+              {/* 版本选择列 */}
+              <div class={styles.versionColumn}>
+                <span class={styles.versionLabel}>{t('flow.content.version')}</span>
+                <Select
+                  modelValue={localElement.value.version || '1.latest'}
+                  list={versionOptions.value}
+                  disabled={isLoadingModal.value}
+                  onChange={handleVersionChange}
+                />
+              </div>
             </div>
           </div>
 
@@ -407,12 +322,34 @@ export default defineComponent({
         {{
           header: () => (
             <div class={styles.header}>
-              <p class={styles.title}>{triggerTitle.value}</p>
-              <div class={styles.enableToggle}>
+              <div class={styles.nameEdit}>
+                {nameEditing.value ? (
+                  <Input
+                    modelValue={editingName.value}
+                    maxlength={30}
+                    placeholder={t('flow.orchestration.atomNamePlaceholder')}
+                    onBlur={handleNameBlur}
+                    onEnter={handleNameEnter}
+                    onChange={handleNameChange}
+                    class={styles.nameInput}
+                  />
+                ) : (
+                  <>
+                    <p class={styles.nameText} title={getTriggerName()}>
+                      {getTriggerName()}
+                    </p>
+                    <span class={styles.editIcon} onClick={handleEditIconClick}>
+                      <SvgIcon name="edit" size={16} />
+                    </span>
+                  </>
+                )}
+              </div>
+              <div class={[styles.enableToggle, isLoadingModal.value && styles.disabled]}>
                 <Switcher
                   size="small"
                   theme="primary"
                   modelValue={localElement.value?.additionalOptions?.enable ?? true}
+                  disabled={isLoadingModal.value}
                   onChange={handleEnableChange}
                 />
                 <span>{t('flow.triggerPanel.enabledLabel')}</span>
@@ -422,10 +359,16 @@ export default defineComponent({
           default: () => <div class={styles.content}>{renderContent()}</div>,
           footer: () => (
             <div class={styles.footer}>
-              <Button theme="primary" onClick={handleSave} disabled={!localElement.value}>
+              <Button 
+                theme="primary" 
+                onClick={handleSave} 
+                disabled={!localElement.value || isLoadingModal.value}
+              >
                 {t('flow.content.save')}
               </Button>
-              <Button onClick={handleClose}>{t('flow.common.cancel')}</Button>
+              <Button onClick={handleClose} disabled={isLoadingModal.value}>
+                {t('flow.common.cancel')}
+              </Button>
             </div>
           ),
         }}

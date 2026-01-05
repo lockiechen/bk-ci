@@ -1,10 +1,10 @@
-import httpInstance from './httpClient'
-import type { HttpMethod, HttpRequestConfig } from './types'
 import { getCache, setCache } from './cache'
+import httpInstance from './httpClient'
 import {
   createDebouncedPromise,
   createThrottledPromise,
 } from './requestControl'
+import type { HttpMethod, HttpRequestConfig } from './types'
 
 export async function request<T = unknown>(
   method: HttpMethod,
@@ -19,7 +19,6 @@ export async function request<T = unknown>(
 
   const meta = finalConfig.meta || {}
   finalConfig.meta = meta
-
   const cacheKey =
     meta.cacheKey ||
     `${method}:${url}:${JSON.stringify(

@@ -1,8 +1,9 @@
 import { FLOW_EDIT_TABS, isValidFlowEditTab } from '@/constants/routes'
+import { useFlowModelStore } from '@/stores/flowModel'
 import { useUIStore } from '@/stores/ui'
 import { Tab } from 'bkui-vue'
 import { storeToRefs } from 'pinia'
-import { computed, defineComponent, watch } from 'vue'
+import { computed, defineComponent, onMounted, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { RouterView, useRoute, useRouter } from 'vue-router'
 import { EditHeader } from '../../../components/EditHeader'
@@ -16,7 +17,11 @@ export default defineComponent({
     const route = useRoute()
     const router = useRouter()
     const flowId = route.params.flowId as string
+    const projectId = route.params.projectId as string
+    const version = route.params.version as string | undefined
 
+    // Use flowModel store for data loading
+    const flowModelStore = useFlowModelStore()
 
     const tabConfigs = [
       {
@@ -81,6 +86,11 @@ export default defineComponent({
       if (newTab !== FLOW_EDIT_TABS.WORKFLOW_ORCHESTRATION && isVariablePanelOpen.value) {
         uiStore.setVariablePanelOpen(false)
       }
+    })
+
+    // Load flow model data on mount (ensures data is available on any tab refresh)
+    onMounted(() => {
+      flowModelStore.loadFlowModel(projectId, flowId, version)
     })
 
     return () => (
