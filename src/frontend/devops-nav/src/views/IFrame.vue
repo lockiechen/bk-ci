@@ -39,7 +39,7 @@
     ])
 
     @Component()
-    export default class IframeView extends Vue {
+        export default class IframeView extends Vue {
         isLoading: boolean = true
         initPath: string = ''
         src: string = ''
@@ -114,7 +114,7 @@
             const hash = this.$route.hash
             
             if (showProjectList) {
-                const reg = /^\/?\w+\/(([\w\-]+)\/?)(\S*)\/?$/
+                const reg = /^\/?[\w\-]+\/(([\w\-]+)\/?)(\S*)\/?$/
                 const matchResult = path.match(reg)
                 const { projectId } = this.$route.params
                 const initPath = matchResult ? matchResult[3] : ''
@@ -128,7 +128,7 @@
                     this.src = urlJoin(this.currentPage.iframe_url, initPath) + '?' + queryStringify(query) + hash
                 }
             } else {
-                const reg = /^\/?\w+\/(\S*)\/?$/
+                const reg = /^\/?[\w\-]+\/(\S*)\/?$/
                 const initPath = path.match(reg) ? path.replace(reg, '$1') : ''
                 const query = Object.assign(
                     this.currentPage.link === '/permission/' ? {} : { project_code: cookie.get(X_DEVOPS_PROJECT_ID) },
