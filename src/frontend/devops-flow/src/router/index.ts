@@ -245,4 +245,9 @@ const router = createRouter({
   ],
 })
 
+router.beforeEach((to, from, next) => {
+  // @ts-ignore
+  window.$syncUrl(to.fullPath.replace(new RegExp('^/' + import.meta.env.BASE_URL + '/'), '/'))
+  next()
+})
 export default router

@@ -1,23 +1,22 @@
-import { createApp, h } from 'vue'
-import * as Vue from 'vue'
-import { createPinia } from 'pinia'
-import { createI18n } from 'vue-i18n'
 import bkui from 'bkui-vue'
-import bkuiZhCn from 'bkui-vue/dist/locale/zh-cn.esm'
 import bkuiEn from 'bkui-vue/dist/locale/en.esm'
+import bkuiZhCn from 'bkui-vue/dist/locale/zh-cn.esm'
+import { createPinia } from 'pinia'
+import { createApp, h } from 'vue'
+import { createI18n } from 'vue-i18n'
 
-import router from './router'
-import { getCookies } from './utils/cookie'
-import ZhCN from '../../locale/flow/zh-CN.json'
+import { bkLoading, bkTooltips, overflowTitle } from 'bkui-vue/lib/directives'
+import { VueDraggable } from 'vue-draggable-plus'
 import EnUS from '../../locale/flow/en-US.json'
 import JaJP from '../../locale/flow/ja-JP.json'
-import { bkTooltips, overflowTitle, bkLoading } from 'bkui-vue/lib/directives'
-import { VueDraggable } from 'vue-draggable-plus'
+import ZhCN from '../../locale/flow/zh-CN.json'
+import router from './router'
+import { getCookies } from './utils/cookie'
 
 // 导入全局样式
-import './styles/variables.css'
 import './styles/global.css'
 import './styles/utils.css'
+import './styles/variables.css'
 
 // 导入指令
 import { clickoutside } from 'bkui-vue/lib/directives'
