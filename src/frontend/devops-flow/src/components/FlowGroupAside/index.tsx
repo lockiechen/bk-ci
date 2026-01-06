@@ -1,17 +1,17 @@
-import { computed, defineComponent, ref, onMounted } from 'vue'
+import { ROUTE_NAMES } from '@/constants/routes'
+import { Loading, Message, Tag } from 'bkui-vue'
+import { computed, defineComponent, nextTick, onMounted, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
-import { useRouter, useRoute } from 'vue-router'
-import { Loading, Tag, Message } from 'bkui-vue'
-import styles from './FlowGroupAside.module.css'
+import { useRoute, useRouter } from 'vue-router'
+import type { EditGroupParams, FlowGroupItem } from '../../api/flowGroup'
+import { FLOW_GROUP_TYPES } from '../../constants/flowGroup'
+import { useDeleteConfirm } from '../../hooks/useDeleteConfirm'
+import { useFlowGroupData } from '../../hooks/useFlowGroupData'
 import { SvgIcon } from '../SvgIcon'
 import { CreateGroupDialog } from './CreateGroupDialog'
-import { RenameGroupDialog } from './RenameGroupDialog'
+import styles from './FlowGroupAside.module.css'
 import { GroupActionMenu } from './GroupActionMenu'
-import { useFlowGroupData } from '../../hooks/useFlowGroupData'
-import { useDeleteConfirm } from '../../hooks/useDeleteConfirm'
-import { FLOW_GROUP_TYPES } from '../../constants/flowGroup'
-import { ROUTE_NAMES } from '@/constants/routes'
-import type { FlowGroupItem, EditGroupParams } from '../../api/flowGroup'
+import { RenameGroupDialog } from './RenameGroupDialog'
 
 export enum GroupSectionType {
   MY_FLOWS = 'myFlowGroups',
@@ -36,6 +36,9 @@ export const FlowGroupAside = defineComponent({
     const selectedItem = computed(() => {
       return router.currentRoute.value.params.groupId as string
     })
+    const projectId = computed(() => {
+      return route.params.projectId as string
+    })
     const collapsed = ref({
       myFlowGroups: false,
       projectFlowGroups: false,
@@ -57,6 +60,11 @@ export const FlowGroupAside = defineComponent({
     // 删除确认 hook
     const { showDeleteConfirm } = useDeleteConfirm()
 
+    watch(() => projectId.value, () => {
+      nextTick(() => {
+        flowGroupData.loadAllData()
+      })
+    })
     /**
      * 组件挂载时加载数据
      */

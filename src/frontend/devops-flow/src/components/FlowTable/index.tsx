@@ -22,9 +22,9 @@ import { FLOW_SORT_FILED } from '@/utils/flowConst.ts'
 import SearchSelect from '@blueking/search-select-v3'
 import { Button, Dropdown, Loading, Message, Popover, Table, Tag } from 'bkui-vue'
 import type { Column } from 'bkui-vue/lib/table/props'
-import { computed, defineComponent, h, onMounted, ref, watch } from 'vue'
+import { computed, defineComponent, h, nextTick, onMounted, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
-import { useRouter } from 'vue-router'
+import { useRoute, useRouter } from 'vue-router'
 import styles from './FlowTable.module.css'
 
 export const FlowTable = defineComponent({
@@ -51,10 +51,12 @@ export const FlowTable = defineComponent({
   setup(props) {
     const { t } = useI18n()
     const router = useRouter()
+    const route = useRoute()
     const confirmLoading = ref(false)
     const tableContainerRef = ref<HTMLDivElement>()
     const { maxHeight } = useTableHeight(tableContainerRef)
     const { showDeleteConfirm } = useDeleteConfirm()
+    const projectId = computed(() => route.params.projectId as string)
 
     const {
       pagination,
@@ -131,6 +133,12 @@ export const FlowTable = defineComponent({
       },
       { immediate: true },
     )
+    
+    watch(() => projectId.value, () => {
+      nextTick(() => {
+        loadContentData(props.groupId)
+      })
+    })
 
     watch([currentSortType, currentCollation], () => {
       loadContentData(props.groupId)
