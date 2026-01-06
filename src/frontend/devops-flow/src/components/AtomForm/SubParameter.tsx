@@ -254,9 +254,9 @@ export default defineComponent({
     })
 
     return () => (
-      <div class={styles.subParameter}>
+      <Loading loading={isLoading.value} mode="spin" size="small" class={styles.subParameter}>
         <label class={styles.label}>
-          {props.title || props.label}：
+          {props.title || props.label}
           {!props.disabled && (
             <span class={styles.addBtn} onClick={handleAddParam}>
               <SvgIcon name="close-circle" class={styles.addIcon} />
@@ -266,7 +266,6 @@ export default defineComponent({
         </label>
         {props.desc && <div class={styles.desc}>{props.desc}</div>}
         {parameters.value.length > 0 && (
-          <Loading loading={isLoading.value}>
             <ul class={styles.paramsList}>
               {parameters.value.map((parameter, index) => (
                 <li
@@ -302,7 +301,7 @@ export default defineComponent({
                   <Input
                     class={[styles.inputCom, parameter.disabled && styles.disabledInput]}
                     modelValue={parameter.value}
-                    type={getInputType(parameter.type) as any}
+                    type={getInputType(parameter.type)}
                     disabled={props.disabled || parameter.disabled}
                     title={parameter.value}
                     onChange={(val: string) => handleChangeValue(val, index)}
@@ -316,9 +315,9 @@ export default defineComponent({
                 </li>
               ))}
             </ul>
-          </Loading>
         )}
-      </div>
+      
+      </Loading>
     )
   },
 })

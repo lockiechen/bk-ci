@@ -247,7 +247,7 @@
       "noticeUserTip": "複数の通知ユーザーはカンマで区切ってください",
       "noticeDetailFlag": "詳細情報を含める",
       "noticeContentPlaceholder": "通知内容を入力（変数を使用できます）",
-      "noticeContentTip": "${{variables.xxx}}形式で変数を参照できます",
+      "noticeContentTip": "${'{{'}variables.xxx{'}}'}形式で変数を参照できます",
       "updateSuccess": "更新成功",
       "addSuccess": "追加成功",
       "deleteSuccess": "削除成功",
@@ -347,9 +347,9 @@
       "loadFailed": "変数の読み込みに失敗しました",
       "loadPluginVariablesFailed": "プラグイン出力変数の読み込みに失敗しました",
       "loadSystemVariablesFailed": "システム変数の読み込みに失敗しました",
-      "variableTips": "変数は式 ${{'{{'}} variables.<var_name> {'}'}} を使用して参照できます",
-      "pluginOutputVariableTips": "プラグイン出力変数は式 ${{'{{'}} steps.<step_id>.outputs.<output_name> {'}'}} を使用して参照できます",
-      "systemVariableTips": "システム変数は式 ${{ ci.<var_name> }} を使用して参照できます"
+      "variableTips": "変数は式 ${'{{'}variables.<var_name>{'}}'} を使用して参照できます",
+      "pluginOutputVariableTips": "プラグイン出力変数は式 ${'{{'}steps.<step_id>.outputs.<output_name>{'}}'} を使用して参照できます",
+      "systemVariableTips": "システム変数は式 ${'{{'}ci.<var_name>{'}}'} を使用して参照できます"
     },
     "orchestration": {
       "clickToAddStage": "最初の作成フローステージを追加するにはクリック",
@@ -453,7 +453,7 @@
       "customCondition": "カスタム条件が満たされたときに実行",
       "customVar": "カスタム変数",
       "customConditionExp": "カスタム条件式",
-      "customConditionExpPlaceholder": "カスタム条件式を入力してください。例：${'{{'} variables.var1 {'}}'} === 'value1'",
+      "customConditionExpPlaceholder": "カスタム条件式を入力してください。例：${'{{'}variables.var1{'}}'} === 'value1'",
       "stageRunning": "現在のStageが開始されたときに実行",
       "preStageSuccess": "前のStageが成功したときに実行",
       "preStageFail": "前のStageが失敗したときに実行",

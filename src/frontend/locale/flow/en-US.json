@@ -247,7 +247,7 @@
       "noticeUserTip": "Multiple notification users should be separated by commas",
       "noticeDetailFlag": "Include detailed information",
       "noticeContentPlaceholder": "Enter notification content, variables can be used",
-      "noticeContentTip": "Supports using ${{variables.xxx}} format to reference variables",
+      "noticeContentTip": "Supports using ${'{{'}variables.xxx{'}}'} format to reference variables",
       "updateSuccess": "Update successful",
       "addSuccess": "Add successful",
       "deleteSuccess": "Deletion successful",
@@ -348,9 +348,9 @@
       "loadFailed": "Failed to load variable",
       "loadPluginVariablesFailed": "Failed to load plugin output variables",
       "loadSystemVariablesFailed": "Failed to load system variables",
-      "variableTips": "Variables can be referenced using the expression ${{'{{'}} variables.<var_name> {'}'}}",
-      "pluginOutputVariableTips": "Plugin output variables can be referenced using the expression ${{'{{'}} steps.<step_id>.outputs.<output_name> {'}'}}",
-      "systemVariableTips": "System variables can be referenced using the expression ${{ ci.<var_name> }}"
+      "variableTips": "Variables can be referenced using the expression ${'{{'}variables.<var_name>{'}}'}",
+      "pluginOutputVariableTips": "Plugin output variables can be referenced using the expression ${'{{'}steps.<step_id>.outputs.<output_name>{'}}'}",
+      "systemVariableTips": "System variables can be referenced using the expression ${'{{'}ci.<var_name>{'}}'}"
     },
     "orchestration": {
       "clickToAddStage": "Click to add the first creation flow Stage",
@@ -454,7 +454,7 @@
       "customCondition": "Run when the following custom conditions are met",
       "customVar": "Custom Variables",
       "customConditionExp": "Custom Condition Expression",
-      "customConditionExpPlaceholder": "Please enter custom condition expression, e.g.: ${'{{'} variables.var1 {'}}'} === 'value1'",
+      "customConditionExpPlaceholder": "Please enter custom condition expression, e.g.: ${'{{'}variables.var1{'}}'} === 'value1'",
       "stageRunning": "Run when current Stage starts",
       "preStageSuccess": "Run when previous Stage succeeds",
       "preStageFail": "Run when previous Stage fails",

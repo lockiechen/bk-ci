@@ -20,7 +20,9 @@ import './styles/variables.css'
 
 // 导入指令
 import { clickoutside } from 'bkui-vue/lib/directives'
-import { RouterView } from 'vue-router'
+import { RouterView, useRoute } from 'vue-router'
+import { FLOW_GROUP_TYPES } from './constants/flowGroup'
+import { ROUTE_NAMES } from './constants/routes'
 
 // 语言映射配置
 const localeAliasMap: Record<string, string> = {
@@ -69,6 +71,31 @@ const i18n = createI18n({
 })
 
 const app = createApp({
+  setup() {
+    const route = useRoute()
+    // 将 i18n 挂载到全局属性
+     window.addEventListener('change::$currentProjectId', (data: any) => { // 蓝盾选择项目时切换
+        if (route.params.projectId !== data.currentProjectId) {
+            router.push({
+                name: ROUTE_NAMES.FLOW_LIST,
+                params: {
+                    projectId: data.currentProjectId,
+                    groupId: FLOW_GROUP_TYPES.ALL_FLOWS,
+                },
+            })
+        }
+    })
+
+    window.addEventListener('order::backHome', () => { // 蓝盾选择项目时切换
+        router.push({
+            name: ROUTE_NAMES.FLOW_LIST,
+        })
+    })
+
+    // window.globalVue.$on('order::syncLocale', (locale: ) => {
+    //     this.$setLocale(locale, false)
+    // })
+  },
   render: () =>
     h(
       'div',

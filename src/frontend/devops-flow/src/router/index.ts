@@ -2,6 +2,12 @@ import { createRouter, createWebHistory } from 'vue-router'
 import { FLOW_GROUP_TYPES } from '../constants/flowGroup'
 import { ROUTE_NAMES } from '../constants/routes'
 
+declare global {
+  interface Window {
+    $syncUrl?: (path: string) => void
+  }
+}
+
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
   routes: [
@@ -246,8 +252,7 @@ const router = createRouter({
 })
 
 router.beforeEach((to, from, next) => {
-  // @ts-ignore
-  window.$syncUrl(to.fullPath.replace(new RegExp('^/' + import.meta.env.BASE_URL + '/'), '/'))
+  window.$syncUrl?.(to.fullPath.replace(new RegExp('^/' + import.meta.env.BASE_URL + '/'), '/'))
   next()
 })
 export default router

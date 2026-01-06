@@ -246,7 +246,7 @@
       "noticeUserTip": "多个通知人请用英文逗号分隔",
       "noticeDetailFlag": "是否包含详细信息",
       "noticeContentPlaceholder": "请输入通知内容，可使用变量",
-      "noticeContentTip": "支持使用 ${{variables.xxx}} 格式引用变量",
+      "noticeContentTip": "支持使用 ${'{{'}variables.xxx{'}}'} 格式引用变量",
       "updateSuccess": "更新成功",
       "addSuccess": "添加成功",
       "deleteSuccess": "删除成功",
@@ -346,9 +346,9 @@
       "loadFailed": "加载变量失败",
       "loadPluginVariablesFailed": "加载插件输出变量失败",
       "loadSystemVariablesFailed": "加载系统变量失败",
-      "variableTips": "可通过表达式 ${'{{'} variables.<var_name> {' '} 引用变量",
-      "pluginOutputVariableTips": "插件输出变量可通过表达式 ${'{{'} steps.<step_id>.outputs.<output_name> {'}}'} 引用",
-      "systemVariableTips": "系统变量可通过表达式 ${{ ci.<var_name> }} 引用"
+      "variableTips": "可通过表达式 ${'{{'}variables.<var_name>{'}}'} 引用变量",
+      "pluginOutputVariableTips": "插件输出变量可通过表达式 ${'{{'}steps.<step_id>.outputs.<output_name>{'}}'} 引用",
+      "systemVariableTips": "系统变量可通过表达式 ${'{{'}ci.<var_name>{'}}'} 引用"
     },
     "orchestration": {
       "clickToAddStage": "点击添加第一个创作流 Stage",
@@ -452,7 +452,7 @@
       "customCondition": "满足以下自定义条件时运行",
       "customVar": "自定义变量",
       "customConditionExp": "自定义条件表达式",
-      "customConditionExpPlaceholder": "请输入自定义条件表达式，例如：${'{{'} variables.var1 {'}}'} === 'value1'",
+      "customConditionExpPlaceholder": "请输入自定义条件表达式，例如：${'{{'}variables.var1{'}}'} === 'value1'",
       "stageRunning": "当前Stage开始运行时",
       "preStageSuccess": "上游Stage成功时",
       "preStageFail": "上游Stage失败时",
