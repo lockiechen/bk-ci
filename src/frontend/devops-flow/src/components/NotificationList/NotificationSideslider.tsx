@@ -12,10 +12,10 @@ import styles from './NotificationSideslider.module.css'
 const NOTIFICATION_TYPES = [
   { id: 'EMAIL', name: 'flow.content.emailNotice' },
   { id: 'WEWORK', name: 'flow.content.weworkNotice' },
-  { id: 'RTX', name: 'flow.content.rtxNotice' },
+  // { id: 'RTX', name: 'flow.content.rtxNotice' },
   { id: 'WEWORK_GROUP', name: 'flow.content.weworkGroup' },
   { id: 'VOICE', name: 'flow.content.voiceNotice' },
-  { id: 'WECHAT', name: 'flow.content.wechatNotice' },
+  // { id: 'WECHAT', name: 'flow.content.wechatNotice' },
   { id: 'SMS', name: 'flow.content.smsNotice' },
 ]
 
@@ -27,7 +27,6 @@ const createDefaultSubscription = (): Subscription => ({
   wechatGroupFlag: false,
   wechatGroup: '',
   wechatGroupMarkdownFlag: false,
-  detailFlag: true,
   content: '',
 })
 
@@ -168,11 +167,6 @@ export default defineComponent({
       localNotification.value.wechatGroupMarkdownFlag = value
     }
 
-    // Handle detail flag change
-    const handleDetailFlagChange = (value: boolean) => {
-      localNotification.value.detailFlag = value
-    }
-
     // Get groups as string for display
     const groupsAsString = computed(() => {
       return localNotification.value.groups.join(', ')
@@ -274,19 +268,6 @@ export default defineComponent({
                     onUpdate:modelValue={handleUsersChange}
                   />
                   <div class={styles.fieldTip}>{t('flow.content.noticeUserTip')}</div>
-                </FormItem>
-
-                {/* Detail Flag */}
-                <FormItem>
-                  <div class={styles.switchRow}>
-                    <Switcher
-                      size="small"
-                      theme="primary"
-                      modelValue={localNotification.value.detailFlag}
-                      onChange={handleDetailFlagChange}
-                    />
-                    <span class={styles.switchLabel}>{t('flow.content.noticeDetailFlag')}</span>
-                  </div>
                 </FormItem>
 
                 {/* Notification Content */}

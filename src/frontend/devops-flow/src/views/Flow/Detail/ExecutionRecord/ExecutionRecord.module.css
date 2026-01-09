@@ -54,7 +54,18 @@
   background-color: var(--bg-primary);
 }
 
+.buildNoStatus {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
 .buildNo {
-  color: var(--color-primary);
   cursor: pointer;
+  font-weight: 500;
+  transition: opacity 0.2s;
+  
+  &:hover {
+    opacity: 0.8;
+  }
 }

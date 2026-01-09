@@ -1,5 +1,5 @@
 import type { Element } from '@/api/flowModel'
-import AtomForm from '@/components/AtomForm/AtomForm'
+import AtomForm, { DISPLAY_MODE, type AtomPropsModel } from '@/components/AtomForm/AtomForm'
 import { SvgIcon } from '@/components/SvgIcon'
 import { createDefaultElement } from '@/utils/flowDefaults'
 import {
@@ -223,12 +223,8 @@ export default defineComponent({
 
     const atomPropsModel = computed(() => {
       const modal = atomModal.value
-      if (!modal) return {}
-      const { htmlTemplateVersion, props } = modal
-      if (htmlTemplateVersion && htmlTemplateVersion !== '1.0') {
-        return (props?.input as Record<string, any>) || {}
-      }
-      return props || {}
+      if (!modal) return null
+      return modal.props as AtomPropsModel
     })
 
     const atomValue = computed(() => {
@@ -254,13 +250,14 @@ export default defineComponent({
       if (isManualTrigger.value) {
         return renderManualSection()
       }
-      if (hasAtomFormConfig.value) {
+      if (hasAtomFormConfig.value && atomPropsModel.value) {
         return (
           <div class={styles.section}>
             <AtomForm
               atomPropsModel={atomPropsModel.value}
               atomValue={atomValue.value}
               element={localElement.value}
+              displayMode={DISPLAY_MODE.TRIGGER}
               onChange={handleAtomFormChange}
             />
           </div>

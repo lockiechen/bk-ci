@@ -12,7 +12,13 @@ import styles from './EditHeader.module.css'
 
 export const EditHeader = defineComponent({
   name: 'EditHeader',
-  setup() {
+  props: {
+    loading: {
+      type: Boolean,
+      default: false
+    },
+  },
+  setup(props) {
     const { t } = useI18n()
     const route = useRoute()
     const router = useRouter()
@@ -143,7 +149,7 @@ export const EditHeader = defineComponent({
 
     return () => (
       <>
-        <CommonHeader workflowName={workflowName.value} onWorkflowNameClick={handleCancel}>
+        <CommonHeader loading={props.loading} workflowName={workflowName.value} onWorkflowNameClick={handleCancel}>
           {{
             'version-selector': renderVersionTag,
             default: () => (

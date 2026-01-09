@@ -179,3 +179,15 @@ export function randomString(len: number) {
     }
     return tempStr
 }
+
+/**
+ * 生成唯一标识符（用于日志轮询标识）
+ * @returns UUID 格式的唯一 ID
+ */
+export function hashID(): string {
+    return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, (c) => {
+        const r = Math.random() * 16 | 0
+        const v = c === 'x' ? r : (r & 0x3 | 0x8)
+        return v.toString(16)
+    }).replace(/-/g, '')
+}

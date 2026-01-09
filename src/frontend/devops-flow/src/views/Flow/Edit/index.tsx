@@ -95,7 +95,7 @@ export default defineComponent({
 
     return () => (
       <>
-        <EditHeader />
+        <EditHeader loading={flowModelStore.loading} />
         <div class={styles.editWrapper}>
           {/* 主内容区域 */}
           <div

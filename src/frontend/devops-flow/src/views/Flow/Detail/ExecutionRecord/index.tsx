@@ -1,6 +1,9 @@
 import type { ExecutionRecord } from '@/api/executionRecord'
+import StageSteps from '@/components/StageSteps'
+import StatusIcon from '@/components/StatusIcon'
 import { ROUTE_NAMES } from '@/constants/routes'
 import { useExecutionRecordData } from '@/hooks/useExecutionRecordData'
+import { statusColorMap } from '@/utils/flowStatus'
 import SearchSelect from '@blueking/search-select-v3'
 import { DatePicker, Table } from 'bkui-vue'
 import type { Column } from 'bkui-vue/lib/table/props'
@@ -142,25 +145,12 @@ export default defineComponent({
       })
     }
 
-    // 渲染 Stage 状态
-    const renderStageStatus = (stages: ExecutionRecord['stageStatus']) => {
-      return (
-        <div class={styles.stageStatus}>
-          {stages.map((stage, index) => {
-            if (stage.status === 'pending') {
-              return <div key={index} class={styles.stagePending}></div>
-            }
-            const statusClass =
-              stage.status === 'success'
-                ? styles.stageSuccess
-                : stage.status === 'failed'
-                  ? styles.stageFailed
-                  : styles.stageRunning
-            const title = stage.status === 'running' ? `${stage.progress}%` : ''
-            return <div key={index} class={[styles.stageCircle, statusClass]} title={title}></div>
-          })}
-        </div>
-      )
+    // 渲染 Stage 状态 - 使用 StageSteps 组件
+    const renderStageStatus = (stages: ExecutionRecord['stageStatus'], buildId: string) => {
+      if (!stages || stages.length === 0) {
+        return <span>--</span>
+      }
+      return <StageSteps steps={stages} buildId={buildId} />
     }
 
     // 备注展开状态映射
@@ -195,31 +185,45 @@ export default defineComponent({
       {
         label: t('flow.content.buildNo'),
         field: 'buildNo',
-        render: ({ row }: any) => (
-          <span
-            class={styles.buildNo}
-            onClick={() => {
-              router.push({
-                name: ROUTE_NAMES.FLOW_DETAIL_EXECUTION_DETAIL_TAB,
-                params: {
-                  flowId,
-                  buildNo: (row as ExecutionRecord).id,
-                },
-              })
-            }}
-          >
-            #{(row as ExecutionRecord).buildNo}
-          </span>
-        ),
+        render: ({ row }: any) => {
+          const record = row as ExecutionRecord
+          const status = record.status || 'UNKNOWN'
+          const statusColor = statusColorMap[status as keyof typeof statusColorMap] || statusColorMap.UNKNOWN
+          
+          return (
+            <span class={styles.buildNoStatus}>
+              <StatusIcon status={status as any} size={14} />
+              <span
+                class={styles.buildNo}
+                style={{ color: statusColor }}
+                onClick={() => {
+                  router.push({
+                    name: ROUTE_NAMES.FLOW_DETAIL_EXECUTION_DETAIL_TAB,
+                    params: {
+                      flowId,
+                      buildNo: record.id,
+                    },
+                  })
+                }}
+              >
+                #{record.buildNo}
+              </span>
+              
+            </span>
+          )
+        },
       },
       {
         label: t('flow.content.stageStatus'),
         field: 'stageStatus',
-        render: ({ row }: any) => renderStageStatus((row as ExecutionRecord).stageStatus),
+        render: ({ row }: any) => {
+          const record = row as ExecutionRecord
+          return renderStageStatus(record.stageStatus, record.id)
+        },
       },
       {
         label: t('flow.content.workflowNode'),
-        field: 'workflowNode',
+        field: 'nodeName',
       },
       {
         label: t('flow.content.triggerMethodAndUser'),

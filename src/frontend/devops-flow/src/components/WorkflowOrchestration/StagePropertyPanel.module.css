@@ -3,7 +3,9 @@
 /* 注意：样式已移至 global.css 中的 .bkci-property-panel 类 */
 
 .stagePanelContent {
-  padding: var(--spacing-xl) var(--spacing-xxl);
+  &.stagePropertyContent {
+    padding: var(--spacing-xl) var(--spacing-xxl);
+  }
   flex: 1;
   overflow-y: auto;
 }

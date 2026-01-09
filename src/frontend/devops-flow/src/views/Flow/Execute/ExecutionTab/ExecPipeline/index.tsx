@@ -1,6 +1,8 @@
+import CompleteLog from '@/components/CompleteLog'
+import { JobDetail, PluginDetail, StageDetail } from '@/components/ExecDetail'
 import { SvgIcon } from '@/components/SvgIcon'
 import { useExecuteDetail } from '@/hooks/useExecuteDetail'
-import { STATUS, type ExecutionRecord, type FlowModel } from '@/types/flow'
+import { STATUS, type Container, type Element, type ExecutionRecord, type FlowModel, type Stage } from '@/types/flow'
 import { isSkip } from '@/utils/flowStatus'
 import { convertMillSec, convertTime } from '@/utils/util'
 import 'bkui-pipeline/dist/bk-pipeline.css'
@@ -56,6 +58,17 @@ export default defineComponent({
     const bkPipelineRef = ref<any>(null)
     const scrollBoxRef = ref<HTMLElement | null>(null)
     const errorPopupRef = ref<HTMLElement | null>(null)
+
+    // 日志面板状态
+    const showJobDetail = ref(false)
+    const showPluginDetail = ref(false)
+    const showStageDetail = ref(false)
+    const selectedContainer = ref<Container | null>(null)
+    const selectedElement = ref<Element | null>(null)
+    const selectedStage = ref<Stage | null>(null)
+    const selectedContainerId = ref<string>('')
+    const selectedContainerStage = ref<Stage | null>(null)
+    const selectedContainerIndex = ref<number>(-1)
 
     // ==================== Computed: Pipeline Data ====================
     const curPipeline = computed<FlowModel | null>(() => {
@@ -238,6 +251,19 @@ export default defineComponent({
       showLog.value = false
     }
 
+    // 关闭所有日志面板
+    const closeAllLogPanels = () => {
+      showJobDetail.value = false
+      showPluginDetail.value = false
+      showStageDetail.value = false
+      selectedContainer.value = null
+      selectedElement.value = null
+      selectedStage.value = null
+      selectedContainerId.value = ''
+      selectedContainerStage.value = null
+      selectedContainerIndex.value = -1
+    }
+
     // ==================== Methods: Pipeline Operations ====================
     const expandAllMatrix = async (expand: boolean) => {
     
@@ -274,8 +300,77 @@ export default defineComponent({
     }
 
     const handlePipelineClick = (args: any) => {
-      // TODO: 打开属性面板
       console.log('Pipeline click:', args)
+      
+      // 从 bk-pipeline 组件传来的参数格式：
+      // - 点击 Atom/Element: { stageIndex, containerIndex, containerGroupIndex, elementIndex }
+      // - 点击 Container/Job: { stageIndex, containerIndex, containerGroupIndex, container }
+      // - 点击 Stage: { stageIndex }
+      const { stageIndex, containerIndex, containerGroupIndex, elementIndex, container: clickedContainer } = args || {}
+      
+      // 关闭之前打开的面板
+      closeAllLogPanels()
+
+      if (!executeDetail.value?.model?.stages) {
+        return
+      }
+
+      // 注意：filteredPipeline 已经过滤掉了第一个 stage，所以索引需要 +1
+      const stages = executeDetail.value.model.stages
+
+      // 如果有 elementIndex，说明点击的是插件/Atom
+      if (elementIndex !== undefined && stageIndex !== undefined && containerIndex !== undefined) {
+        const stage = stages[stageIndex + 1] // +1 因为过滤掉了第一个 stage
+        if (stage && stage.containers) {
+          let targetContainer = stage.containers[containerIndex]
+          
+          // 处理矩阵容器组
+          if (containerGroupIndex !== undefined && targetContainer?.groupContainers) {
+            targetContainer = targetContainer.groupContainers[containerGroupIndex]
+          }
+          
+          if (targetContainer && targetContainer.elements) {
+            const element = targetContainer.elements[elementIndex]
+            if (element) {
+              selectedElement.value = element as Element
+              selectedContainerId.value = (targetContainer.id || targetContainer.containerId || '') as string
+              showPluginDetail.value = true
+            }
+          }
+        }
+        return
+      }
+
+      // 如果有 clickedContainer 或 containerIndex（但没有 elementIndex），说明点击的是 Job/Container
+      if ((clickedContainer || containerIndex !== undefined) && stageIndex !== undefined) {
+        const stage = stages[stageIndex + 1]
+        if (stage && stage.containers) {
+          let targetContainer = clickedContainer || stage.containers[containerIndex]
+          
+          // 处理矩阵容器组
+          if (!clickedContainer && containerGroupIndex !== undefined && stage.containers[containerIndex]?.groupContainers) {
+            targetContainer = stage.containers[containerIndex].groupContainers[containerGroupIndex]
+          }
+          
+          if (targetContainer) {
+            selectedContainer.value = targetContainer as Container
+            selectedContainerStage.value = stage
+            selectedContainerIndex.value = containerGroupIndex !== undefined ? containerGroupIndex : containerIndex
+            showJobDetail.value = true
+          }
+        }
+        return
+      }
+
+      // 只有 stageIndex，说明点击的是 Stage
+      if (stageIndex !== undefined) {
+        const stage = stages[stageIndex + 1]
+        if (stage) {
+          selectedStage.value = stage
+          showStageDetail.value = true
+        }
+        return
+      }
     }
 
     const handleStageCheck = (args: any) => {
@@ -440,22 +535,76 @@ export default defineComponent({
       )
     }
 
-    const renderCompleteLog = () => {
+    // 渲染完整日志组件
+    const renderCompleteLogComponent = () => {
       if (!showLog.value || !executeDetail.value) return null
 
       return (
-        <div class={styles.completeLogWrapper}>
-          <div class={styles.completeLogHeader}>
-            <span>{t('flow.execute.completeLog')}</span>
-            <Button text onClick={hideCompleteLog}>
-              <SvgIcon name="close" size={16} />
-            </Button>
-          </div>
-          <div class={styles.completeLogContent}>
-            {/* TODO: 实现完整日志内容 */}
-            {t('flow.execute.logContent')}
-          </div>
-        </div>
+        <CompleteLog
+          execDetail={executeDetail.value}
+          executeCount={executeCount.value}
+          onClose={hideCompleteLog}
+        />
+      )
+    }
+
+    // 渲染 Job 详情面板
+    const renderJobDetailPanel = () => {
+      if (!showJobDetail.value || !selectedContainer.value || !executeDetail.value) return null
+
+      return (
+        <JobDetail
+          isShow={showJobDetail.value}
+          execDetail={executeDetail.value}
+          container={selectedContainer.value}
+          stage={selectedContainerStage.value}
+          containerIndex={selectedContainerIndex.value}
+          executeCount={executeCount.value}
+          onClose={() => {
+            showJobDetail.value = false
+            selectedContainer.value = null
+            selectedContainerStage.value = null
+            selectedContainerIndex.value = -1
+          }}
+        />
+      )
+    }
+
+    // 渲染插件详情面板
+    const renderPluginDetailPanel = () => {
+      if (!showPluginDetail.value || !selectedElement.value || !executeDetail.value) return null
+
+      return (
+        <PluginDetail
+          isShow={showPluginDetail.value}
+          execDetail={executeDetail.value}
+          element={selectedElement.value}
+          containerId={selectedContainerId.value}
+          executeCount={executeCount.value}
+          onClose={() => {
+            showPluginDetail.value = false
+            selectedElement.value = null
+            selectedContainerId.value = ''
+          }}
+        />
+      )
+    }
+
+    // 渲染 Stage 详情面板
+    const renderStageDetailPanel = () => {
+      if (!showStageDetail.value || !selectedStage.value || !executeDetail.value) return null
+
+      return (
+        <StageDetail
+          isShow={showStageDetail.value}
+          execDetail={executeDetail.value}
+          stage={selectedStage.value}
+          executeCount={executeCount.value}
+          onClose={() => {
+            showStageDetail.value = false
+            selectedStage.value = null
+          }}
+        />
       )
     }
 
@@ -563,7 +712,11 @@ export default defineComponent({
             {/* {renderErrorPopup()} */}
           </section>
 
-          {renderCompleteLog()}
+          {/* 日志面板 */}
+          {renderCompleteLogComponent()}
+          {renderJobDetailPanel()}
+          {renderPluginDetailPanel()}
+          {renderStageDetailPanel()}
         </div>
       )
     }

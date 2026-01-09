@@ -77,7 +77,6 @@
 
 .collapseContent {
   padding: var(--spacing-lg);
-  border: 1px solid var(--border-color);
 
   :global {
     .bk-form-item {
@@ -94,22 +93,8 @@
   margin-top: var(--spacing-lg);
   margin-bottom: var(--spacing-lg);
 
-  :global {
-    .bk-collapse-item {
-      border: 1px solid var(--border-color);
-      border-radius: var(--border-radius);
-      background: var(--bg-tertiary);
-    }
-
-    .bk-collapse-header {
-      padding: 0 !important;
-      background: transparent !important;
-    }
-
-    .bk-collapse-content {
-      padding: 0 var(--spacing-lg) var(--spacing-lg) var(--spacing-lg) !important;
-      background: var(--bg-primary);
-    }
+  :global(.bk-collapse-content) {
+    padding: 0;
   }
 }
 

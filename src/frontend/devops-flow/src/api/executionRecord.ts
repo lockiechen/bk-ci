@@ -4,10 +4,7 @@
  */
 
 import { get } from '@/utils/http'
-
-// Enable mock fallback for development
-const ENABLE_MOCK_FALLBACK = false
-const MOCK_API_DELAY = 300
+import { statusIconMap } from '@/utils/flowStatus'
 
 /**
  * Stage status from API
@@ -68,16 +65,27 @@ export interface BuildHistoryResponse {
 }
 
 /**
+ * Stage status item for StageSteps component
+ */
+export interface StageStatusStep {
+  stageId: string
+  name?: string
+  status: string // 原始状态，如 'SUCCEED', 'FAILED', 'RUNNING' 等
+  statusCls: string // 状态类名，用于样式
+  icon: string // 图标名称
+  tooltip?: string
+  progress?: number
+}
+
+/**
  * ExecutionRecord for display (converted from BuildRecord)
  */
 export interface ExecutionRecord {
   id: string
   buildNo: number
   checked: boolean
-  stageStatus: Array<{
-    status: 'success' | 'failed' | 'pending' | 'running'
-    progress?: number
-  }>
+  status: string // 执行状态，用于显示颜色和图标
+  stageStatus: StageStatusStep[] // StageSteps 组件需要的格式
   workflowNode: string
   triggerMethod: string
   triggerTime: string
@@ -184,11 +192,21 @@ function formatDuration(ms?: number): string {
  * Convert BuildRecord from API to ExecutionRecord for display
  */
 function convertBuildRecordToExecutionRecord(record: BuildRecord): ExecutionRecord {
-  // Convert stage status
-  const stageStatus = record.stageStatus?.map(stage => ({
-    status: convertStatus(stage.status),
-    progress: stage.status === 'RUNNING' ? Math.floor(Math.random() * 100) : undefined,
-  })) || []
+  // Convert stage status to StageSteps format
+  const stageStatus = record.stageStatus?.map((stage, index) => {
+    const originalStatus = stage.status || 'UNKNOWN'
+    const statusCls = originalStatus
+    const icon = statusIconMap[originalStatus as keyof typeof statusIconMap] || 'circle'
+    
+    return {
+      stageId: stage.stageId || `stage-${index}`,
+      name: stage.name,
+      status: originalStatus,
+      statusCls,
+      icon,
+      progress: stage.status === 'RUNNING' ? Math.floor(Math.random() * 100) : undefined,
+    }
+  }) || []
 
   // Get error code from errorInfoList
   const errorCode = record.errorInfoList?.[0]?.errorCode?.toString() || ''
@@ -216,6 +234,7 @@ function convertBuildRecordToExecutionRecord(record: BuildRecord): ExecutionReco
     id: record.id,
     buildNo: record.buildNum,
     checked: false,
+    status: record.status || 'UNKNOWN', // 保留状态字段
     stageStatus,
     workflowNode: record.material?.[0]?.branchName || '--',
     triggerMethod,
@@ -229,112 +248,6 @@ function convertBuildRecordToExecutionRecord(record: BuildRecord): ExecutionReco
   }
 }
 
-/**
- * Generate mock data (for fallback only)
- */
-function generateMockData(count: number): ExecutionRecord[] {
-  const triggerMethods = ['手动触发', '定时触发', '远程触发', 'Git Push', 'Git Tag', '代码合并']
-  const triggerUsers = ['fayewang', 'admin', 'zhangsan', 'lisi', 'wangwu', 'zhaoliu']
-  const remarks = [
-    '',
-    '这是对执行结果的备注',
-    '备注一下',
-    '修复了bug',
-    '功能优化',
-    '性能提升',
-    '代码重构',
-  ]
-  const errorCodes = ['', 'E001', 'E002', 'E100', 'E200']
-
-  const statusTypes: Array<'success' | 'failed' | 'pending' | 'running'> = [
-    'success',
-    'failed',
-    'pending',
-    'running',
-  ]
-
-  const mockData: ExecutionRecord[] = []
-
-  for (let i = 0; i < count; i++) {
-    const buildNo = 200 - i
-    const daysAgo = Math.floor(i / 5)
-    const hoursAgo = i % 24
-    const minutesAgo = (i * 7) % 60
-
-    const date = new Date()
-    date.setDate(date.getDate() - daysAgo)
-    date.setHours(date.getHours() - hoursAgo)
-    date.setMinutes(date.getMinutes() - minutesAgo)
-
-    const formatDate = (d: Date) => {
-      const month = String(d.getMonth() + 1).padStart(2, '0')
-      const day = String(d.getDate()).padStart(2, '0')
-      const hour = String(d.getHours()).padStart(2, '0')
-      const minute = String(d.getMinutes()).padStart(2, '0')
-      return `${month}-${day} ${hour}:${minute}`
-    }
-
-    const startTime = formatDate(date)
-    const endDate = new Date(date.getTime() + (Math.random() * 30 + 10) * 60 * 1000)
-    const endTime = formatDate(endDate)
-
-    const duration = Math.floor((endDate.getTime() - date.getTime()) / 1000)
-    const minutes = Math.floor(duration / 60)
-    const seconds = duration % 60
-    const durationStr = minutes > 0 ? `${minutes}分${seconds}秒` : `${seconds}秒`
-
-    // Generate random stage status
-    const stageCount = 6
-    const stageStatus: ExecutionRecord['stageStatus'] = []
-    for (let j = 0; j < stageCount; j++) {
-      if (j < stageCount - 2) {
-        stageStatus.push({ status: 'success' })
-      } else if (j === stageCount - 2) {
-        const rand = Math.random()
-        if (rand < 0.3) {
-          stageStatus.push({ status: 'running', progress: Math.floor(Math.random() * 100) })
-        } else if (rand < 0.5) {
-          stageStatus.push({ status: 'failed' })
-        } else {
-          stageStatus.push({ status: 'success' })
-        }
-      } else {
-        stageStatus.push({ status: 'pending' })
-      }
-    }
-
-    const triggerMethod = triggerMethods[i % triggerMethods.length] || '手动触发'
-    const triggerUser = triggerUsers[i % triggerUsers.length] || 'admin'
-    const triggerDisplay =
-      triggerMethod === '手动触发' || triggerMethod === '远程触发'
-        ? `${triggerMethod}(${triggerUser})`
-        : triggerMethod
-
-    const selectedRemark = remarks[i % remarks.length] || ''
-    const selectedErrorCode = stageStatus.some((s) => s.status === 'failed')
-      ? errorCodes[Math.floor(Math.random() * errorCodes.length)] || ''
-      : ''
-    const workflowNodeId = Math.random().toString(36).substring(2, 15)
-
-    mockData.push({
-      id: String(i + 1),
-      buildNo,
-      checked: false,
-      stageStatus,
-      workflowNode: `ins-${workflowNodeId}`,
-      triggerMethod: triggerDisplay,
-      triggerTime: startTime,
-      startTime,
-      endTime,
-      totalDuration: durationStr,
-      executionDuration: durationStr,
-      remark: selectedRemark,
-      errorCode: selectedErrorCode,
-    })
-  }
-
-  return mockData
-}
 
 /**
  * Get execution records from API
@@ -385,42 +298,6 @@ export async function getExecutionRecords(
       totalPages: response.totalPages || Math.ceil((response.count || list.length) / pageSize),
     }
   } catch (error) {
-    if (ENABLE_MOCK_FALLBACK) {
-      console.warn('[API Fallback] getExecutionRecords failed, using mock data:', error)
-      // Fallback to mock data
-      return new Promise((resolve) => {
-        setTimeout(() => {
-          const totalCount = 50
-          const allMockData = generateMockData(totalCount)
-          
-          // Apply keyword filter if provided
-          let filteredData = allMockData
-          if (filterParams.keyword) {
-            const keyword = filterParams.keyword.toLowerCase()
-            filteredData = allMockData.filter(
-              (item) =>
-                item.buildNo.toString().includes(keyword) ||
-                item.triggerMethod.toLowerCase().includes(keyword) ||
-                item.workflowNode.toLowerCase().includes(keyword) ||
-                item.remark.toLowerCase().includes(keyword) ||
-                item.errorCode.toLowerCase().includes(keyword),
-            )
-          }
-
-          const filteredCount = filteredData.length
-          const startIndex = (page - 1) * pageSize
-          const paginatedData = filteredData.slice(startIndex, startIndex + pageSize)
-
-          resolve({
-            list: paginatedData,
-            count: filteredCount,
-            page,
-            limit: pageSize,
-            totalPages: Math.ceil(filteredCount / pageSize),
-          })
-        }, MOCK_API_DELAY)
-      })
-    }
     throw error
   }
 }

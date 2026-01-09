@@ -294,9 +294,7 @@ export interface StageControlOption {
   runCondition: string
   customVariables: CustomVariable[]
   customCondition: string
-  manualTrigger: boolean
-  triggerUsers: string[]
-  timeout: number
+  timeout?: number
 }
 
 /**
@@ -381,7 +379,6 @@ export interface Subscription {
   wechatGroupFlag: boolean
   wechatGroup: string
   wechatGroupMarkdownFlag: boolean
-  detailFlag: boolean
   content: string
 }
 
@@ -576,16 +573,7 @@ export interface FlowVersion {
   [key: string]: unknown
 }
 
-export interface Subscription {
-  types: string[]
-  groups: string[]
-  users: string
-  wechatGroupFlag: boolean
-  wechatGroup: string
-  wechatGroupMarkdownFlag: boolean
-  detailFlag: boolean
-  content: string
-}
+
 export interface ModelAndSetting {
   model: FlowModel
   setting: FlowSettings

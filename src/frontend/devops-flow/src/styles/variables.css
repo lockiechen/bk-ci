@@ -92,4 +92,44 @@
 
   /* 过渡效果 */
   --transition-all: all 0.3s ease;
+
+  /* ==================== 日志组件相关变量 ==================== */
+  /* 暗色主题背景 */
+  --log-bg-dark: #1a1a1a;
+  --log-bg-dark-secondary: #1e1e1e;
+  --log-bg-dark-tertiary: #2e2e2e;
+  --log-bg-dark-hover: #3a3f4e;
+  --log-bg-dark-active: #4a4f5c;
+
+  /* 暗色主题文字 */
+  --log-text-dark: #d4d4d4;
+  --log-text-dark-secondary: #999999;
+  --log-text-dark-muted: #6e7681;
+
+  /* 暗色主题边框 */
+  --log-border-dark: #2b2b2b;
+  --log-border-dark-light: #3e3e3e;
+  --log-border-dark-lighter: #444444;
+
+  /* 日志级别颜色 */
+  --log-color-error: #f14c4c;
+  --log-color-warning: #ffcc00;
+  --log-color-info: #3a84ff;
+  --log-color-debug: #6e7681;
+  --log-color-success: #6a9955;
+  --log-color-trace: #9fa8b2;
+  
+  /* 搜索高亮颜色 */
+  --log-search-highlight: #ffdd00;
+  --log-search-highlight-active: #ff9500;
+
+  /* 日志布局 */
+  --log-header-height: 48px;
+  --log-line-number-width: 60px;
+  --log-timestamp-width: 100px;
+  --log-tool-height: 30px;
+  --log-panel-width: 80vw;
+
+  /* 日志字体 */
+  --log-font-family: 'JetBrains Mono', 'SF Mono', Consolas, 'Liberation Mono', Menlo, Courier, monospace;
 }

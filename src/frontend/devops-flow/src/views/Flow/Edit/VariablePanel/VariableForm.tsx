@@ -1,17 +1,17 @@
-import { defineComponent, ref, computed, watch, type PropType } from 'vue'
-import { useI18n } from 'vue-i18n'
-import { Form, Input, Select, Checkbox, Button, Message } from 'bkui-vue'
 import type { Param } from '@/api/flowModel'
+import { SvgIcon } from '@/components/SvgIcon'
 import type { ParamOption } from '@/types/variable'
 import {
-  ParamType,
-  VariableCategory,
   DEFAULT_VARIABLE_VALUES,
+  ParamType,
   VARIABLE_TYPE_LIST,
+  VariableCategory,
   validateVariableId,
 } from '@/types/variable'
+import { Button, Checkbox, Form, Input, Popover, Select } from 'bkui-vue'
+import { computed, defineComponent, ref, watch, type PropType } from 'vue'
+import { useI18n } from 'vue-i18n'
 import styles from './VariableForm.module.css'
-import { SvgIcon } from '@/components/SvgIcon'
 
 const FormItem = Form.FormItem
 
@@ -85,13 +85,7 @@ export default defineComponent({
           trigger: 'blur',
         },
       ],
-      name: [
-        {
-          required: true,
-          message: t('flow.variable.nameRequired'),
-          trigger: 'blur',
-        },
-      ],
+      name: [],
       type: [
         {
           required: true,
@@ -113,10 +107,10 @@ export default defineComponent({
         type: ParamType.STRING,
         constant: props.category === VariableCategory.CONSTANT,
         defaultValue: defaultData.defaultValue,
-        required: false,
+        required: true,
         desc: '',
         options: defaultData.options || [],
-        valueNotEmpty: false,
+        valueNotEmpty: true,
         readOnly: false,
       }
     }
@@ -185,7 +179,7 @@ export default defineComponent({
 
     return () => (
       <div class={styles.variableForm}>
-        <Form ref={formRef} model={formData.value} rules={rules} labelWidth={120}>
+        <Form ref={formRef} model={formData.value} rules={rules} form-type="vertical">
           <FormItem label={t('flow.variable.id')} property="id" required>
             <Input
               v-model={formData.value.id}
@@ -198,7 +192,7 @@ export default defineComponent({
             />
           </FormItem>
 
-          <FormItem label={t('flow.variable.name')} property="name" required>
+          <FormItem label={t('flow.variable.name')} property="name">
             <Input
               v-model={formData.value.name}
               placeholder={t('flow.variable.namePlaceholder')}
@@ -313,23 +307,39 @@ export default defineComponent({
           {/* 只在非常量类型时显示这些选项 */}
           {!isConstant.value && (
             <>
+              {/* 第一行：两个复选框并排，中间有分隔线 */}
               <FormItem>
-                <Checkbox v-model={formData.value.required} disabled={!props.editable}>
-                  {t('flow.variable.showOnExec')}
-                </Checkbox>
+                <div class={styles.checkboxRow}>
+                  <div class={styles.checkboxItem}>
+                    <Checkbox v-model={formData.value.required} disabled={!props.editable}>
+                      {t('flow.variable.showOnExec')}
+                    </Checkbox>
+                    <Popover content={t('flow.variable.showOnExecDesc')} placement="top">
+                      <span class={styles.infoIcon}>
+                        <SvgIcon name="info-circle" />
+                      </span>
+                    </Popover>
+                  </div>
+                  <div class={styles.separator}></div>
+                  <div class={styles.checkboxItem}>
+                    <Checkbox v-model={formData.value.valueNotEmpty} disabled={!props.editable || !formData.value.required}>
+                      {t('flow.variable.required')}
+                    </Checkbox>
+                  </div>
+                </div>
               </FormItem>
-              {/* 只有勾选了"是否为入参"时才显示"是否必填" */}
-              {formData.value.required && (
-                <FormItem>
-                  <Checkbox v-model={formData.value.valueNotEmpty} disabled={!props.editable}>
-                    {t('flow.variable.required')}
-                  </Checkbox>
-                </FormItem>
-              )}
+              {/* 第二行：运行时只读 */}
               <FormItem>
-                <Checkbox v-model={formData.value.readOnly} disabled={!props.editable}>
-                  {t('flow.variable.readOnlyOnRun')}
-                </Checkbox>
+                <div class={styles.checkboxItem}>
+                  <Checkbox v-model={formData.value.readOnly} disabled={!props.editable}>
+                    {t('flow.variable.readOnlyOnRun')}
+                  </Checkbox>
+                  <Popover content={t('flow.variable.readOnlyOnRunDesc')} placement="top">
+                    <span class={styles.infoIcon}>
+                      <SvgIcon name="info-circle" />
+                    </span>
+                  </Popover>
+                </div>
               </FormItem>
             </>
           )}

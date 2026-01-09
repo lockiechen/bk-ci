@@ -9,7 +9,7 @@ import { Loading, Message } from 'bkui-vue'
 import { computed, defineComponent, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useRoute } from 'vue-router'
-import type { Subscription } from '../../../../api/flowModel'
+import type { Subscription } from '@/types/flow'
 import sharedStyles from '../shared.module.css'
 
 export default defineComponent({

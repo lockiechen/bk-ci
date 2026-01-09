@@ -3,22 +3,22 @@ import type { Container, Element, FlowModel, FlowSettings, Stage } from '@/api/f
 import { useAtomStore } from '@/stores/atom'
 import { useFlowModelStore } from '@/stores/flowModel'
 import {
-  createDefaultContainer,
-  createDefaultElement,
-  createDefaultStage,
-  generateId,
-} from '@/utils/flowDefaults'
-import { storeToRefs } from 'pinia'
-import { computed, ref } from 'vue'
-import { useEditingPos } from './useEditingPos'
-import {
   diffAtomVersions,
   getAtomDefaultValue,
   getAtomOutputObj,
   isNewAtomTemplate,
 } from '@/utils/atom'
+import {
+  createDefaultContainer,
+  createDefaultElement,
+  createDefaultStage,
+  generateId,
+} from '@/utils/flowDefaults'
 import type { AddAtomEventPayload, AddStageEventPayload, ClickEventPayload } from 'bkui-pipeline'
+import { storeToRefs } from 'pinia'
+import { computed, ref } from 'vue'
 import { DEFAULT_VERSION } from './useAtomVersion'
+import { useEditingPos } from './useEditingPos'
 
 export function useFlowModel() {
 
@@ -280,10 +280,14 @@ export function useFlowModel() {
       handleAddJob({ stageIndex })
       return
     }
-    const newStage = createDefaultStage(stageIndex, { name: `Stage-${stageIndex}`, containers: [
-      createDefaultContainer(0, { name: 'Job1' }),
-    ] })
-
+    const newStage = createDefaultStage(stageIndex, { name: `Stage-${stageIndex + 1}`, containers: [
+        createDefaultContainer(1, { name: 'Job1', dispatchType: {
+          buildType: 'CREATE_AGENT_ENV',
+          value: '${{BK_CI_CREATIVE_STREAM_NODE_AGENT_ID}}',
+        },
+      }),
+      ]
+    })
     tempEditingObject.value = newStage
     isNewStage.value = true
 
@@ -334,12 +338,16 @@ export function useFlowModel() {
     const containerIndex = stage.containers?.length || 0
     
     // 根据 jobType 设置 @type 和 classType
-    const containerType = jobType === 'cloud' ? 'devCloud' : 'vmBuild'
+    const containerType = jobType === 'cloud' ? 'normal' : 'vmBuild'
     const newContainer = createDefaultContainer(containerIndex, {
       name: `Job-${containerIndex + 1}`,
       jobId: generateId('job'),
       '@type': containerType,
       classType: containerType,
+      dispatchType: {
+        buildType: 'CREATE_AGENT_ENV',
+        value: '${{BK_CI_CREATIVE_STREAM_NODE_AGENT_ID}}',
+      },
     })
     console.log('handleAddJob', stageIndex, containerIndex, newContainer, stage.containers.length)
     setEditingPos({ stageIndex, containerIndex: stage.containers.length })
