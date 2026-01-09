@@ -385,7 +385,6 @@
       "selectDependentJob": "选择要依赖的 Job",
       "inputDependentJobId": "输入要依赖的 Job ID",
       "jobTimeout": "Job 执行超时时间(单位分钟)",
-      "jobTimeoutPlaceholder": "请输入超时时间",
       "viewDocumentation": "查看使用指引和示例",
       "selectPlaceholder": "请选择",
       "strategy": "策略",

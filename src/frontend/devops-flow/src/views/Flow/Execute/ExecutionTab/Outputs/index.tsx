@@ -5,9 +5,10 @@ import ExtMenu from '@/components/ExtMenu'
 import IframeReport from '@/components/IframeReport'
 import { SvgIcon } from '@/components/SvgIcon'
 import ThirdPartyReport from '@/components/ThirdPartyReport'
+import { ROUTE_NAMES } from '@/constants/routes'
 import { useOutputs } from '@/hooks/useOutputs'
 import { Button, Input, Loading, SearchSelect, Table, Tag } from 'bkui-vue'
-import { defineComponent, nextTick, onMounted, watch } from 'vue'
+import { computed, defineComponent, nextTick, onMounted, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useRoute } from 'vue-router'
 import styles from './Outputs.module.css'
@@ -15,15 +16,15 @@ import styles from './Outputs.module.css'
 export default defineComponent({
   // eslint-disable-next-line vue/multi-word-component-names
   name: 'Outputs',
-  props: {
-    currentTab: {
-      type: String,
-      default: 'artifacts',
-    },
-  },
-  setup(props) {
+  setup() {
     const { t } = useI18n()
     const route = useRoute()
+
+    // 根据路由名称判断当前 tab
+    const currentTab = computed(() => {
+      return route.name === ROUTE_NAMES.FLOW_DETAIL_ARTIFACTS ? 'artifacts' : 'reports'
+    })
+
     const {
       activeOutput,
       activeOutputDetail,
@@ -51,7 +52,7 @@ export default defineComponent({
       fullScreenViewReport,
       updateSearchKey,
       initializeArtifactValue,
-    } = useOutputs(props.currentTab)
+    } = useOutputs(currentTab.value)
 
     // 表格列配置
     const columns = [
@@ -90,7 +91,7 @@ export default defineComponent({
     )
 
     watch(
-      () => props.currentTab,
+      () => currentTab.value,
       () => {
         keyWord.value = ''
         activeOutputDetail.value = null
@@ -136,10 +137,10 @@ export default defineComponent({
               {/* 侧边栏 */}
               <aside
                 class={styles.pipelineExecOutputsAside}
-                style={{ width: props.currentTab === 'reports' ? '300px' : '30%' }}
+                style={{ width: currentTab.value === 'reports' ? '300px' : '30%' }}
               >
                 <div class={styles.pipelineExecOutputsFilterInput}>
-                  {props.currentTab === 'artifacts' && (
+                  {currentTab.value === 'artifacts' && (
                     <div class={styles.artifactSearch}>
                       <p>{t('flow.execute.metaData')}</p>
                       <SearchSelect
@@ -156,7 +157,7 @@ export default defineComponent({
                     class={styles.inputSearch}
                     clearable
                     type="search"
-                    placeholder={t(`flow.execute.${props.currentTab}FilterPlaceholder`)}
+                    placeholder={t(`flow.execute.${currentTab.value}FilterPlaceholder`)}
                     v-model={keyWord.value}
                   />
                 </div>
