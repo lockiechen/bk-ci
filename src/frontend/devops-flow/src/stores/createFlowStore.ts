@@ -142,7 +142,6 @@ export const useNewFlowStore = defineStore('newFlow', () => {
         storeModelList.value = res.records
       }
     } catch (error: any) {
-      console.error('Failed to fetch store templates:', error)
       Message({ theme: 'error', message: error.message || error })
       storeModelList.value = []
     } finally {

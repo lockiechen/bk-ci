@@ -90,15 +90,24 @@ export default defineComponent({
               {t('flow.content.environmentManagement')}
             </span>
           </p>
-          <AuthoringEnv
-            isEdit={true}
-            envLoading={envListLoading.value}
-            modelValue={baseInfoData.value.envName}
-            onUpdate:modelValue={updateAuthoringEnv}
-            envList={envSelectList.value}
-            nodeLoading={nodeListLoading.value}
-            nodeList={nodeList.value}
-          />
+          <Form.FormItem property="envName" required>
+            {{
+              error:() => t('flow.content.environmentRequired'),
+              default: () => (
+                <>
+                <AuthoringEnv
+                  isEdit={true}
+                  envLoading={envListLoading.value}
+                  modelValue={baseInfoData.value.envName}
+                  onUpdate:modelValue={updateAuthoringEnv}
+                  envList={envSelectList.value}
+                  nodeLoading={nodeListLoading.value}
+                  nodeList={nodeList.value}
+                />
+                </>
+              )
+            }}
+          </Form.FormItem>
         </div>
       </Form>
     )

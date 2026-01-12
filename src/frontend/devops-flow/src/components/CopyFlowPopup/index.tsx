@@ -151,7 +151,7 @@ export default defineComponent({
         const res = await getMatchDynamicData(params)
         formData.value.dynamicGroup = res
       } catch (error: any) {
-        Message({  theme: 'error', message: error || error.message })
+        Message({  theme: 'error', message: error.message || error })
       } finally {
         dynamicLoading.value = false
       }
@@ -188,7 +188,7 @@ export default defineComponent({
         
         getDynamicGroup(currentLabels)
       } catch (error: any) {
-        Message({  theme: 'error', message: error || error.message })
+        Message({  theme: 'error', message: error.message || error })
       } finally {
         tagsLoading.value = false
       }

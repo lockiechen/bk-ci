@@ -118,7 +118,7 @@ export function useNewFlow() {
       }
     } catch (error: any) {
        Message({
-        message: error || error.message || t('flow.content.createFailed'),
+        message: error.message || error || t('flow.content.createFailed'),
         theme: 'error',
       })
     }

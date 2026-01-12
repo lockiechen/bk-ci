@@ -85,7 +85,7 @@ export default defineComponent({
         is-show={props.isShow}
         theme="primary"
         zIndex={1000}
-        width={1000}
+        width={1200}
         quick-close={false}
         onClosed={onClose}
         class={styles.newFlowPopup}

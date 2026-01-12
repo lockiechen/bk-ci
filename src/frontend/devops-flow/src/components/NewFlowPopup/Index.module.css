@@ -1,11 +1,15 @@
 .header {
   display: flex;
   background-color: var(--bg-primary);
+  padding-bottom: var(--spacing-lg);
 }
 
 .stepContent {
   flex: 1;
   padding: 0 var(--sidebar-width);
+  :global(.bk-steps .bk-step .bk-step-description) {
+    min-width: 180px;
+  }
 }
 
 .newFlowPopup {

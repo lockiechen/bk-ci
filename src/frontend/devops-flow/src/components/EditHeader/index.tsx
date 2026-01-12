@@ -8,6 +8,7 @@ import { useI18n } from 'vue-i18n'
 import { useRoute, useRouter } from 'vue-router'
 import { useFlowInfo } from '../../hooks/useFlowInfo'
 import { CommonHeader } from '../CommonHeader'
+import { FLOW_GROUP_TYPES } from '@/constants/flowGroup'
 import styles from './EditHeader.module.css'
 
 export const EditHeader = defineComponent({
@@ -54,6 +55,14 @@ export const EditHeader = defineComponent({
     })
 
     const handleCancel = () => {
+      // 如果是只有草稿的，就跳转到列表页
+      if (!flowInfo.value?.versionName) {
+          router.push({
+            name: ROUTE_NAMES.FLOW_LIST,
+            params: { groupId: FLOW_GROUP_TYPES.ALL_FLOWS }
+          })
+          return
+        }
       router.push({
         name: ROUTE_NAMES.FLOW_DETAIL_EXECUTION_RECORD,
         params: { ...route.params, version: flowInfo.value?.releaseVersion },
