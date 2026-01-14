@@ -5,7 +5,7 @@ import { ROUTE_NAMES } from '@/constants/routes'
 import { useExecutionRecordData } from '@/hooks/useExecutionRecordData'
 import { statusColorMap } from '@/utils/flowStatus'
 import SearchSelect from '@blueking/search-select-v3'
-import { DatePicker, Table } from 'bkui-vue'
+import { DatePicker, Loading, Table } from 'bkui-vue'
 import type { Column } from 'bkui-vue/lib/table/props'
 import { computed, defineComponent, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
@@ -18,10 +18,8 @@ export default defineComponent({
     const { t } = useI18n()
     const route = useRoute()
     const router = useRouter()
-    const projectId = route.params.projectId as string
-    const flowId = route.params.flowId as string
-    // flowId is actually pipelineId in this context
-    const pipelineId = flowId
+    const projectId = computed(() => route.params.projectId as string)
+    const flowId = computed(() => route.params.flowId as string)
 
     // Use hook to manage execution record data
     const {
@@ -31,7 +29,7 @@ export default defineComponent({
       handlePageChange,
       handleLimitChange,
       updateQueryParams,
-    } = useExecutionRecordData(projectId, pipelineId)
+    } = useExecutionRecordData(projectId.value, flowId.value)
 
     // 日期范围
     const dateRange = ref<[Date, Date] | null>(null)
@@ -200,7 +198,7 @@ export default defineComponent({
                   router.push({
                     name: ROUTE_NAMES.FLOW_DETAIL_EXECUTION_DETAIL_TAB,
                     params: {
-                      flowId,
+                      flowId: flowId.value,
                       buildNo: record.id,
                     },
                   })
@@ -288,7 +286,7 @@ export default defineComponent({
         </div>
 
         {/* Table area */}
-        <div class={styles.tableWrapper}>
+        <Loading class={styles.tableWrapper} loading={loading.value} mode="spin" theme="primary" size="small">
           <Table
             data={tableData.value}
             columns={tableColumns.value as Column[]}
@@ -301,11 +299,10 @@ export default defineComponent({
             }}
             remotePagination
             border="outer"
-            loading={loading.value}
-            onPageChange={handlePageChange}
+            onPageValueChange={handlePageChange}
             onPageLimitChange={handleLimitChange}
           />
-        </div>
+        </Loading>
       </>
     )
   },

@@ -1,11 +1,12 @@
 import { FlowHeader } from '@/components/FlowHeader'
 import { FLOW_DETAIL_TABS, isValidFlowDetailTab, ROUTE_NAMES } from '@/constants/routes'
 import { useFlowInfo } from '@/hooks/useFlowInfo'
+import { useExecutionRecordStore } from '@/stores/executionRecord'
 import { useFlowModelStore } from '@/stores/flowModel'
 import layoutStyles from '@/styles/layout.module.css'
 import type { FlowInfo, FlowVersion } from '@/types/flow'
 import { VERSION_STATUS_ENUM } from '@/utils/flowConst'
-import { computed, defineComponent, watch, onMounted } from 'vue'
+import { computed, defineComponent, onMounted, onUnmounted, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { RouterView, useRoute, useRouter } from 'vue-router'
 import styles from './Detail.module.css'
@@ -21,6 +22,7 @@ export default defineComponent({
     const version = computed(() => route.params.version as string)
     const { flowInfo, flowVersionList, loading } = useFlowInfo()
      const store = useFlowModelStore()
+    const executionRecordStore = useExecutionRecordStore()
 
     /**
      * Check if the flow only has draft version (no released version)
@@ -51,6 +53,12 @@ export default defineComponent({
 
     onMounted(() => {
       store.loadFlowModel(projectId.value, flowId.value, version.value)
+    })
+
+    // Clear execution record store when leaving the FlowDetail page
+    // This ensures that when switching to a different flow, the old records are cleared
+    onUnmounted(() => {
+      executionRecordStore.reset()
     })
 
     const handleVersionChange = (version: number) => {

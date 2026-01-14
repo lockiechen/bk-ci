@@ -11,10 +11,12 @@
 .tableWrapper {
   width: 100%;
   flex: 1;
+  min-height: 0;
   overflow: hidden;
   :global(.bk-table) {
     max-width: 100%;
     width: 100%;
+    max-height: 100%;
   }
 }
 

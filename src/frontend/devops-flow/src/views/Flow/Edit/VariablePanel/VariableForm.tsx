@@ -348,9 +348,9 @@ export default defineComponent({
             <FormItem>
               <div class={styles.formActions}>
                 <Button theme="primary" onClick={handleSave}>
-                  {t('save')}
+                  {t('flow.common.save')}
                 </Button>
-                <Button onClick={handleCancel}>{t('cancel')}</Button>
+                <Button onClick={handleCancel}>{t('flow.common.cancel')}</Button>
               </div>
             </FormItem>
           )}

@@ -49,6 +49,7 @@ export function useExecuteDetail() {
 
     // 方法
     initExecuteDetail: store.initExecuteDetail,
+    silentRefreshExecuteDetail: store.silentRefreshExecuteDetail,
     stopExecute: store.stopExecute,
     requestRePlayFlow: store.requestRePlayFlow,
     requestRetryFlow: store.requestRetryFlow,

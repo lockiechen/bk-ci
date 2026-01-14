@@ -2,22 +2,24 @@ import {
   replayFlow,
   requestBuildParamCombination,
   requestBuildParams,
+  requestFlowVersion,
   requestPipelineExecDetail,
   requestTerminatePipeline,
-  requestFlowVersion,
   retryFlow,
 } from '@/api/executeDetail'
 import { fetchFlowInfo, updateRemark } from '@/api/flowInfo'
 import type { ExecuteDetailData, FlowInfo } from '@/types/flow'
 import { defineStore } from 'pinia'
-import { ref } from 'vue'
+import { computed, ref } from 'vue'
 import { useRoute } from 'vue-router'
 
 export const useExecuteDetailStore = defineStore('executeDetail', () => {
   const route = useRoute()
-  const flowId = ref(route.params.flowId as string)
-  const projectId = ref(route.params.projectId as string)
-  const buildNo = ref(route.params.buildNo as string)
+  
+  // 使用 computed 属性，自动响应路由参数变化
+  const flowId = computed(() => route.params.flowId as string)
+  const projectId = computed(() => route.params.projectId as string)
+  const buildNo = computed(() => route.params.buildNo as string)
 
   const loading = ref(false)
   const executeDetail = ref<ExecuteDetailData | null>(null)
@@ -25,9 +27,9 @@ export const useExecuteDetailStore = defineStore('executeDetail', () => {
 
   async function getExecuteDetail() {
     const params = {
-      projectId: projectId.value || (route.params.projectId as string),
-      buildNo: buildNo.value || (route.params.buildNo as string),
-      pipelineId: flowId.value || (route.params.flowId as string),
+      projectId: projectId.value,
+      buildNo: buildNo.value,
+      pipelineId: flowId.value,
       executeCount: route.query.executeCount
         ? Number(route.query.executeCount)
         : undefined,
@@ -45,6 +47,10 @@ export const useExecuteDetailStore = defineStore('executeDetail', () => {
   async function initExecuteDetail() {
     try {
       loading.value = true
+      // 先清空旧数据，避免显示旧数据
+      executeDetail.value = null
+      flowInfo.value = null
+      
       const [executeRes, flowInfoRes] = await Promise.all([getExecuteDetail(), getFlowInfoDetail()])
 
       executeDetail.value = executeRes
@@ -55,6 +61,21 @@ export const useExecuteDetailStore = defineStore('executeDetail', () => {
       flowInfo.value = null
     } finally {
       loading.value = false
+    }
+  }
+
+  /**
+   * Silently refresh execute detail data (only record API, no loading state)
+   * Used for polling to update execution progress without UI loading effect
+   */
+  async function silentRefreshExecuteDetail() {
+    try {
+      const executeRes = await getExecuteDetail()
+      executeDetail.value = executeRes
+      return executeRes
+    } catch (error) {
+      console.error('Failed to silently refresh execute detail:', error)
+      throw error
     }
   }
   /**
@@ -191,6 +212,7 @@ export const useExecuteDetailStore = defineStore('executeDetail', () => {
     flowInfo,
 
     initExecuteDetail,
+    silentRefreshExecuteDetail,
     stopExecute,
     requestRePlayFlow,
     requestRetryFlow,
