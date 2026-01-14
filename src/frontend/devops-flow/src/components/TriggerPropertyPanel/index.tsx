@@ -82,12 +82,6 @@ export default defineComponent({
     const triggerType = computed(
       () => localElement.value?.atomCode || localElement.value?.['@type'] || '',
     )
-    const triggerTitle = computed(() => {
-      if (localElement.value?.name) return localElement.value.name
-      if (triggerType.value === 'manualTrigger') return t('flow.content.manualTrigger')
-      if (triggerType.value === 'timerTrigger') return t('flow.content.timerTrigger')
-      return t('flow.content.triggerEvents')
-    })
 
     const getTriggerName = () => {
       if (localElement.value?.name) {

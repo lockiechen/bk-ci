@@ -79,7 +79,7 @@ export default defineComponent({
     watch(
       () => props.editingContainer,
       (container) => {
-        formData.value = container ? { ...container } : null
+        formData.value = Object.assign(formData.value || {}, container)
       },
       { immediate: true },
     )
@@ -95,7 +95,10 @@ export default defineComponent({
 
     // ========== Handlers ==========
     function handleContainerChange(container: Container) {
-      formData.value = container
+      // Prevent recursive updates by checking if the container has actually changed
+      if (JSON.stringify(formData.value) !== JSON.stringify(container)) {
+        formData.value = container
+      }
     }
 
     async function handleConfirm() {

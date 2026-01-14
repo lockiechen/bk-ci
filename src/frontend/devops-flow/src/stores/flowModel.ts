@@ -138,13 +138,6 @@ export const useFlowModelStore = defineStore('flowModel', () => {
       // 为每个 stage 的每个 container 添加 dispatchType 并删除 baseOS
       modelCopy.stages?.forEach((stage: any) => {
         stage.containers?.forEach((container: any) => {
-          if (!container.dispatchType) {
-            // TODO：暂时先写死，后续产品要求变更在相应更改
-            container.dispatchType = {
-              buildType: 'CREATE_AGENT_ENV',
-              value: '${{BK_CI_CREATIVE_STREAM_NODE_AGENT_ID}}',
-            }
-          }
           // 删除 baseOS 字段
           if (container.baseOS) {
             delete container.baseOS

@@ -1,22 +1,21 @@
-import {
-  defineComponent,
-  ref,
-  computed,
-  watch,
-  type PropType,
-  Transition,
-  onMounted,
-  onUnmounted,
-} from 'vue'
-import { useI18n } from 'vue-i18n'
-import { Input, Tab, Loading, Exception, Message } from 'bkui-vue'
+import { JobCategory, JobType, type AtomClassify, type AtomItem } from '@/api/atom'
+import type { Container } from '@/api/flowModel'
+import { SvgIcon } from '@/components/SvgIcon'
 import { useAtomManager } from '@/hooks/useAtomManager'
 import { useAtomVersion } from '@/hooks/useAtomVersion'
-import { JobType, type AtomItem, type AtomClassify, JobCategory } from '@/api/atom'
-import type { Container } from '@/api/flowModel'
-import styles from './AtomSelector.module.css'
-import { SvgIcon } from '@/components/SvgIcon'
+import { Exception, Input, Loading, Message, Tab } from 'bkui-vue'
+import {
+  Transition,
+  computed,
+  defineComponent,
+  ref,
+  watch,
+  type PropType
+} from 'vue'
+import { useI18n } from 'vue-i18n'
+import { useRoute } from 'vue-router'
 import AtomCard from './AtomCard'
+import styles from './AtomSelector.module.css'
 
 const { TabPanel } = Tab
 
@@ -48,14 +47,15 @@ export default defineComponent({
   setup(props, { emit }) {
     // ========== Hooks ==========
     const { t } = useI18n()
-    const projectCode = 'lockie'
+    const route = useRoute()
+    const projectCode = computed(() => route.params.projectId as string)    
     const atomManager = useAtomManager({
-      projectCode,
-      jobType: JobType.AGENT,
       os: ['WINDOWS'],
       category: JobCategory.TASK,
     })
-    const atomVersion = useAtomVersion({ projectCode })
+    const atomVersion = useAtomVersion({
+      projectCode: projectCode.value
+    })
 
     // ========== Refs ==========
     const searchKey = ref('')
@@ -70,6 +70,7 @@ export default defineComponent({
     const hasMore = ref(true)
 
     // ========== Computed ==========
+    
     const currentAtomCode = computed(() => {
       const element = props.container?.elements?.[props.atomIndex]
       if (element) {
@@ -258,6 +259,7 @@ export default defineComponent({
         const result = await atomManager.fetchAtomList({
           classifyId: classifyId.value,
           keyword: searchKey.value,
+          jobType: props.container?.['@type'] === 'normal' ? JobType.AGENT_LESS : JobType.AGENT,
           page: currentPage.value,
           pageSize: 20,
         })
@@ -335,7 +337,7 @@ export default defineComponent({
                               atom={atom}
                               activeAtomCode={activeAtomCode.value}
                               currentAtomCode={currentAtomCode.value}
-                              projectCode={projectCode}
+                              projectCode={projectCode.value}
                               onSelect={handleSelectAtom}
                               onInstall-success={handleInstallSuccess}
                               onClick={handleSetActiveAtom}
@@ -369,7 +371,7 @@ export default defineComponent({
                           atom={atom}
                           activeAtomCode={activeAtomCode.value}
                           currentAtomCode={currentAtomCode.value}
-                          projectCode={projectCode}
+                          projectCode={projectCode.value}
                           onSelect={handleSelectAtom}
                           onInstall-success={handleInstallSuccess}
                           onClick={handleSetActiveAtom}
@@ -394,7 +396,7 @@ export default defineComponent({
                           atom={atom}
                           activeAtomCode={activeAtomCode.value}
                           currentAtomCode={currentAtomCode.value}
-                          projectCode={projectCode}
+                          projectCode={projectCode.value}
                           onSelect={handleSelectAtom}
                           onInstall-success={handleInstallSuccess}
                           onClick={handleSetActiveAtom}

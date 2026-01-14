@@ -103,6 +103,13 @@ export function useFlowModel() {
     return flowModel.value?.stages[stageIndex] || null
   })
 
+  // 当前编辑 Element 所属的 Job
+  const editingElementContainer = computed(() => {
+    if (!isEditingPlugin.value) return null
+    const { stageIndex, containerIndex } = realEditingPos.value
+    return flowModel.value?.stages[stageIndex]?.containers?.[containerIndex]
+  })
+
   // 当前编辑 Job 的索引
   const editingContainerIndex = computed(() => {
     if (!isEditingJob.value) return -1
@@ -344,10 +351,13 @@ export function useFlowModel() {
       jobId: generateId('job'),
       '@type': containerType,
       classType: containerType,
-      dispatchType: {
-        buildType: 'CREATE_AGENT_ENV',
-        value: '${{BK_CI_CREATIVE_STREAM_NODE_AGENT_ID}}',
-      },
+      ...(jobType === 'vmBuild' ? {
+          dispatchType: {
+            buildType: 'CREATE_AGENT_ENV',
+            value: '${{BK_CI_CREATIVE_STREAM_NODE_AGENT_ID}}',
+          }
+        } : {}
+      ),
     })
     console.log('handleAddJob', stageIndex, containerIndex, newContainer, stage.containers.length)
     setEditingPos({ stageIndex, containerIndex: stage.containers.length })
@@ -529,6 +539,7 @@ export function useFlowModel() {
     editingContainerStage,
     editingContainerIndex,
     isEditingFinallyStage,
+    editingElementContainer,
     editingElement, // Plugin context
 
     // Actions

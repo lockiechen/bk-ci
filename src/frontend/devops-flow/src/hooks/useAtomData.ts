@@ -18,7 +18,6 @@ interface UseAtomDataOptions {
 
 export const useAtomData = (options: UseAtomDataOptions) => {
   const { projectCode, jobType = JobType.AGENT, os = ['WINDOWS'] } = options
-
   // 缓存数据
   const atomCache = ref<AtomDataCache>({})
   const classifyList = ref<AtomClassify[]>([])
@@ -105,7 +104,7 @@ export const useAtomData = (options: UseAtomDataOptions) => {
         const result = await fetchAtoms({
           projectCode,
           category: JobCategory.TASK,
-          jobType: JobType.AGENT,
+          jobType,
           classifyId,
           os: os.join(','),
           keyword,

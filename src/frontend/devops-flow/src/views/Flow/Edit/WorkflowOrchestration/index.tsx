@@ -29,6 +29,7 @@ export default defineComponent({
       isNewStage,
       isNewJob,
       editingContainerStage,
+      editingElementContainer,
       editingContainerIndex,
       isEditingFinallyStage,
       hasFlowStages,
@@ -186,6 +187,7 @@ export default defineComponent({
         {/* Atom selector */}
         <AtomSelector
           v-model:visible={isAtomSelectorVisible.value}
+          container={editingElementContainer.value}
           onSelect={handleAtomSelect}
         />
       </Loading>

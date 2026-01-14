@@ -136,21 +136,14 @@ export default defineComponent({
     )
     const showDependOnName = computed(() => jobCtrl.value?.dependOnType === DependOnType.NAME)
 
-    // ========== Watchers ==========
-    // Sync props.container to formData
-    watch(
-      () => props.container,
-      (container) => {
-        formData.value = container ? { ...container } : null
-      },
-      { immediate: true },
-    )
-
-    // Clean up runCondition related fields
+    // Clean up runCondition related fields - with guard to prevent recursive updates
     watch(
       () => jobCtrl.value?.runCondition,
-      (condition) => {
+      (condition, oldCondition) => {
         if (!formData.value?.jobControlOption) return
+        
+        // Skip if condition hasn't actually changed
+        if (condition === oldCondition) return
 
         const isVarMatch = [
           JobRunCondition.CUSTOM_VARIABLE_MATCH,
@@ -169,7 +162,16 @@ export default defineComponent({
       },
     )
 
-    // Emit change when formData changes
+    // ========== Watchers ==========
+    // Sync props.container to formData
+    watch(
+      () => props.container,
+      (container) => {
+        formData.value = container ? { ...container } : null
+      },
+      { immediate: true },
+    )
+    // Emit change when formData changes - with debounce to prevent recursive updates
     watch(
       formData,
       () => {

@@ -1,3 +1,4 @@
+import { useRoute } from 'vue-router'
 import { ref, computed, reactive } from 'vue'
 import { fetchAtoms, fetchAtomClassify, type AtomItem, type AtomClassify, JobType, JobCategory } from '@/api/atom'
 
@@ -14,8 +15,6 @@ interface AtomCacheMap {
 }
 
 interface UseAtomManagerOptions {
-  projectCode: string
-  jobType?: JobType
   os?: string[]
   category?: JobCategory
 }
@@ -25,12 +24,14 @@ interface UseAtomManagerOptions {
  * 提供插件分类和插件列表的缓存管理
  */
 export const useAtomManager = (options: UseAtomManagerOptions) => {
+  const route = useRoute()
   const {
-    projectCode,
-    jobType = JobType.AGENT,
     os = ['WINDOWS'],
     category = JobCategory.TASK
   } = options
+  const projectCode = computed(() => {
+    return route.params.projectId
+  })
 
   // 全局状态
   const classifyList = ref<AtomClassify[]>([])
@@ -43,9 +44,10 @@ export const useAtomManager = (options: UseAtomManagerOptions) => {
   // 生成缓存键
   const generateCacheKey = (params: {
     classifyId?: string
-    keyword?: string
+    keyword?: string,
+    jobType?: JobType
   }) => {
-    const { classifyId = '', keyword = '' } = params
+    const { classifyId = '', keyword = '', jobType } = params
     return `${category}_${classifyId}_${keyword}_${jobType}_${os.join(',')}`
   }
 
@@ -78,6 +80,7 @@ export const useAtomManager = (options: UseAtomManagerOptions) => {
   // 获取插件列表
   const fetchAtomList = async (params: {
     classifyId?: string
+    jobType: JobType
     keyword?: string
     page?: number
     pageSize?: number
@@ -90,12 +93,13 @@ export const useAtomManager = (options: UseAtomManagerOptions) => {
     const {
       classifyId = '',
       keyword = '',
+      jobType,
       page = 1,
       pageSize = 20,
       forceRefresh = false
     } = params
 
-    const cacheKey = generateCacheKey({ classifyId, keyword })
+    const cacheKey = generateCacheKey({ classifyId, keyword, jobType })
 
     // 初始化缓存
     if (!atomCacheMap[cacheKey]) {
@@ -132,7 +136,7 @@ export const useAtomManager = (options: UseAtomManagerOptions) => {
 
     try {
       const result = await fetchAtoms({
-        projectCode,
+        projectCode: projectCode.value,
         category,
         jobType,
         classifyId,
@@ -179,6 +183,7 @@ export const useAtomManager = (options: UseAtomManagerOptions) => {
   const getCachedAtomList = (params: {
     classifyId?: string
     keyword?: string
+    jobType?: JobType
   } = {}): AtomItem[] => {
     const cacheKey = generateCacheKey(params)
     return atomCacheMap[cacheKey]?.data || []
@@ -187,7 +192,8 @@ export const useAtomManager = (options: UseAtomManagerOptions) => {
   // 检查是否正在加载
   const isLoadingAtoms = (params: {
     classifyId?: string
-    keyword?: string
+    keyword?: string,
+    jobType?: JobType
   } = {}) => {
     const cacheKey = generateCacheKey(params)
     return atomCacheMap[cacheKey]?.loading || false
@@ -196,7 +202,8 @@ export const useAtomManager = (options: UseAtomManagerOptions) => {
   // 清除指定缓存
   const clearCache = (params?: {
     classifyId?: string
-    keyword?: string
+    keyword?: string,
+    jobType?: JobType
   }) => {
     if (params) {
       const cacheKey = generateCacheKey(params)
@@ -220,7 +227,8 @@ export const useAtomManager = (options: UseAtomManagerOptions) => {
   // 刷新数据
   const refreshData = async (params: {
     classifyId?: string
-    keyword?: string
+    keyword?: string,
+    jobType?: JobType
   } = {}) => {
     return await fetchAtomList({ ...params, forceRefresh: true })
   }

@@ -152,7 +152,12 @@ export default defineComponent({
 
     const paramsGroupMap = computed<Record<string, GroupMapItem>>(() => {
       
-      const { inputGroups = [], input = {} } = props.atomPropsModel
+      const { inputGroups = [] } = props.atomPropsModel
+      let { input } = props.atomPropsModel
+
+      if (!input) {
+        input = props.atomPropsModel
+      }
 
       // 初始化分组映射，包含 rootProps 用于存放未分组的字段
       const groupMap = inputGroups.reduce<Record<string, GroupMapItem>>((acc, group) => {
