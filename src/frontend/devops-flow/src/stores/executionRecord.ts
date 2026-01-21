@@ -18,25 +18,28 @@ export const useExecutionRecordStore = defineStore('executionRecord', () => {
     totalPages: 0,
   })
 
-  // Query parameters
-  const queryParams = ref<{
-    projectId: string
-    pipelineId: string
-    startTime?: string
-    endTime?: string
-    keyword?: string
-    status?: string[]
-    trigger?: string[]
-    debug?: boolean
-  }>({
+  const initialQueryParams: Omit<ExecutionRecordQueryParams, 'page' | 'pageSize'> = {
     projectId: '',
     pipelineId: '',
     startTime: undefined,
     endTime: undefined,
-    keyword: undefined,
     status: undefined,
     trigger: undefined,
+    materialAlias: undefined,
+    triggerAlias: undefined,
+    materialCommitId: undefined,
+    materialCommitMessage: undefined,
+    triggerUser: undefined,
+    materialBranch: undefined,
+    triggerBranch: undefined,
+    remark: undefined,
+    artifactQuality: undefined,
     debug: false,
+  }
+
+  // Query parameters
+  const queryParams = ref<Omit<ExecutionRecordQueryParams, 'page' | 'pageSize'>>({
+    ...initialQueryParams,
   })
 
   // Loading state
@@ -64,18 +67,11 @@ export const useExecutionRecordStore = defineStore('executionRecord', () => {
     loading.value = true
     try {
       const params: ExecutionRecordQueryParams = {
-        projectId: queryParams.value.projectId,
-        pipelineId: queryParams.value.pipelineId,
+        ...queryParams.value,
         page: page || pagination.value.current,
         pageSize: pagination.value.limit,
-        startTime: queryParams.value.startTime,
-        endTime: queryParams.value.endTime,
-        keyword: queryParams.value.keyword,
-        status: queryParams.value.status,
-        trigger: queryParams.value.trigger,
-        debug: queryParams.value.debug,
       }
-
+      console.log('params', params)
       const response = await getExecutionRecords(params)
       records.value = response.list
       pagination.value.count = response.count
@@ -140,16 +136,7 @@ export const useExecutionRecordStore = defineStore('executionRecord', () => {
       limit: 20,
       totalPages: 0,
     }
-    queryParams.value = {
-      projectId: '',
-      pipelineId: '',
-      startTime: undefined,
-      endTime: undefined,
-      keyword: undefined,
-      status: undefined,
-      trigger: undefined,
-      debug: false,
-    }
+    queryParams.value = { ...initialQueryParams }
   }
 
   return {

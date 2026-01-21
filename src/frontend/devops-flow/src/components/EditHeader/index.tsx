@@ -1,4 +1,5 @@
 import { ReleaseSlider } from '@/components/ReleaseSlider'
+import { FLOW_GROUP_TYPES } from '@/constants/flowGroup'
 import { ROUTE_NAMES } from '@/constants/routes'
 import { useFlowModel } from '@/hooks/useFlowModel'
 import { useUIStore } from '@/stores/ui'
@@ -8,7 +9,7 @@ import { useI18n } from 'vue-i18n'
 import { useRoute, useRouter } from 'vue-router'
 import { useFlowInfo } from '../../hooks/useFlowInfo'
 import { CommonHeader } from '../CommonHeader'
-import { FLOW_GROUP_TYPES } from '@/constants/flowGroup'
+import FlowSelector from '../FlowHeader/FlowSelector'
 import styles from './EditHeader.module.css'
 
 export const EditHeader = defineComponent({
@@ -23,8 +24,8 @@ export const EditHeader = defineComponent({
     const { t } = useI18n()
     const route = useRoute()
     const router = useRouter()
-    const flowId = route.params.flowId as string
-    const projectId = (route.params.projectId as string) || (route.query.projectId as string)
+    const flowId = computed(() => route.params.flowId as string)
+    const projectId = computed(() => route.params.projectId as string)
 
     const flowModel = useFlowModel()
     const { flowInfo } = useFlowInfo()
@@ -70,7 +71,7 @@ export const EditHeader = defineComponent({
     }
 
     const handleSave = async () => {
-      if (!projectId) {
+      if (!projectId.value) {
         Message({
           theme: 'error',
           message: t('flow.content.projectIdRequired'),
@@ -90,8 +91,8 @@ export const EditHeader = defineComponent({
 
       try {
         const response = await flowModel.saveFlow({
-          projectId,
-          pipelineId: flowId,
+          projectId: projectId.value,
+          pipelineId: flowId.value,
           storageType: 'MODEL',
         })
 
@@ -142,7 +143,7 @@ export const EditHeader = defineComponent({
 
     const handleReleased = () => {
       // Reload flow model after release
-      flowModel.loadFlow(projectId, flowId, route.params.version as string, true)
+      flowModel.loadFlow(projectId.value, flowId.value, route.params.version as string, true)
     }
 
     // Render version tag in breadcrumb area
@@ -160,6 +161,14 @@ export const EditHeader = defineComponent({
       <>
         <CommonHeader loading={props.loading} workflowName={workflowName.value} onWorkflowNameClick={handleCancel}>
           {{
+            'workflow-selector': () => (
+              <FlowSelector
+                projectId={projectId.value}
+                currentFlowId={flowId.value}
+                currentFlowName={workflowName.value}
+                onNameClick={handleCancel}
+              />
+            ),
             'version-selector': renderVersionTag,
             default: () => (
               <div class={styles.editHeader}>
@@ -197,8 +206,8 @@ export const EditHeader = defineComponent({
 
         <ReleaseSlider
           v-model:isShow={isReleaseSliderShow.value}
-          projectId={projectId}
-          flowId={flowId}
+          projectId={projectId.value}
+          flowId={flowId.value}
           version={currentVersion.value}
           baseVersionName={baseVersionName.value}
           onReleased={handleReleased}

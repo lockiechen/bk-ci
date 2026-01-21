@@ -165,29 +165,90 @@ export function convertFileSize(size: number, unit: string = 'B'): string {
   }
 }
 
+interface RandomIdOptions {
+  length?: number
+  prefix?: string
+  useTimestamp?: boolean
+  type?: 'base36' | 'hex' | 'safe' | 'uuid'
+}
+
+/**
+ * 统一的随机 ID 生成函数
+ * @param options 配置项
+ * @returns 生成的字符串
+ */
+export function generateRandomId(options: RandomIdOptions = {}): string {
+  const { length = 8, prefix = '', useTimestamp = false, type = 'base36' } = options
+
+  if (type === 'uuid') {
+    return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'
+      .replace(/[xy]/g, (c) => {
+        const r = (Math.random() * 16) | 0
+        const v = c === 'x' ? r : (r & 0x3) | 0x8
+        return v.toString(16)
+      })
+      .replace(/-/g, '')
+  }
+
+  let chars = '0123456789abcdefghijklmnopqrstuvwxyz' // base36
+  if (type === 'hex') {
+    chars = '0123456789abcdef'
+  } else if (type === 'safe') {
+    chars = 'ABCDEFGHJKLMNPQRSTWXYZabcdefhijklmnprstwxyz012345678'
+  }
+
+  let randomPart = ''
+  const charsLen = chars.length
+  for (let i = 0; i < length; i++) {
+    randomPart += chars.charAt(Math.floor(Math.random() * charsLen))
+  }
+
+  const parts: string[] = []
+  if (prefix) parts.push(prefix)
+  if (useTimestamp) parts.push(Date.now().toString())
+  parts.push(randomPart)
+
+  return parts.join('-')
+}
+
 /**
  * 生成随机字符串
  * @param len 随机字符串长度
- * @returns 
+ * @returns
+ * @deprecated Use generateRandomId instead
  */
 export function randomString(len: number) {
-    const chars = 'ABCDEFGHJKLMNPQRSTWXYZabcdefhijklmnprstwxyz012345678'
-    const tempLen = chars.length
-    let tempStr = ''
-    for (let i = 0; i < len; ++i) {
-        tempStr += chars.charAt(Math.floor(Math.random() * tempLen))
-    }
-    return tempStr
+  return generateRandomId({ length: len, type: 'safe' })
 }
 
 /**
  * 生成唯一标识符（用于日志轮询标识）
  * @returns UUID 格式的唯一 ID
+ * @deprecated Use generateRandomId instead
  */
 export function hashID(): string {
-    return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, (c) => {
-        const r = Math.random() * 16 | 0
-        const v = c === 'x' ? r : (r & 0x3 | 0x8)
-        return v.toString(16)
-    }).replace(/-/g, '')
+  return generateRandomId({ type: 'uuid' })
+}
+
+export function debounce<T extends (...args: any[]) => any>(
+  func: T,
+  wait: number,
+  immediate: boolean = false
+): (...args: Parameters<T>) => void {
+  let timeout: ReturnType<typeof setTimeout> | null = null
+
+  return function(this: any, ...args: Parameters<T>) {
+    const context = this
+
+    const later = function() {
+      timeout = null
+      if (!immediate) func.apply(context, args)
+    }
+
+    const callNow = immediate && !timeout
+    if (timeout) clearTimeout(timeout)
+    timeout = setTimeout(later, wait)
+
+    if (callNow) func.apply(context, args)
+  }
 }

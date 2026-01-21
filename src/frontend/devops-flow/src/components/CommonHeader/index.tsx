@@ -59,14 +59,16 @@ export const CommonHeader = defineComponent({
           <SvgIcon name="angle-down" class={styles.separatorIcon} size={18} />
 
           {/* 工作流名称 */}
-          <span
-            class={[styles.workflowName, props.onWorkflowNameClick && styles.clickable]}
-            onClick={handleWorkflowNameClick}
-          >
-            {props.workflowName}
-          </span>
-
-          <SvgIcon name="exchange-line" class={styles.exchangeIcon} />
+          {slots['workflow-selector'] ? (
+            slots['workflow-selector']()
+          ) : (
+            <span
+                class={[styles.workflowName, props.onWorkflowNameClick && styles.clickable]}
+                onClick={handleWorkflowNameClick}
+              >
+                {props.workflowName}
+              </span>
+          )}
 
           {/* 执行详情插槽 */}
           {slots['execution-detail'] && (

@@ -1,4 +1,5 @@
 import { CommonHeader } from '@/components/CommonHeader'
+import FlowSelector from '@/components/FlowHeader/FlowSelector'
 import { SvgIcon } from '@/components/SvgIcon'
 import { ROUTE_NAMES } from '@/constants/routes'
 import { useExecuteDetail, type ExecuteInfo } from '@/hooks/useExecuteDetail'
@@ -20,8 +21,8 @@ export default defineComponent({
     const { t } = useI18n()
     const router = useRouter()
     const route = useRoute()
-    const projectId = route.params.projectId as string
-    const flowId = route.params.flowId as string
+    const projectId = computed(() => route.params.projectId as string)
+    const flowId = computed(() => route.params.flowId as string)
     const btnLoading = ref(false)
     const { flowInfo, isRunning, isDebugExec, stopExecute, requestRePlayFlow, requestRetryFlow } =
       useExecuteDetail()
@@ -31,7 +32,7 @@ export default defineComponent({
       router.push({
         name: ROUTE_NAMES.FLOW_DETAIL_EXECUTION_RECORD,
         params: {
-          flowId,
+          flowId: flowId.value,
           version: flowInfo.value?.releaseVersion
         },
       })
@@ -41,7 +42,7 @@ export default defineComponent({
     const handleCancel = async () => {
       try {
         btnLoading.value = true
-        const res = await stopExecute(flowId)
+        const res = await stopExecute(flowId.value)
         if (res) {
           Message({
             message: t('flow.execute.stopSuc'),
@@ -61,8 +62,8 @@ export default defineComponent({
       const retryFn = type === 'reBuild' ? requestRetryFlow : requestRePlayFlow
       // 请求执行构建
       const res = await retryFn({
-        projectId,
-        pipelineId: flowId,
+        projectId: projectId.value,
+        pipelineId: flowId.value,
         buildId,
         forceTrigger,
       })
@@ -158,7 +159,11 @@ export default defineComponent({
     const handleEdit = () => {
       router.push({
         name: ROUTE_NAMES.FLOW_EDIT_WORKFLOW_ORCHESTRATION,
-        params: { flowId, version: flowInfo.value?.version, projectId },
+        params: { flowId: 
+          flowId.value,
+          version: flowInfo.value?.version,
+          projectId: projectId.value,
+         },
       })
     }
 
@@ -166,7 +171,11 @@ export default defineComponent({
     const handleExecute = () => {
       router.push({
         name: ROUTE_NAMES.FLOW_PREVIEW,
-        params: { flowId, version: flowInfo.value?.version, projectId },
+        params: { 
+          flowId: flowId.value,
+          version: flowInfo.value?.version,
+          projectId: projectId.value,
+        },
       })
     }
 
@@ -174,6 +183,14 @@ export default defineComponent({
       <div>
         <CommonHeader workflowName={props.executeInfo.name} onWorkflowNameClick={handleFlowDetail}>
           {{
+            'workflow-selector': () => (
+              <FlowSelector
+                projectId={projectId.value}
+                currentFlowId={flowId.value}
+                currentFlowName={props.executeInfo.name}
+                onNameClick={handleFlowDetail}
+              />
+            ),
             'execution-detail': () => (
               <span>{`${t('flow.execute.executeDetail')}: #${props.executeInfo.currentBuildNum}`}</span>
             ),

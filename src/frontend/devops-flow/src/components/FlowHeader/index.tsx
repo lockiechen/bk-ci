@@ -13,6 +13,7 @@ import { useRoute, useRouter } from 'vue-router'
 import ExtMenu from '../ExtMenu'
 import { SvgIcon } from '../SvgIcon'
 import { ExportFlowDialog } from './ExportFlowDialog'
+import FlowSelector from './FlowSelector'
 import styles from './index.module.css'
 
 const { Option } = Select
@@ -158,6 +159,13 @@ export const FlowHeader = defineComponent({
         <>
           <CommonHeader loading={props.loading} workflowName={props.flowInfo?.pipelineName }>
             {{
+              'workflow-selector': () => (
+                <FlowSelector
+                  projectId={route.params.projectId as string}
+                  currentFlowId={props.flowInfo?.pipelineId || (route.params.flowId as string)}
+                  currentFlowName={props.flowInfo?.pipelineName}
+                />
+              ),
               'version-selector': () => (
                 <Select
                   v-model={selectedVersion.value}

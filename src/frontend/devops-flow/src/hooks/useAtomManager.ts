@@ -1,6 +1,6 @@
+import { fetchAtomClassify, fetchAtoms, JobCategory, JobType, type AtomClassify, type AtomItem } from '@/api/atom'
+import { computed, reactive, ref } from 'vue'
 import { useRoute } from 'vue-router'
-import { ref, computed, reactive } from 'vue'
-import { fetchAtoms, fetchAtomClassify, type AtomItem, type AtomClassify, JobType, JobCategory } from '@/api/atom'
 
 interface AtomListCache {
   data: AtomItem[]
@@ -15,7 +15,6 @@ interface AtomCacheMap {
 }
 
 interface UseAtomManagerOptions {
-  os?: string[]
   category?: JobCategory
 }
 
@@ -26,11 +25,10 @@ interface UseAtomManagerOptions {
 export const useAtomManager = (options: UseAtomManagerOptions) => {
   const route = useRoute()
   const {
-    os = ['WINDOWS'],
     category = JobCategory.TASK
   } = options
   const projectCode = computed(() => {
-    return route.params.projectId
+    return route.params.projectId as string
   })
 
   // 全局状态
@@ -48,7 +46,7 @@ export const useAtomManager = (options: UseAtomManagerOptions) => {
     jobType?: JobType
   }) => {
     const { classifyId = '', keyword = '', jobType } = params
-    return `${category}_${classifyId}_${keyword}_${jobType}_${os.join(',')}`
+    return `${category}_${classifyId}_${keyword}_${jobType}`
   }
 
   // 检查缓存是否有效
@@ -80,12 +78,12 @@ export const useAtomManager = (options: UseAtomManagerOptions) => {
   // 获取插件列表
   const fetchAtomList = async (params: {
     classifyId?: string
-    jobType: JobType
+    jobType?: JobType
     keyword?: string
     page?: number
     pageSize?: number
     forceRefresh?: boolean
-  } = {}): Promise<{
+  }): Promise<{
     records: AtomItem[]
     hasMore: boolean
     page: number
@@ -140,7 +138,7 @@ export const useAtomManager = (options: UseAtomManagerOptions) => {
         category,
         jobType,
         classifyId,
-        os: os.join(','),
+        os: 'WINDOWS',
         keyword,
         page,
         pageSize

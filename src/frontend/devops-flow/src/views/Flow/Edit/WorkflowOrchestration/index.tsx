@@ -187,7 +187,7 @@ export default defineComponent({
         {/* Atom selector */}
         <AtomSelector
           v-model:visible={isAtomSelectorVisible.value}
-          container={editingElementContainer.value}
+          container={editingElementContainer.value ?? undefined}
           onSelect={handleAtomSelect}
         />
       </Loading>

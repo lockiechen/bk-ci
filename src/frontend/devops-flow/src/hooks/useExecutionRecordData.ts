@@ -1,5 +1,6 @@
 import { storeToRefs } from 'pinia'
-import { onMounted, watch } from 'vue'
+import { computed, onMounted, watch } from 'vue'
+import { useRoute } from 'vue-router'
 import type { ExecutionRecord, ExecutionRecordQueryParams } from '../api/executionRecord'
 import { useExecutionRecordStore } from '../stores/executionRecord'
 
@@ -7,39 +8,27 @@ import { useExecutionRecordStore } from '../stores/executionRecord'
  * Execution record data hook
  * Fetches data from store, processes it, and provides it to components
  */
-export function useExecutionRecordData(projectId: string, pipelineId: string, debug = false) {
+export function useExecutionRecordData(debug = false) {
   const store = useExecutionRecordStore()
+  const route = useRoute()
+  const projectId = computed(() => route.params.projectId as string)
+  const flowId = computed(() => route.params.flowId as string)
 
   // Use storeToRefs to ensure reactivity
   const { records, pagination, queryParams, loading } =
     storeToRefs(store)
 
-  // Initialize query parameters
-  const needsInit = !queryParams.value.projectId || 
-    !queryParams.value.pipelineId ||
-    queryParams.value.projectId !== projectId ||
-    queryParams.value.pipelineId !== pipelineId
-
-  if (needsInit) {
-    store.setQueryParams({ projectId, pipelineId, debug })
-  }
-
   // Watch for projectId and pipelineId changes
   watch(
-    () => [projectId, pipelineId],
+    () => [projectId.value, flowId.value],
     ([newProjectId, newPipelineId]) => {
       if (newProjectId && newPipelineId) {
-        const needsUpdate = queryParams.value.projectId !== newProjectId ||
-          queryParams.value.pipelineId !== newPipelineId
-        
-        if (needsUpdate) {
-          store.setQueryParams({ 
+        store.setQueryParams({ 
             projectId: newProjectId, 
             pipelineId: newPipelineId,
             debug,
           })
           store.loadExecutionRecords(1)
-        }
       }
     },
     { immediate: true },
@@ -50,9 +39,17 @@ export function useExecutionRecordData(projectId: string, pipelineId: string, de
     () => [
       queryParams.value.startTime, 
       queryParams.value.endTime, 
-      queryParams.value.keyword,
       queryParams.value.status,
       queryParams.value.trigger,
+      queryParams.value.materialAlias,
+      queryParams.value.triggerAlias,
+      queryParams.value.materialCommitId,
+      queryParams.value.materialCommitMessage,
+      queryParams.value.triggerUser,
+      queryParams.value.materialBranch,
+      queryParams.value.triggerBranch,
+      queryParams.value.remark,
+      queryParams.value.artifactQuality,
     ],
     () => {
       if (queryParams.value.projectId && queryParams.value.pipelineId) {

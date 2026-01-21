@@ -1,16 +1,34 @@
+import { fetchAuthoringEnvList } from '@/api/authoringEnvironmentApi'
 import type { ExecutionRecord } from '@/api/executionRecord'
+import { getHistoryConditionList } from '@/api/executionRecord'
 import StageSteps from '@/components/StageSteps'
 import StatusIcon from '@/components/StatusIcon'
 import { ROUTE_NAMES } from '@/constants/routes'
 import { useExecutionRecordData } from '@/hooks/useExecutionRecordData'
+import { useExecutionRecordStore } from '@/stores/executionRecord'
 import { statusColorMap } from '@/utils/flowStatus'
 import SearchSelect from '@blueking/search-select-v3'
 import { DatePicker, Loading, Table } from 'bkui-vue'
 import type { Column } from 'bkui-vue/lib/table/props'
-import { computed, defineComponent, ref, watch } from 'vue'
+import { computed, defineComponent, onMounted, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useRoute, useRouter } from 'vue-router'
 import styles from './ExecutionRecord.module.css'
+
+// Constants for Search Keys
+const SEARCH_KEY = {
+  STATUS: 'status',
+  TRIGGER: 'trigger',
+  TRIGGER_USER: 'triggerUser',
+  WORKFLOW_NODE: 'workflowNode', // Map to materialBranch for API
+  REMARK: 'remark',
+} as const
+
+type SearchValues = { 
+  id: string;
+  name: string;
+  values?: Array<{ id: string; name: string }>
+}[]
 
 export default defineComponent({
   name: 'ExecutionRecord',
@@ -21,6 +39,152 @@ export default defineComponent({
     const projectId = computed(() => route.params.projectId as string)
     const flowId = computed(() => route.params.flowId as string)
 
+    // Initialize store
+    const store = useExecutionRecordStore()
+
+    const statusList = ref<any[]>([])
+    const triggerList = ref<any[]>([])
+    // const workflowNodeList = ref<any[]>([]) // Remove this
+
+    // Load initial data
+    onMounted(async () => {
+      if (projectId.value && flowId.value) {
+        try {
+          const [statuses, triggers] = await Promise.all([
+            getHistoryConditionList(projectId.value, flowId.value, SEARCH_KEY.STATUS),
+            getHistoryConditionList(projectId.value, flowId.value, SEARCH_KEY.TRIGGER),
+          ])
+          statusList.value = statuses
+          triggerList.value = triggers
+        } catch (e) {
+          console.error(e)
+        }
+      }
+    })
+
+    // 远程获取节点列表
+    const getWorkflowNodes = async (keyword: string) => {
+      if (!projectId.value) return []
+      try {
+        const res = await fetchAuthoringEnvList({ projectId: projectId.value })
+        const list = res.map((item) => ({
+          id: item.envHashId,
+          name: item.name,
+        }))
+
+        if (!keyword) return list
+
+        return list.filter((item) => item.name.toLowerCase().includes(keyword.toLowerCase()))
+      } catch (e) {
+        console.error(e)
+        return []
+      }
+    }
+
+    const getMenuList = async (item: any, keyword: string) => {
+      if (item.id === SEARCH_KEY.WORKFLOW_NODE) {
+        return await getWorkflowNodes(keyword)
+      }
+      return []
+    }
+
+    // 搜索选择器的数据配置
+    const searchData = computed(() => [
+      {
+        id: SEARCH_KEY.STATUS,
+        name: t('flow.content.status'),
+        multiable: true,
+        children: statusList.value.map((item) => ({ id: item.id, name: item.value })),
+      },
+      {
+        id: SEARCH_KEY.TRIGGER,
+        name: t('flow.content.triggerMethod'),
+        multiable: true,
+        children: triggerList.value.map((item) => ({ id: item.id, name: item.value })),
+      },
+      {
+        id: SEARCH_KEY.TRIGGER_USER,
+        name: t('flow.content.triggerUser'),
+      },
+      {
+        id: SEARCH_KEY.WORKFLOW_NODE,
+        name: t('flow.content.workflowNode'),
+        async: true,
+      },
+      {
+        id: SEARCH_KEY.REMARK,
+        name: t('flow.content.remark'),
+      },
+    ])
+
+    // 日期范围
+    const dateRange = ref<[Date, Date] | null>(null)
+
+    // 搜索选择器的值
+    const searchValue = ref<SearchValues>([])
+
+    // 初始化：从 URL query 恢复搜索条件
+    const {
+      startTime,
+      endTime,
+      status,
+      trigger,
+      triggerUser,
+      materialBranch,
+      remark,
+    } = route.query
+
+    // 恢复日期
+    if (startTime && endTime) {
+      dateRange.value = [new Date(startTime as string), new Date(endTime as string)]
+    }
+
+    // 恢复 SearchSelect
+    const initialSearchValue: any[] = []
+
+    // Helper to restore search items
+    const restoreSearchItem = (key: string, id: string, isMulti = false) => {
+      const value = route.query[key]
+      if (value) {
+        const item = searchData.value.find((d) => d.id === id)
+        if (item) {
+          if (isMulti) {
+            const list = Array.isArray(value) ? value : [value]
+            const values = (list as string[]).map((v) => {
+              const option = item.children?.find((c) => c.id === v)
+              return { id: v, name: option?.name || v }
+            })
+            initialSearchValue.push({ id, name: item.name, values })
+          } else {
+            initialSearchValue.push({ id, name: item.name, values: [{ id: value as string, name: value as string }] })
+          }
+        }
+      }
+    }
+
+    restoreSearchItem(SEARCH_KEY.STATUS, SEARCH_KEY.STATUS, true)
+    restoreSearchItem(SEARCH_KEY.TRIGGER, SEARCH_KEY.TRIGGER, true)
+    restoreSearchItem(SEARCH_KEY.TRIGGER_USER, SEARCH_KEY.TRIGGER_USER)
+    restoreSearchItem(SEARCH_KEY.WORKFLOW_NODE, SEARCH_KEY.WORKFLOW_NODE)
+    restoreSearchItem(SEARCH_KEY.REMARK, SEARCH_KEY.REMARK)
+
+    if (initialSearchValue.length > 0) {
+      searchValue.value = initialSearchValue
+    }
+
+    // 更新 store (在调用 hook 之前)
+    if (Object.keys(route.query).length > 0) {
+      store.setQueryParams({
+        startTime: startTime as string,
+        endTime: endTime as string,
+        status: Array.isArray(status) ? status : status ? [status] : undefined,
+        trigger: Array.isArray(trigger) ? trigger : trigger ? [trigger] : undefined,
+        triggerUser: triggerUser as string,
+        materialBranch: materialBranch as string,
+        remark: remark as string,
+      } as any)
+    }
+
     // Use hook to manage execution record data
     const {
       records: tableData,
@@ -29,65 +193,7 @@ export default defineComponent({
       handlePageChange,
       handleLimitChange,
       updateQueryParams,
-    } = useExecutionRecordData(projectId.value, flowId.value)
-
-    // 日期范围
-    const dateRange = ref<[Date, Date] | null>(null)
-
-    // 搜索选择器的值
-    const searchValue = ref<
-      Array<{ id: string; name: string; values?: Array<{ id: string; name: string }> }>
-    >([])
-
-    // 搜索选择器的数据配置
-    const searchData = computed(() => [
-      {
-        id: 'status',
-        name: t('flow.content.status'),
-        children: [
-          { id: 'success', name: t('flow.common.success') },
-          { id: 'failed', name: t('flow.common.failed') },
-          { id: 'running', name: t('flow.content.executionStatusRunning') },
-          { id: 'pending', name: t('flow.content.executionStatusPending') },
-        ],
-      },
-      {
-        id: 'repository',
-        name: t('flow.content.repository'),
-      },
-      {
-        id: 'commitId',
-        name: 'commitId',
-      },
-      {
-        id: 'commitMessage',
-        name: 'CommitMessage',
-      },
-      {
-        id: 'triggerMethod',
-        name: t('flow.content.triggerMethod'),
-        children: [
-          { id: 'manual', name: t('flow.content.manualTrigger') },
-          { id: 'timer', name: t('flow.content.timerTrigger') },
-          { id: 'remote', name: t('flow.content.remoteTrigger') },
-          { id: 'git-push', name: 'Git Push' },
-          { id: 'git-tag', name: 'Git Tag' },
-          { id: 'merge', name: t('flow.content.codeMerge') },
-        ],
-      },
-      {
-        id: 'triggerBranch',
-        name: t('flow.content.triggerBranch'),
-      },
-      {
-        id: 'remark',
-        name: t('flow.content.remark'),
-      },
-      {
-        id: 'artifactQuality',
-        name: t('flow.content.artifactQuality'),
-      },
-    ])
+    } = useExecutionRecordData()
 
     const searchPlaceHolder = computed(() => {
       return searchData.value.map((item) => item.name).join('/')
@@ -95,52 +201,73 @@ export default defineComponent({
 
     // 监听日期范围变化
     watch(dateRange, (newRange) => {
+      let params: any = {}
       if (newRange && newRange.length === 2) {
-        updateQueryParams({
+        params = {
           startTime: newRange[0].toISOString(),
           endTime: newRange[1].toISOString(),
-        })
+        }
       } else {
-        updateQueryParams({
+        params = {
           startTime: undefined,
           endTime: undefined,
-        })
+        }
       }
+      updateQueryParams(params)
+
+      // Sync URL
+      const query = { ...route.query, ...params }
+      if (!params.startTime) {
+        delete query.startTime
+        delete query.endTime
+      }
+      router.replace({ query })
     })
 
     // 处理搜索选择器变化
     const handleSearchChange = (
-      value: Array<{ id: string; name: string; values?: Array<{ id: string; name: string }> }>,
+      value: SearchValues,
     ) => {
       searchValue.value = value
-      // 将选中的值转换为关键词字符串
-      const keyword = value
-        .map((item) => {
-          if (item.values && item.values.length > 0) {
-            return item.values.map((v) => v.name).join(' ')
+
+      const params: Record<string, string | string[] | undefined> = {
+        [SEARCH_KEY.STATUS]: undefined,
+        [SEARCH_KEY.TRIGGER]: undefined,
+        [SEARCH_KEY.TRIGGER_USER]: undefined,
+        [SEARCH_KEY.WORKFLOW_NODE]: undefined,
+        [SEARCH_KEY.REMARK]: undefined,
+      }
+
+      value.forEach((item) => {
+        if (item.id === SEARCH_KEY.STATUS && item.values) {
+          params[SEARCH_KEY.STATUS] = item.values.map((v) => v.id)
+        } else if (item.id === SEARCH_KEY.TRIGGER && item.values) {
+          params[SEARCH_KEY.TRIGGER] = item.values.map((v) => v.id)
+        } else {
+          // For single value fields
+          if (Array.isArray(item.values) && item.values.length > 0) {
+             params[item.id] = item.values[0]!.id
           }
-          return item.name
-        })
-        .join(' ')
-      updateQueryParams({
-        keyword: keyword || undefined,
+        }
       })
+
+      updateQueryParams(params)
+
+      // Sync URL
+      const query = { ...route.query, ...params }
+      // Remove undefined keys from query
+      Object.keys(params).forEach(key => {
+          if (params[key] === undefined) {
+              delete query[key]
+          }
+      })
+
+      router.replace({ query })
     }
 
     // 处理搜索按钮点击
     const handleSearch = () => {
-      // 触发搜索，重新加载数据
-      updateQueryParams({
-        keyword:
-          searchValue.value
-            .map((item) => {
-              if (item.values && item.values.length > 0) {
-                return item.values.map((v) => v.name).join(' ')
-              }
-              return item.name
-            })
-            .join(' ') || undefined,
-      })
+      // 搜索逻辑已在 handleSearchChange 中处理
     }
 
     // 渲染 Stage 状态 - 使用 StageSteps 组件
@@ -221,11 +348,11 @@ export default defineComponent({
       },
       {
         label: t('flow.content.workflowNode'),
-        field: 'nodeName',
+        field: 'createWorkspaceId',
       },
       {
         label: t('flow.content.triggerMethodAndUser'),
-        field: 'triggerMethod',
+        field: 'triggerAndUser',
       },
       {
         label: t('flow.content.triggerTime'),
@@ -279,6 +406,7 @@ export default defineComponent({
               unique-select
               placeholder={searchPlaceHolder.value}
               class={styles.searchInput}
+              getMenuList={getMenuList}
               onUpdate:modelValue={handleSearchChange}
               onSearch={handleSearch}
             />

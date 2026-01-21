@@ -1,4 +1,5 @@
-import type { Container, Element, Stage } from '@/api/flowModel'
+import type { Container, Element, Stage } from '@/api/flowModel';
+import { randomString } from '@/utils/util';
 
 export enum AtomRunCondition {
   PRE_TASK_SUCCESS = 'PRE_TASK_SUCCESS',
@@ -28,18 +29,11 @@ export enum JobRunCondition {
 }
 
 /**
- * 生成唯一 ID
- */
-export function generateId(prefix = 'id'): string {
-  return `${prefix}-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`
-}
-
-/**
  * 创建默认 Stage
  */
 export function createDefaultStage(index: number, partial?: Partial<Stage>): Stage {
   return {
-    id: generateId('stage'),
+    id: `stage-${randomString(4)}`,
     name: `Stage-${index}`,
     containers: [],
     tag: [],
@@ -63,10 +57,10 @@ export function createDefaultContainer(index: number, partial?: Partial<Containe
   return {
     jobId: '',
     '@type': 'vmBuild',
-    id: generateId('container'),
+    id: `container-${randomString(4)}`,
     name: `Job-${index}`,
     elements: [],
-    containerId: generateId('container'),
+    containerId: `container-${randomString(4)}`,
     containerHashId: '',
     matrixGroupFlag: false,
     classType: 'vmBuild',
@@ -112,7 +106,7 @@ export function createDefaultContainer(index: number, partial?: Partial<Containe
  */
 export function createDefaultElement(index: number, partial?: Partial<Element>): Element {
   return {
-    id: generateId('element'),
+    id: `element-${randomString(4)}`,
     name: `Plugin-${index}`,
     taskAtom: '',
     data: {

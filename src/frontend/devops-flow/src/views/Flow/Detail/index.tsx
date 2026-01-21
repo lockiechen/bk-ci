@@ -51,6 +51,16 @@ export default defineComponent({
       { immediate: true }
     )
 
+    // 监听路由参数变化，重新加载 FlowModel
+    watch(
+      [route.params.flowId, route.params.version],
+      ([newFlowId, newVersion]) => {
+        if (newFlowId) {
+          store.loadFlowModel(projectId.value, newFlowId as string, (newVersion as string) || '')
+        }
+      }
+    )
+
     onMounted(() => {
       store.loadFlowModel(projectId.value, flowId.value, version.value)
     })

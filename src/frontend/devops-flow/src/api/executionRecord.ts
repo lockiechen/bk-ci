@@ -3,20 +3,9 @@
  * Reference: devops-pipeline's /process/api/user/builds/{projectId}/{pipelineId}/history/new
  */
 
-import { get } from '@/utils/http'
+import type { StageStatusInfo } from '@/types/flow'
 import { statusIconMap } from '@/utils/flowStatus'
-
-/**
- * Stage status from API
- */
-export interface StageStatusItem {
-  stageId: string
-  name: string
-  status: string
-  startEpoch?: number
-  elapsed?: number
-  tag?: string[]
-}
+import { get } from '@/utils/http'
 
 /**
  * Build record from API (matching devops-pipeline format)
@@ -28,7 +17,7 @@ export interface BuildRecord {
   userId: string
   trigger: string
   status: string
-  stageStatus: StageStatusItem[]
+  stageStatus: StageStatusInfo[]
   queueTime?: number
   startTime?: number
   endTime?: number
@@ -87,7 +76,7 @@ export interface ExecutionRecord {
   status: string // 执行状态，用于显示颜色和图标
   stageStatus: StageStatusStep[] // StageSteps 组件需要的格式
   workflowNode: string
-  triggerMethod: string
+  triggerAndUser: string
   triggerTime: string
   startTime: string
   endTime: string
@@ -107,9 +96,17 @@ export interface ExecutionRecordQueryParams {
   pageSize?: number
   startTime?: string
   endTime?: string
-  keyword?: string
   status?: string[]
   trigger?: string[]
+  materialAlias?: string
+  triggerAlias?: string
+  materialCommitId?: string
+  materialCommitMessage?: string
+  triggerUser?: string
+  materialBranch?: string
+  triggerBranch?: string
+  remark?: string
+  artifactQuality?: string
   debug?: boolean
 }
 
@@ -122,39 +119,6 @@ export interface ExecutionRecordListResponse {
   page: number
   limit: number
   totalPages: number
-}
-
-/**
- * Convert API status to display status
- */
-function convertStatus(status: string): 'success' | 'failed' | 'pending' | 'running' {
-  const statusMap: Record<string, 'success' | 'failed' | 'pending' | 'running'> = {
-    SUCCEED: 'success',
-    SUCCEED_WITH_WARN: 'success',
-    STAGE_SUCCESS: 'success',
-    SUCCEED_WITH_QUALITY: 'success',
-    SUCCEED_WITH_QUALITY_FAIL: 'success',
-    FAILED: 'failed',
-    TERMINATE: 'failed',
-    HEARTBEAT_TIMEOUT: 'failed',
-    QUALITY_CHECK_FAIL: 'failed',
-    QUEUE_TIMEOUT: 'failed',
-    EXEC_TIMEOUT: 'failed',
-    QUEUE: 'pending',
-    SKIP: 'pending',
-    PAUSE: 'pending',
-    CANCELED: 'pending',
-    REVIEWING: 'pending',
-    REVIEW_ABORT: 'pending',
-    REVIEW_PROCESSED: 'pending',
-    TRIGGER_REVIEWING: 'pending',
-    RUNNING: 'running',
-    PREPARE_ENV: 'running',
-    CALL_WAITING: 'running',
-    DEPENDENT_WAITING: 'running',
-    LOOP_WAITING: 'running',
-  }
-  return statusMap[status] || 'pending'
 }
 
 /**
@@ -203,32 +167,14 @@ function convertBuildRecordToExecutionRecord(record: BuildRecord): ExecutionReco
       name: stage.name,
       status: originalStatus,
       statusCls,
-      icon,
-      progress: stage.status === 'RUNNING' ? Math.floor(Math.random() * 100) : undefined,
+      showMsg: stage.showMsg,
+      icon
     }
   }) || []
 
   // Get error code from errorInfoList
-  const errorCode = record.errorInfoList?.[0]?.errorCode?.toString() || ''
-
-  // Format trigger method
-  const triggerMethodMap: Record<string, string> = {
-    MANUAL: '手动触发',
-    TIME_TRIGGER: '定时触发',
-    REMOTE: '远程触发',
-    SERVICE: '服务触发',
-    PIPELINE: '流水线触发',
-    CODE_GIT: 'Git Push',
-    CODE_GITLAB: 'GitLab Push',
-    CODE_SVN: 'SVN',
-    CODE_TGIT: 'TGit',
-    CODE_P4: 'P4',
-    WEB_HOOK: 'WebHook',
-  }
-  const triggerDisplay = triggerMethodMap[record.trigger] || record.trigger || '--'
-  const triggerMethod = ['MANUAL', 'REMOTE'].includes(record.trigger) && record.userId
-    ? `${triggerDisplay}(${record.userId})`
-    : triggerDisplay
+  const errorCode = record.errorInfoList?.[0]?.errorCode?.toString() || ''  
+  const triggerAndUser = `${record.trigger}/${record.userId}`
 
   return {
     id: record.id,
@@ -237,7 +183,7 @@ function convertBuildRecordToExecutionRecord(record: BuildRecord): ExecutionReco
     status: record.status || 'UNKNOWN', // 保留状态字段
     stageStatus,
     workflowNode: record.material?.[0]?.branchName || '--',
-    triggerMethod,
+    triggerAndUser,
     triggerTime: formatTime(record.queueTime),
     startTime: formatTime(record.startTime),
     endTime: formatTime(record.endTime),
@@ -274,6 +220,33 @@ export async function getExecutionRecords(
   if (filterParams.trigger?.length) {
     filterParams.trigger.forEach(t => queryParams.append('trigger', t))
   }
+  if (filterParams.materialAlias) {
+    queryParams.append('materialAlias', filterParams.materialAlias)
+  }
+  if (filterParams.triggerAlias) {
+    queryParams.append('triggerAlias', filterParams.triggerAlias)
+  }
+  if (filterParams.materialCommitId) {
+    queryParams.append('materialCommitId', filterParams.materialCommitId)
+  }
+  if (filterParams.materialCommitMessage) {
+    queryParams.append('materialCommitMessage', filterParams.materialCommitMessage)
+  }
+  if (filterParams.triggerUser) {
+    queryParams.append('triggerUser', filterParams.triggerUser)
+  }
+  if (filterParams.materialBranch) {
+    queryParams.append('materialBranch', filterParams.materialBranch)
+  }
+  if (filterParams.triggerBranch) {
+    queryParams.append('triggerBranch', filterParams.triggerBranch)
+  }
+  if (filterParams.remark) {
+    queryParams.append('remark', filterParams.remark)
+  }
+  if (filterParams.artifactQuality) {
+    queryParams.append('artifactQuality', filterParams.artifactQuality)
+  }
   if (filterParams.startTime) {
     queryParams.append('startTimeStartTime', filterParams.startTime)
   }
@@ -289,7 +262,6 @@ export async function getExecutionRecords(
 
     // Convert API records to display format
     const list = response.records.map(convertBuildRecordToExecutionRecord)
-
     return {
       list,
       count: response.count || list.length,
@@ -298,6 +270,34 @@ export async function getExecutionRecords(
       totalPages: response.totalPages || Math.ceil((response.count || list.length) / pageSize),
     }
   } catch (error) {
+    console.error('Failed to get execution records:', error)
     throw error
+  }
+}
+
+/**
+ * Get history condition list
+ */
+export async function getHistoryConditionList(
+  projectId: string,
+  pipelineId: string,
+  condition: string,
+  query: Record<string, any> = {},
+): Promise<any[]> {
+  const queryParams = new URLSearchParams()
+  Object.keys(query).forEach((key) => {
+    if (query[key] !== undefined && query[key] !== null) {
+      queryParams.append(key, String(query[key]))
+    }
+  })
+
+  try {
+    const response = await get<any[]>(
+      `/process/api/user/builds/${projectId}/${pipelineId}/historyCondition/${condition}?${queryParams.toString()}`,
+    )
+    return response
+  } catch (error) {
+    console.error(`Failed to get history condition list for ${condition}:`, error)
+    return []
   }
 }

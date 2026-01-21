@@ -12,8 +12,8 @@ import {
   createDefaultContainer,
   createDefaultElement,
   createDefaultStage,
-  generateId,
 } from '@/utils/flowDefaults'
+import { randomString } from '@/utils/util'
 import type { AddAtomEventPayload, AddStageEventPayload, ClickEventPayload } from 'bkui-pipeline'
 import { storeToRefs } from 'pinia'
 import { computed, ref } from 'vue'
@@ -107,7 +107,7 @@ export function useFlowModel() {
   const editingElementContainer = computed(() => {
     if (!isEditingPlugin.value) return null
     const { stageIndex, containerIndex } = realEditingPos.value
-    return flowModel.value?.stages[stageIndex]?.containers?.[containerIndex]
+    return flowModel.value?.stages[stageIndex]?.containers?.[containerIndex!]
   })
 
   // 当前编辑 Job 的索引
@@ -348,10 +348,10 @@ export function useFlowModel() {
     const containerType = jobType === 'cloud' ? 'normal' : 'vmBuild'
     const newContainer = createDefaultContainer(containerIndex, {
       name: `Job-${containerIndex + 1}`,
-      jobId: generateId('job'),
+      jobId: `job-${randomString(4)}`,
       '@type': containerType,
       classType: containerType,
-      ...(jobType === 'vmBuild' ? {
+      ...(containerType === 'vmBuild' ? {
           dispatchType: {
             buildType: 'CREATE_AGENT_ENV',
             value: '${{BK_CI_CREATIVE_STREAM_NODE_AGENT_ID}}',
@@ -441,7 +441,7 @@ export function useFlowModel() {
       const outputObj = getAtomOutputObj(atomProps.output || {})
 
       element = createDefaultElement(elementIndex, {
-        id: preVerEle?.id || generateId('element'),
+        id: preVerEle?.id || `element-${randomString(4)}`,
         '@type':
           atomModal.classType && atomModal.classType !== atomCode ? atomModal.classType : atomCode,
         atomCode,
@@ -468,7 +468,7 @@ export function useFlowModel() {
         ...diffRes.atomValue,
       }
       element = createDefaultElement(elementIndex, {
-        id: preVerEle?.id || generateId('element'),
+        id: preVerEle?.id || `element-${randomString(4)}`,
         '@type':
           atomModal.classType && atomModal.classType !== atomCode ? atomModal.classType : atomCode,
         atomCode,
