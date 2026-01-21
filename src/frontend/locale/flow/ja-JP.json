@@ -134,6 +134,10 @@
       "favorite": "お気に入り",
       "uncollect": "お気に入り解除",
       "export": "エクスポート",
+      "exportSuccess": "エクスポート成功",
+      "exportFailed": "エクスポート失敗",
+      "renameSuccess": "リネーム成功",
+      "renameFailed": "リネーム失敗",
       "latest": "最新",
       "executionInfo": "実行情報",
       "executionRecord": "実行記録",
@@ -479,6 +483,19 @@
         "groupName": "作成フローグループ名",
         "groupNamePlaceholder": "作成フローグループ名を入力してください",
         "groupNameRequired": "作成フローグループ名は空にできません"
+      },
+      "renameFlow": {
+        "title": "作成フローをリネーム",
+        "flowName": "作成フロー名",
+        "flowNamePlaceholder": "作成フロー名を入力してください、128文字以内",
+        "flowNameRequired": "作成フロー名は空にできません"
+      },
+      "exportFlow": {
+        "title": "作成フローをエクスポート",
+        "exportJson": "JSON をエクスポート",
+        "exportYaml": "YAML をエクスポート",
+        "exportJsonTip": "作成フロー設定を JSON ファイルとしてエクスポート",
+        "exportYamlTip": "YAML ファイルをエクスポートしてコード庫にコミットすると、PACモードを有効にして、コード庫またはUIからパイプラインを維持することができます。"
       },
       "deleteConfirm": {
         "title": "削除を確認"

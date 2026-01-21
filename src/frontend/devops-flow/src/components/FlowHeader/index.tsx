@@ -1,17 +1,18 @@
 import type { MenuItem } from '@/api/flowContentList'
-import { deleteContent } from '@/api/flowContentList'
+import { deleteContent, toggleFlowFavorite } from '@/api/flowContentList'
 import { CommonHeader } from '@/components/CommonHeader'
 import { FLOW_GROUP_TYPES } from '@/constants/flowGroup'
 import { useDeleteConfirm } from '@/hooks/useDeleteConfirm'
-import { useFlowListData } from '@/hooks/useFlowListData'
+import { useFlowInfoStore } from '@/stores/flowInfoStore'
 import type { FlowInfo, FlowVersion } from '@/types/flow'
-import { Button, Select, Tag } from 'bkui-vue'
+import { Button, Message, Select, Tag } from 'bkui-vue'
 import type { PropType } from 'vue'
 import { computed, defineComponent, h, ref } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useRoute, useRouter } from 'vue-router'
 import ExtMenu from '../ExtMenu'
 import { SvgIcon } from '../SvgIcon'
+import { ExportFlowDialog } from './ExportFlowDialog'
 import styles from './index.module.css'
 
 const { Option } = Select
@@ -52,31 +53,64 @@ export const FlowHeader = defineComponent({
     const router = useRouter()
     const route = useRoute()
     const selectedVersion = ref(Number(route.params.version))
-    const { collectHandler } = useFlowListData()
     const { showDeleteConfirm } = useDeleteConfirm()
+    const flowInfoStore = useFlowInfoStore()
+
+    // 对话框显示状态
+    const showExportDialog = ref(false)
+
     const flowList = {
       name: 'flowList',
       params: {
         groupId: FLOW_GROUP_TYPES.ALL_FLOWS,
       },
     }
-    const moreActions = ref<MenuItem[]>([
+
+    const projectId = computed(() => route.params.projectId as string)
+    const flowId = computed(() => props.flowInfo?.pipelineId || '')
+    const flowName = computed(() => props.flowInfo?.pipelineName || '')
+
+    // 收藏/取消收藏处理
+    const handleCollect = async (data: FlowInfo) => {
+      const isCollected = data.hasCollect
+      const newCollectState = !isCollected
+      try {
+        await toggleFlowFavorite(projectId.value, data.pipelineId, newCollectState)
+        const action = newCollectState ? t('flow.content.favorite') : t('flow.content.uncollect')
+        Message({ theme: 'success', message: `${action}${t('flow.common.success')}` })
+        // 刷新 flowInfo 以更新收藏状态
+        flowInfoStore.getFlowInfo()
+      } catch (error: any) {
+        Message({ theme: 'error', message: error?.message || t('flow.common.failed') })
+      }
+    }
+
+    // 计算收藏按钮文本
+    const collectText = computed(() => {
+      return props.flowInfo?.hasCollect ? t('flow.content.uncollect') : t('flow.content.favorite')
+    })
+
+    const moreActions = computed<MenuItem[]>(() => [
       {
-        text: t('flow.content.favorite'),
-        handler: (data: any) => collectHandler(data.hasCollect, data.id),
+        text: collectText.value,
+        handler: (data: any) => handleCollect(data),
       },
       {
         text: t('flow.actions.rename'),
-        handler: (data: any) => console.log(data),
+        handler: () => {
+          props.onEdit?.()
+        },
       },
       {
         text: t('flow.content.export'),
-        handler: (data: any) => console.log(data),
+        handler: () => {
+          showExportDialog.value = true
+        },
       },
       {
         text: t('flow.actions.delete'),
         handler: (data: any) => {
-          const objectName = data?.name || data?.id
+          const objectName = data?.pipelineName || data?.pipelineId
           showDeleteConfirm({
             message: () => [
               `${t('flow.content.confirmDeleteFlow')}\n${t('flow.content.operationObject')}: `,
@@ -87,7 +121,10 @@ export const FlowHeader = defineComponent({
               ),
             ],
             onConfirm: async () => {
-              await deleteContent(data?.id)
+              await deleteContent({
+                projectId: projectId.value,
+                pipelineIds: [data?.pipelineId],
+              })
               router.push(flowList)
             },
           })
@@ -164,6 +201,13 @@ export const FlowHeader = defineComponent({
               ),
             }}
           </CommonHeader>
+
+          {/* 导出对话框 */}
+          <ExportFlowDialog
+            v-model:isShow={showExportDialog.value}
+            flowId={flowId.value}
+            flowName={flowName.value}
+          />
         </>
       )
   },

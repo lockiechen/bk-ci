@@ -132,7 +132,12 @@
       "loadingFlow": "正在加载创作流组件...",
       "toggleFullScreen": "切换全屏",
       "favorite": "收藏",
+      "uncollect": "取消收藏",
       "export": "导出",
+      "exportSuccess": "导出成功",
+      "exportFailed": "导出失败",
+      "renameSuccess": "重命名成功",
+      "renameFailed": "重命名失败",
       "latest": "最新",
       "executionInfo": "执行信息",
       "executionRecord": "执行记录",
@@ -489,6 +494,19 @@
         "groupName": "创作流组名称",
         "groupNamePlaceholder": "请输入创作流组名称",
         "groupNameRequired": "创作流组名称不能为空"
+      },
+      "renameFlow": {
+        "title": "重命名创作流",
+        "flowName": "创作流名称",
+        "flowNamePlaceholder": "请输入创作流名称，不超过128字符",
+        "flowNameRequired": "创作流名称不能为空"
+      },
+      "exportFlow": {
+        "title": "导出创作流",
+        "exportJson": "导出 JSON",
+        "exportYaml": "导出 YAML",
+        "exportJsonTip": "导出创作流配置为 JSON 文件",
+        "exportYamlTip": "导出 YAML 文件提交到代码库，可以开启 PAC 模式，通过代码库或者UI维护流水线。"
       },
       "deleteConfirm": {
         "title": "确认删除"

@@ -135,6 +135,10 @@
       "favorite": "Favorite",
       "uncollect": "Unfavorite",
       "export": "Export",
+      "exportSuccess": "Export successful",
+      "exportFailed": "Export failed",
+      "renameSuccess": "Rename successful",
+      "renameFailed": "Rename failed",
       "latest": "Latest",
       "executionInfo": "Execution Information",
       "executionRecord": "Execution Record",
@@ -492,6 +496,19 @@
         "groupName": "Creation Flow Group Name",
         "groupNamePlaceholder": "Please enter creation flow group name",
         "groupNameRequired": "Creation flow group name cannot be empty"
+      },
+      "renameFlow": {
+        "title": "Rename Creation Flow",
+        "flowName": "Creation Flow Name",
+        "flowNamePlaceholder": "Please enter creation flow name, no more than 128 characters",
+        "flowNameRequired": "Creation flow name cannot be empty"
+      },
+      "exportFlow": {
+        "title": "Export Creation Flow",
+        "exportJson": "Export JSON",
+        "exportYaml": "Export YAML",
+        "exportJsonTip": "Export creation flow configuration as JSON file",
+        "exportYamlTip": "Export YAML file and submit to code repository to enable PAC mode, allowing maintenance of the pipeline through the code repository or UI."
       },
       "deleteConfirm": {
         "title": "Confirm Delete"

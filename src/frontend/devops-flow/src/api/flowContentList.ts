@@ -772,3 +772,63 @@ export async function toggleFlowFavorite(
     throw error
   }
 }
+
+/**
+ * 重命名创作流
+ * @param projectId 项目ID
+ * @param pipelineId 创作流ID
+ * @param name 新名称
+ */
+export async function renameFlow(
+  projectId: string,
+  pipelineId: string,
+  name: string,
+): Promise<boolean> {
+  try {
+    const res = await post<boolean>(
+      `${PROCESS_API_URL_PREFIX}/user/pipelines/${projectId}/${pipelineId}/rename`,
+      { name },
+    )
+    return res
+  } catch (error) {
+    throw error
+  }
+}
+
+/**
+ * 导出创作流 - 获取导出 URL
+ * @param projectId 项目ID
+ * @param pipelineId 创作流ID
+ * @returns 导出 URL
+ */
+export function getFlowExportUrl(projectId: string, pipelineId: string): string {
+  return `${PROCESS_API_URL_PREFIX}/user/pipelines/${pipelineId}/projects/${projectId}/export`
+}
+
+/**
+ * 导出创作流为 YAML - 获取 YAML 内容
+ * @param projectId 项目ID
+ * @param pipelineId 创作流ID
+ * @param modelAndSetting 模型和设置
+ */
+export async function exportFlowAsYaml(
+  projectId: string,
+  pipelineId: string,
+  modelAndSetting: ModelAndSetting,
+): Promise<ImportContentResponse> {
+  try {
+    const res = await post<ImportContentResponse>(
+      `${PROCESS_API_URL_PREFIX}/user/transfer/projects/${projectId}`,
+      { modelAndSetting },
+      {
+        params: {
+          pipelineId,
+          actionType: 'FULL_MODEL2YAML',
+        },
+      },
+    )
+    return res
+  } catch (error) {
+    throw error
+  }
+}
