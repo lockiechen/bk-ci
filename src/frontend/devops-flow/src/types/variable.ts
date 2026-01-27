@@ -122,14 +122,34 @@ export const DEFAULT_VARIABLE_VALUES: Record<ParamType, Param> = {
 
 /**
  * Variable type list for selector
+ * nameKey is used for i18n translation
  */
 export const VARIABLE_TYPE_LIST = [
-  { id: ParamType.STRING, name: 'string' },
-  { id: ParamType.TEXTAREA, name: 'textarea' },
-  { id: ParamType.BOOLEAN, name: 'boolean' },
-  { id: ParamType.ENUM, name: 'enum' },
-  { id: ParamType.MULTIPLE, name: 'multiple' },
+  { id: ParamType.STRING, nameKey: 'flow.variable.types.string' },
+  { id: ParamType.TEXTAREA, nameKey: 'flow.variable.types.textarea' },
+  { id: ParamType.BOOLEAN, nameKey: 'flow.variable.types.boolean' },
+  { id: ParamType.ENUM, nameKey: 'flow.variable.types.enum' },
+  { id: ParamType.MULTIPLE, nameKey: 'flow.variable.types.multiple' },
 ]
+
+/**
+ * Options source type for ENUM/MULTIPLE
+ */
+export enum OptionsSourceType {
+  LIST = 'options', // 静态选项列表
+  API = 'remote', // 从接口获取
+}
+
+/**
+ * Options API configuration
+ */
+export interface OptionsApiConfig {
+  type: OptionsSourceType
+  url?: string // API 地址
+  dataPath?: string // 数据路径，如 data.list
+  paramId?: string // 选项 ID 字段名，默认 id
+  paramName?: string // 选项名称字段名，默认 name
+}
 /**
  * Validate variable ID
  * - Must start with letter or underscore

@@ -46,6 +46,10 @@ interface UsePreviewReturn {
   checkAll: Ref<boolean>
   selectedNode: Ref<string>
   runMessage: Ref<string>
+  
+  // Validation state
+  invalidParams: Ref<Set<string>>
+  isNodeInvalid: Ref<boolean>
 
   // Authoring nodes
   authoringNodes: ComputedRef<AuthoringNodeItem[]>
@@ -192,6 +196,10 @@ export const usePreview = (options: UsePreviewOptions = {}): UsePreviewReturn =>
   const checkAll = ref(true)
   const selectedNode = ref()
   const runMessage = ref('')
+  
+  // Validation state - track invalid params for highlighting
+  const invalidParams = ref<Set<string>>(new Set())
+  const isNodeInvalid = ref(false)
 
   // ----------------------------------------
   // 3.4 Computed Data Layer (Derived from Store)
@@ -258,6 +266,12 @@ export const usePreview = (options: UsePreviewOptions = {}): UsePreviewReturn =>
    */
   const handleParamChange = (type: ParamType, key: string, value: unknown): void => {
     store.updateParamValue(type, key, value)
+    // Clear validation error when param is changed
+    if (invalidParams.value.has(key)) {
+      const newInvalidParams = new Set(invalidParams.value)
+      newInvalidParams.delete(key)
+      invalidParams.value = newInvalidParams
+    }
   }
 
   /**
@@ -383,9 +397,76 @@ export const usePreview = (options: UsePreviewOptions = {}): UsePreviewReturn =>
   }
 
   /**
+   * Validate required params before execution
+   * Returns empty array if valid, otherwise returns list of empty required param ids
+   */
+  const validateRequiredParams = (): string[] => {
+    const emptyRequiredParams: string[] = []
+    
+    // Check params (required input parameters)
+    store.paramList.forEach(param => {
+      if (param.required) {
+        const value = store.paramsValues[param.id]
+        // Check if value is empty (undefined, null, empty string)
+        if (value === undefined || value === null || value === '') {
+          emptyRequiredParams.push(param.id)
+        }
+      }
+    })
+    
+    // Check version params if visible
+    if (store.isVisibleVersion) {
+      store.versionParamList.forEach(param => {
+        if (param.required) {
+          const value = store.versionParamValues[param.id]
+          if (value === undefined || value === null || value === '') {
+            emptyRequiredParams.push(param.id)
+          }
+        }
+      })
+    }
+    
+    return emptyRequiredParams
+  }
+
+  /**
    * Execute the pipeline
    */
   const handleExecute = async (): Promise<void> => {
+    // Reset validation state
+    isNodeInvalid.value = false
+    invalidParams.value = new Set()
+
+    // Validate creation node is selected
+    if (!selectedNode.value) {
+      isNodeInvalid.value = true
+      // Expand runtime info section to show the error
+      if (!activeSections.value.has(1)) {
+        activeSections.value = new Set([...activeSections.value, 1])
+      }
+      Message({
+        theme: 'error',
+        message: t('flow.preview.creationNodeRequired'),
+      })
+      return
+    }
+
+    // Validate required params are not empty
+    const emptyRequiredParams = validateRequiredParams()
+    if (emptyRequiredParams.length > 0) {
+      // Update invalid params for highlighting
+      invalidParams.value = new Set(emptyRequiredParams)
+      // Expand input params section to show errors
+      if (!activeSections.value.has(2)) {
+        activeSections.value = new Set([...activeSections.value, 2])
+      }
+      Message({
+        theme: 'error',
+        message: t('flow.preview.requiredParamsEmpty', { params: emptyRequiredParams.join(', ') }),
+      })
+      return
+    }
+
     try {
       const skipAtoms = store.canElementSkip ? store.getSkippedAtoms() : {}
       
@@ -442,6 +523,13 @@ export const usePreview = (options: UsePreviewOptions = {}): UsePreviewReturn =>
     }
   })
 
+  // Watch selectedNode to clear validation error when node is selected
+  watch(selectedNode, (newValue) => {
+    if (newValue && isNodeInvalid.value) {
+      isNodeInvalid.value = false
+    }
+  })
+
   // Load data on mount
   onMounted(() => {
     if (autoLoad) {
@@ -471,6 +559,10 @@ export const usePreview = (options: UsePreviewOptions = {}): UsePreviewReturn =>
     checkAll,
     selectedNode,
     runMessage,
+    
+    // Validation state
+    invalidParams,
+    isNodeInvalid,
 
     // Authoring nodes
     authoringNodes,

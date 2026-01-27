@@ -832,3 +832,33 @@ export async function exportFlowAsYaml(
     throw error
   }
 }
+
+/**
+ * 简单流水线信息（用于下拉选择器）
+ */
+export interface SimplePipelineInfo {
+  pipelineId: string
+  pipelineName: string
+}
+
+/**
+ * 按名称搜索创作流（简单列表，用于下拉选择器）
+ * @param projectId 项目ID
+ * @param pipelineName 创作流名称（搜索关键词）
+ */
+export async function searchFlowByName(
+  projectId: string,
+  pipelineName: string = '',
+): Promise<SimplePipelineInfo[]> {
+  try {
+    const params = new URLSearchParams()
+    params.append('pipelineName', pipelineName)
+
+    const res = await get<SimplePipelineInfo[]>(
+      `${PROCESS_API_URL_PREFIX}/user/pipelineInfos/${projectId}/searchByName?${params.toString()}`,
+    )
+    return res
+  } catch (error) {
+    throw error
+  }
+}

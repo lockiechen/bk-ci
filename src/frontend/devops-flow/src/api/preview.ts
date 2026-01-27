@@ -44,6 +44,14 @@ export interface StartupProperty {
   isChanged?: boolean
   options?: Array<{ id: string; name: string }>
   category?: string
+  // Payload for dynamic options from API
+  payload?: {
+    url?: string
+    dataPath?: string
+    paramId?: string
+    paramName?: string
+    [key: string]: unknown
+  }
 }
 
 /**

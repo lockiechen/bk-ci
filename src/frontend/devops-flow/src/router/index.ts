@@ -1,6 +1,8 @@
 import { createRouter, createWebHistory } from 'vue-router'
+import { fetchFlowInfo } from '../api/flowInfo'
 import { FLOW_GROUP_TYPES } from '../constants/flowGroup'
 import { ROUTE_NAMES } from '../constants/routes'
+import { VERSION_STATUS_ENUM } from '../utils/flowConst'
 
 declare global {
   interface Window {
@@ -29,17 +31,9 @@ const router = createRouter({
         },
         {
           path: 'flow/:flowId',
+          name: ROUTE_NAMES.FLOW_DETAIL,
           component: () => import('../views/Flow'),
           children: [
-            {
-              path: '',
-              redirect: (to) => ({
-                name: ROUTE_NAMES.FLOW_DETAIL_EXECUTION_RECORD,
-                params: {
-                  flowId: to.params.flowId,
-                },
-              }),
-            },
             {
               path: 'detail/:version',
               component: () => import('../views/Flow/Detail/index'),
@@ -108,11 +102,12 @@ const router = createRouter({
                 {
                   path: ':invalidTab',
                   redirect: (to) => {
-                    // 如果 tab 不合法，重定向到默认 tab
+                    // 如果 tab 不合法，重定向到默认 tab，保留 version 参数
                     return {
                       name: ROUTE_NAMES.FLOW_DETAIL_EXECUTION_RECORD,
                       params: {
                         flowId: to.params.flowId,
+                        version: to.params.version,
                       },
                     }
                   },
@@ -129,6 +124,7 @@ const router = createRouter({
                     name: ROUTE_NAMES.FLOW_EDIT_WORKFLOW_ORCHESTRATION,
                     params: {
                       flowId: to.params.flowId,
+                      version: to.params.version,
                     },
                   }),
                 },
@@ -170,6 +166,7 @@ const router = createRouter({
                       name: ROUTE_NAMES.FLOW_EDIT_WORKFLOW_ORCHESTRATION,
                       params: {
                         flowId: to.params.flowId,
+                        version: to.params.version,
                       },
                     }
                   },
@@ -251,8 +248,56 @@ const router = createRouter({
   ],
 })
 
-router.beforeEach((to, from, next) => {
+router.beforeEach(async (to) => {
+  // 只在直接访问 /flow/:flowId 路径时触发（路由名称为 FLOW_DETAIL）
+  // 如果访问的是子路由（如 detail/:version/...），则直接通过
+  if (to.name !== ROUTE_NAMES.FLOW_DETAIL) {
+    return true
+  }
+
+  const projectId = to.params.projectId as string
+  const flowId = to.params.flowId as string
+
+  try {
+    // 获取 flowInfo，拿到 releaseVersion
+    const flowInfo = await fetchFlowInfo({ projectId, flowId })
+
+    // 如果只有草稿版本，重定向到编辑页
+    if (flowInfo.latestVersionStatus === VERSION_STATUS_ENUM.COMMITTING) {
+      return {
+        name: ROUTE_NAMES.FLOW_EDIT_WORKFLOW_ORCHESTRATION,
+        params: {
+          projectId,
+          flowId,
+          version: flowInfo.version?.toString(),
+        },
+      }
+    }
+
+    // 重定向到详情页，带上 releaseVersion
+    return {
+      name: ROUTE_NAMES.FLOW_DETAIL_EXECUTION_RECORD,
+      params: {
+        projectId,
+        flowId,
+        version: flowInfo.releaseVersion?.toString(),
+      },
+    }
+  } catch (error) {
+    console.error('Failed to fetch flow info for routing:', error)
+    // 出错时仍然跳转到详情页，让详情页组件处理错误
+    return {
+      name: ROUTE_NAMES.FLOW_DETAIL_EXECUTION_RECORD,
+      params: {
+        projectId,
+        flowId,
+        version: '0', // 使用占位符，详情页会重新获取
+      },
+    }
+  }
+})
+
+router.afterEach((to) => {
   window.$syncUrl?.(to.fullPath.replace(new RegExp('^/' + import.meta.env.BASE_URL + '/'), '/'))
-  next()
 })
 export default router

@@ -1,16 +1,18 @@
 import type { Param } from '@/api/flowModel'
 import { SvgIcon } from '@/components/SvgIcon'
-import type { ParamOption } from '@/types/variable'
+import type { OptionsApiConfig, ParamOption } from '@/types/variable'
 import {
   DEFAULT_VARIABLE_VALUES,
+  OptionsSourceType,
   ParamType,
   VARIABLE_TYPE_LIST,
   VariableCategory,
   validateVariableId,
 } from '@/types/variable'
-import { Button, Checkbox, Form, Input, Popover, Select } from 'bkui-vue'
+import { Button, Checkbox, Form, Input, Popover, Radio, Select } from 'bkui-vue'
 import { computed, defineComponent, ref, watch, type PropType } from 'vue'
 import { useI18n } from 'vue-i18n'
+import OptionsEditor from './OptionsEditor'
 import styles from './VariableForm.module.css'
 
 const FormItem = Form.FormItem
@@ -36,6 +38,11 @@ export default defineComponent({
     },
     existingCategories: {
       type: Array as PropType<string[]>,
+      default: () => [],
+    },
+    // 当前流程的所有变量，用于 API 选项的变量引用
+    allVariables: {
+      type: Array as PropType<Param[]>,
       default: () => [],
     },
   },
@@ -93,12 +100,39 @@ export default defineComponent({
           trigger: 'change',
         },
       ],
+      defaultValue: [
+        {
+          validator: (value: unknown) => {
+            // Only validate for constants
+            if (!isConstant.value) {
+              return true
+            }
+            // Boolean type allows false value
+            if (formData.value.type === ParamType.BOOLEAN) {
+              return value !== undefined && value !== null
+            }
+            // Array type (MULTIPLE) - check if not empty
+            if (Array.isArray(value)) {
+              return value.length > 0
+            }
+            // String/other types - check if not empty string
+            return value !== undefined && value !== null && value !== ''
+          },
+          message: t('flow.variable.defaultValueRequired'),
+          trigger: 'blur',
+        },
+      ],
     }
 
     // Initialize form data
-    function getInitialFormData(): Param {
+    function getInitialFormData(): Param & { payload?: OptionsApiConfig } {
       if (props.variable) {
-        return { ...props.variable }
+        return {
+          ...props.variable,
+          payload: (props.variable as Param & { payload?: OptionsApiConfig }).payload || {
+            type: OptionsSourceType.LIST,
+          },
+        }
       }
       const defaultData = DEFAULT_VARIABLE_VALUES[ParamType.STRING]
       return {
@@ -112,6 +146,7 @@ export default defineComponent({
         options: defaultData.options || [],
         valueNotEmpty: true,
         readOnly: false,
+        payload: { type: OptionsSourceType.LIST },
       }
     }
 
@@ -151,26 +186,20 @@ export default defineComponent({
       emit('cancel')
     }
 
-    // Add option for ENUM/MULTIPLE types
-    const handleAddOption = () => {
-      if (!formData.value.options) {
-        formData.value.options = []
-      }
-      ;(formData.value.options as ParamOption[]).push({
-        key: `option_${Date.now()}`,
-        value: '',
-      })
-    }
-
-    // Remove option
-    const handleRemoveOption = (index: number) => {
-      formData.value.options?.splice(index, 1)
-    }
-
     // Show options editor
     const showOptionsEditor = computed(() => {
       return formData.value.type === ParamType.ENUM || formData.value.type === ParamType.MULTIPLE
     })
+
+    // Handle options update from OptionsEditor
+    const handleOptionsUpdate = (options: ParamOption[]) => {
+      formData.value.options = options
+    }
+
+    // Handle payload update from OptionsEditor
+    const handlePayloadUpdate = (payload: OptionsApiConfig) => {
+      ;(formData.value as Param & { payload?: OptionsApiConfig }).payload = payload
+    }
 
     // Helper to check if type matches (handles both string and enum)
     const isType = (type: ParamType | string): boolean => {
@@ -207,18 +236,19 @@ export default defineComponent({
               disabled={!props.editable}
             >
               {availableTypes.value.map((type) => (
-                <Select.Option key={type.id} value={type.id} label={type.name}>
-                  {type.name}
+                <Select.Option key={type.id} value={type.id} label={t(type.nameKey)}>
+                  {t(type.nameKey)}
                 </Select.Option>
               ))}
             </Select>
           </FormItem>
 
-          <FormItem label={t('flow.variable.defaultValue')}>
+          <FormItem label={t('flow.variable.defaultValue')} property="defaultValue" required={isConstant.value}>
             {isType(ParamType.BOOLEAN) ? (
-              <Checkbox v-model={formData.value.defaultValue} disabled={!props.editable}>
-                {String(formData.value.defaultValue)}
-              </Checkbox>
+              <Radio.Group v-model={formData.value.defaultValue} disabled={!props.editable}>
+                <Radio label={true}>true</Radio>
+                <Radio label={false}>false</Radio>
+              </Radio.Group>
             ) : isType(ParamType.TEXTAREA) ? (
               <Input
                 v-model={formData.value.defaultValue}
@@ -249,34 +279,20 @@ export default defineComponent({
           </FormItem>
 
           {showOptionsEditor.value && (
-            <FormItem label={t('flow.variable.options')}>
-              <div class={styles.optionsEditor}>
-                {((formData.value.options || []) as ParamOption[]).map((option, index: number) => (
-                  <div key={option.key} class={styles.optionItem}>
-                    <Input
-                      v-model={option.key}
-                      placeholder={t('flow.variable.optionId')}
-                      disabled={!props.editable}
-                      class={styles.optionInput}
-                    />
-                    <Input
-                      v-model={option.value}
-                      placeholder={t('flow.variable.optionLabel')}
-                      disabled={!props.editable}
-                      class={styles.optionInput}
-                    />
-                    {props.editable && (
-                      <i class="bk-icon icon-close" onClick={() => handleRemoveOption(index)}></i>
-                    )}
-                  </div>
-                ))}
-                {props.editable && (
-                  <Button text onClick={handleAddOption}>
-                    <SvgIcon name="add-small" />
-                    {t('flow.variable.addOption')}
-                  </Button>
-                )}
-              </div>
+            <FormItem label={t('flow.variable.optionSource')}>
+              <OptionsEditor
+                options={(formData.value.options || []) as ParamOption[]}
+                payload={
+                  (formData.value as Param & { payload?: OptionsApiConfig }).payload || {
+                    type: OptionsSourceType.LIST,
+                  }
+                }
+                disabled={!props.editable}
+                variables={props.allVariables}
+                currentVariableId={formData.value.id}
+                onUpdate:options={handleOptionsUpdate}
+                onUpdate:payload={handlePayloadUpdate}
+              />
             </FormItem>
           )}
 

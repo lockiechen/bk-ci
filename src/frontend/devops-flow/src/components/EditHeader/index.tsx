@@ -3,6 +3,7 @@ import { FLOW_GROUP_TYPES } from '@/constants/flowGroup'
 import { ROUTE_NAMES } from '@/constants/routes'
 import { useFlowModel } from '@/hooks/useFlowModel'
 import { useUIStore } from '@/stores/ui'
+import { VERSION_STATUS_ENUM } from '@/utils/flowConst'
 import { Button, Message, Tag } from 'bkui-vue'
 import { computed, defineComponent, ref } from 'vue'
 import { useI18n } from 'vue-i18n'
@@ -56,14 +57,15 @@ export const EditHeader = defineComponent({
     })
 
     const handleCancel = () => {
-      // 如果是只有草稿的，就跳转到列表页
-      if (!flowInfo.value?.versionName) {
+      // 如果只有草稿版本（没有正式发布版本），跳转到列表页
+      if (flowInfo.value?.latestVersionStatus === VERSION_STATUS_ENUM.COMMITTING) {
           router.push({
             name: ROUTE_NAMES.FLOW_LIST,
             params: { groupId: FLOW_GROUP_TYPES.ALL_FLOWS }
           })
           return
         }
+      // 否则跳转到创作流详情页
       router.push({
         name: ROUTE_NAMES.FLOW_DETAIL_EXECUTION_RECORD,
         params: { ...route.params, version: flowInfo.value?.releaseVersion },
@@ -192,9 +194,6 @@ export const EditHeader = defineComponent({
                   disabled={isSaving.value || !flowModel.hasUnsavedChanges.value}
                 >
                   {t('flow.content.save')}
-                </Button>
-                <Button onClick={handleDebug} disabled={isSaving.value}>
-                  {t('flow.content.debug')}
                 </Button>
                 <Button theme="primary" onClick={handlePublish} disabled={isSaving.value}>
                   {t('flow.content.publish')}

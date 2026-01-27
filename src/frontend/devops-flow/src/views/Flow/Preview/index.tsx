@@ -6,6 +6,7 @@ import BkPipeline, { type PipelineModel } from 'bkui-pipeline/vue3'
 import { Alert, Checkbox, Exception, Input, Loading, Select } from 'bkui-vue'
 import { defineComponent } from 'vue'
 import { useI18n } from 'vue-i18n'
+import DynamicSelect from './DynamicSelect'
 import styles from './Preview.module.css'
 import PreviewHeader from './PreviewHeader'
 
@@ -29,6 +30,10 @@ export default defineComponent({
       runMessage,
       canExecute,
       flowName,
+      
+      // Validation state
+      invalidParams,
+      isNodeInvalid,
 
       // Authoring nodes
       authoringNodes,
@@ -55,7 +60,6 @@ export default defineComponent({
       handleCheckAllChange,
       handlePipelineChange,
       handleResetDefault,
-      handleSaveCurrentParams,
       handleVersionChange,
       handleExecute,
     } = usePreview()
@@ -74,9 +78,10 @@ export default defineComponent({
       disabled = false
     ) => {
       const value = values[param.id]
+      const isInvalid = invalidParams.value.has(param.id)
 
       return (
-        <div class={styles.paramFormItemHalf} key={param.id}>
+        <div class={[styles.paramFormItemHalf, isInvalid && styles.paramInvalid]} key={param.id}>
           <div class={styles.paramLabel}>
             <span class={styles.paramLabelText}>
               {param.id}
@@ -90,21 +95,14 @@ export default defineComponent({
                 disabled={disabled || param.readOnly}
                 onChange={(val: boolean) => handleParamChange(type, param.id, val)}
               />
-            ) : param.type === 'ENUM' && param.options?.length ? (
-              <Select
-                modelValue={value}
-                clearable={false}
-                disabled={disabled || param.readOnly}
-                class={styles.fullWidthSelect}
+            ) : param.type === 'ENUM' && (param.payload?.url || param.options?.length) ? (
+              <DynamicSelect
+                param={param}
+                modelValue={value as string}
+                disabled={disabled}
+                isInvalid={isInvalid}
                 onChange={(val: string) => handleParamChange(type, param.id, val)}
-              >
-                {param.options.map(opt => (
-                  <Select.Option key={opt.id} value={opt.id} label={opt.name}>
-                    <span>{opt.id}</span>
-                    {opt.name !== opt.id && <span class={styles.optionLabel}> {opt.name}</span>}
-                  </Select.Option>
-                ))}
-              </Select>
+              />
             ) : param.type === 'TEXTAREA' ? (
               <div class={styles.textareaWrapper}>
                 <Input
@@ -114,6 +112,7 @@ export default defineComponent({
                   placeholder={t('flow.content.descriptionPlaceholder')}
                   rows={3}
                   maxlength={param.maxLength || 100}
+                  class={isInvalid ? styles.inputInvalid : ''}
                   onChange={(val: string) => handleParamChange(type, param.id, val)}
                 />
               </div>
@@ -122,6 +121,7 @@ export default defineComponent({
                 modelValue={value as string}
                 disabled={disabled || param.readOnly}
                 placeholder={param.defaultValue || ''}
+                class={isInvalid ? styles.inputInvalid : ''}
                 onChange={(val: string) => handleParamChange(type, param.id, val)}
               />
             )}
@@ -140,9 +140,10 @@ export default defineComponent({
       disabled = false
     ) => {
       const value = values[param.id]
+      const isInvalid = invalidParams.value.has(param.id)
 
       return (
-        <div class={styles.paramFormItem} key={param.id}>
+        <div class={[styles.paramFormItem, isInvalid && styles.paramInvalid]} key={param.id}>
           <div class={styles.paramLabel}>
             <div class={styles.paramLabelText}>
               {param.label || param.id}
@@ -157,29 +158,28 @@ export default defineComponent({
                 disabled={disabled || param.readOnly}
                 onChange={(val: boolean) => handleParamChange(type, param.id, val)}
               />
-            ) : param.type === 'ENUM' && param.options?.length ? (
-              <Select
-                modelValue={value}
-                disabled={disabled || param.readOnly}
-                clearable={false}
+            ) : param.type === 'ENUM' && (param.payload?.url || param.options?.length) ? (
+              <DynamicSelect
+                param={param}
+                modelValue={value as string}
+                disabled={disabled}
+                isInvalid={isInvalid}
                 onChange={(val: string) => handleParamChange(type, param.id, val)}
-              >
-                {param.options.map(opt => (
-                  <Select.Option key={opt.id} value={opt.id} label={opt.name} />
-                ))}
-              </Select>
+              />
             ) : param.type === 'TEXTAREA' ? (
               <Input
                 type="textarea"
                 modelValue={value as string}
                 disabled={disabled || param.readOnly}
                 rows={3}
+                class={isInvalid ? styles.inputInvalid : ''}
                 onChange={(val: string) => handleParamChange(type, param.id, val)}
               />
             ) : (
               <Input
                 modelValue={value as string}
                 disabled={disabled || param.readOnly}
+                class={isInvalid ? styles.inputInvalid : ''}
                 onChange={(val: string) => handleParamChange(type, param.id, val)}
               />
             )}
@@ -269,7 +269,7 @@ export default defineComponent({
               <div class={styles.collapseContent}>
                 <div class={styles.runtimeInfoGrid}>
                   {/* Creation Node */}
-                  <div class={styles.runtimeInfoItem}>
+                  <div class={[styles.runtimeInfoItem, isNodeInvalid.value && styles.paramInvalid]}>
                     <div class={styles.runtimeInfoLabel}>
                       {t('flow.preview.creationNode')}
                       <span class={styles.requiredMark}>*</span>
@@ -278,7 +278,7 @@ export default defineComponent({
                       v-model={selectedNode.value}
                       clearable={false}
                       loading={authoringNodesLoading.value}
-                      class={styles.fullWidthSelect}
+                      class={[styles.fullWidthSelect, isNodeInvalid.value && styles.inputInvalid]}
                       placeholder={t('flow.common.pleaseSelect')}
                     >
                       {authoringNodes.value.map((node: AuthoringNodeItem) => (
@@ -324,10 +324,6 @@ export default defineComponent({
               <div class={styles.headerActions} onClick={(e: Event) => e.stopPropagation()}>
                 <span class={styles.textLink} onClick={handleResetDefault}>
                   {t('flow.preview.resetDefault')}
-                </span>
-                <span class={styles.divider}>|</span>
-                <span class={styles.textLink} onClick={handleSaveCurrentParams}>
-                  {t('flow.preview.saveCurrentParams')}
                 </span>
               </div>
             ))}

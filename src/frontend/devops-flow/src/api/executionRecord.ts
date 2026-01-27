@@ -5,7 +5,32 @@
 
 import type { StageStatusInfo } from '@/types/flow'
 import { statusIconMap } from '@/utils/flowStatus'
-import { get } from '@/utils/http'
+import { get, post } from '@/utils/http'
+import { convertMillSec, convertTime } from '@/utils/util'
+
+/**
+ * Condition type enum for history filter conditions
+ * 筛选条件类型枚举
+ */
+export enum HistoryConditionType {
+  /** 触发方式 */
+  TRIGGER_METHOD = 'TRIGGER_METHOD',
+  /** 触发事件 */
+  TRIGGER_EVENT = 'TRIGGER_EVENT',
+  /** 触发人 */
+  TRIGGER_USER = 'TRIGGER_USER',
+  /** 触发节点（工作流节点） */
+  TRIGGER_NODE = 'TRIGGER_NODE',
+}
+
+/**
+ * Condition option item from API
+ * 筛选条件选项项
+ */
+export interface ConditionOptionItem {
+  id: string
+  value: string
+}
 
 /**
  * Build record from API (matching devops-pipeline format)
@@ -94,19 +119,22 @@ export interface ExecutionRecordQueryParams {
   pipelineId: string
   page?: number
   pageSize?: number
-  startTime?: string
-  endTime?: string
+  /** 开始时间 */
+  startTimeStartTime?: string
+  /** 结束时间 */
+  endTimeEndTime?: string
+  /** 状态 */
   status?: string[]
-  trigger?: string[]
-  materialAlias?: string
-  triggerAlias?: string
-  materialCommitId?: string
-  materialCommitMessage?: string
+  /** 触发方式 */
+  triggerMethod?: string[]
+  /** 触发事件 */
+  triggerEvent?: string[]
+  /** 触发人 */
   triggerUser?: string
-  materialBranch?: string
-  triggerBranch?: string
+  /** 触发节点（工作流节点） */
+  triggerNode?: string
+  /** 备注 */
   remark?: string
-  artifactQuality?: string
   debug?: boolean
 }
 
@@ -119,37 +147,6 @@ export interface ExecutionRecordListResponse {
   page: number
   limit: number
   totalPages: number
-}
-
-/**
- * Convert timestamp to formatted time string
- */
-function formatTime(timestamp?: number): string {
-  if (!timestamp) return '--'
-  const date = new Date(timestamp)
-  const month = String(date.getMonth() + 1).padStart(2, '0')
-  const day = String(date.getDate()).padStart(2, '0')
-  const hour = String(date.getHours()).padStart(2, '0')
-  const minute = String(date.getMinutes()).padStart(2, '0')
-  return `${month}-${day} ${hour}:${minute}`
-}
-
-/**
- * Convert milliseconds to duration string
- */
-function formatDuration(ms?: number): string {
-  if (!ms || ms <= 0) return '--'
-  const seconds = Math.floor(ms / 1000)
-  const minutes = Math.floor(seconds / 60)
-  const hours = Math.floor(minutes / 60)
-  
-  if (hours > 0) {
-    return `${hours}小时${minutes % 60}分${seconds % 60}秒`
-  } else if (minutes > 0) {
-    return `${minutes}分${seconds % 60}秒`
-  } else {
-    return `${seconds}秒`
-  }
 }
 
 /**
@@ -184,11 +181,11 @@ function convertBuildRecordToExecutionRecord(record: BuildRecord): ExecutionReco
     stageStatus,
     workflowNode: record.material?.[0]?.branchName || '--',
     triggerAndUser,
-    triggerTime: formatTime(record.queueTime),
-    startTime: formatTime(record.startTime),
-    endTime: formatTime(record.endTime),
-    totalDuration: formatDuration(record.totalTime),
-    executionDuration: formatDuration(record.executeTime),
+    triggerTime: convertTime(record.queueTime || 0),
+    startTime: convertTime(record.startTime || 0),
+    endTime: convertTime(record.endTime || 0),
+    totalDuration: convertMillSec(record.totalTime || 0),
+    executionDuration: convertMillSec(record.executeTime || 0),
     remark: record.remark || '',
     errorCode,
   }
@@ -214,44 +211,36 @@ export async function getExecutionRecords(
   }
   
   // Add filter parameters
+  // 状态
   if (filterParams.status?.length) {
     filterParams.status.forEach(s => queryParams.append('status', s))
   }
-  if (filterParams.trigger?.length) {
-    filterParams.trigger.forEach(t => queryParams.append('trigger', t))
+  // 触发方式
+  if (filterParams.triggerMethod?.length) {
+    filterParams.triggerMethod.forEach(m => queryParams.append('triggerMethod', m))
   }
-  if (filterParams.materialAlias) {
-    queryParams.append('materialAlias', filterParams.materialAlias)
+  // 触发事件
+  if (filterParams.triggerEvent?.length) {
+    filterParams.triggerEvent.forEach(e => queryParams.append('triggerEvent', e))
   }
-  if (filterParams.triggerAlias) {
-    queryParams.append('triggerAlias', filterParams.triggerAlias)
-  }
-  if (filterParams.materialCommitId) {
-    queryParams.append('materialCommitId', filterParams.materialCommitId)
-  }
-  if (filterParams.materialCommitMessage) {
-    queryParams.append('materialCommitMessage', filterParams.materialCommitMessage)
-  }
+  // 触发人
   if (filterParams.triggerUser) {
     queryParams.append('triggerUser', filterParams.triggerUser)
   }
-  if (filterParams.materialBranch) {
-    queryParams.append('materialBranch', filterParams.materialBranch)
+  // 触发节点（工作流节点）
+  if (filterParams.triggerNode) {
+    queryParams.append('triggerNode', filterParams.triggerNode)
   }
-  if (filterParams.triggerBranch) {
-    queryParams.append('triggerBranch', filterParams.triggerBranch)
-  }
+  // 备注
   if (filterParams.remark) {
     queryParams.append('remark', filterParams.remark)
   }
-  if (filterParams.artifactQuality) {
-    queryParams.append('artifactQuality', filterParams.artifactQuality)
+  // 时间范围
+  if (filterParams.startTimeStartTime) {
+    queryParams.append('startTimeStartTime', filterParams.startTimeStartTime)
   }
-  if (filterParams.startTime) {
-    queryParams.append('startTimeStartTime', filterParams.startTime)
-  }
-  if (filterParams.endTime) {
-    queryParams.append('endTimeEndTime', filterParams.endTime)
+  if (filterParams.endTimeEndTime) {
+    queryParams.append('endTimeEndTime', filterParams.endTimeEndTime)
   }
 
   try {
@@ -276,28 +265,121 @@ export async function getExecutionRecords(
 }
 
 /**
- * Get history condition list
+ * Query params for getHistoryConditions API
+ * 获取筛选条件选项的查询参数
  */
-export async function getHistoryConditionList(
-  projectId: string,
-  pipelineId: string,
-  condition: string,
-  query: Record<string, any> = {},
-): Promise<any[]> {
+export interface HistoryConditionsQueryParams {
+  /** 项目ID */
+  projectId: string
+  /** 流水线ID */
+  pipelineId: string
+  /** 构建条件类型 */
+  conditionType: HistoryConditionType
+  /** 页码 */
+  page?: number
+  /** 每页大小 */
+  pageSize?: number
+  /** 查询关键字 */
+  keyword?: string
+  /** 是否指定查询调试数据 */
+  debug?: boolean
+}
+
+/**
+ * Response for history conditions API
+ * 筛选条件选项响应
+ */
+export interface HistoryConditionsResponse {
+  records: ConditionOptionItem[]
+  count: number
+  totalPages: number
+  page: number
+  pageSize: number
+}
+
+/**
+ * Get history filter conditions options
+ * 获取流水线构建历史中的查询条件选项
+ * API: GET /api/user/builds/projects/{projectId}/pipelines/{pipelineId}/history/conditions
+ */
+export async function getHistoryConditions(
+  params: HistoryConditionsQueryParams,
+): Promise<ConditionOptionItem[]> {
+  const { projectId, pipelineId, conditionType, page = 1, pageSize = 20, keyword, debug } = params
+
   const queryParams = new URLSearchParams()
-  Object.keys(query).forEach((key) => {
-    if (query[key] !== undefined && query[key] !== null) {
-      queryParams.append(key, String(query[key]))
-    }
-  })
+  queryParams.append('conditionType', conditionType)
+  queryParams.append('page', String(page))
+  queryParams.append('pageSize', String(pageSize))
+
+  if (keyword) {
+    queryParams.append('keyword', keyword)
+  }
+  if (debug !== undefined) {
+    queryParams.append('debug', String(debug))
+  }
 
   try {
-    const response = await get<any[]>(
-      `/process/api/user/builds/${projectId}/${pipelineId}/historyCondition/${condition}?${queryParams.toString()}`,
+    const response = await get<HistoryConditionsResponse>(
+      `/process/api/user/builds/projects/${projectId}/pipelines/${pipelineId}/history/conditions?${queryParams.toString()}`,
     )
-    return response
+    return response.records || []
   } catch (error) {
-    console.error(`Failed to get history condition list for ${condition}:`, error)
+    console.error(`Failed to get history conditions for ${conditionType}:`, error)
     return []
+  }
+}
+
+/**
+ * Get all filter conditions for execution history
+ * 获取执行历史的所有筛选条件选项
+ */
+export async function getAllHistoryConditions(
+  projectId: string,
+  pipelineId: string,
+  debug?: boolean,
+): Promise<{
+  triggerMethods: ConditionOptionItem[]
+  triggerEvents: ConditionOptionItem[]
+  triggerUsers: ConditionOptionItem[]
+  triggerNodes: ConditionOptionItem[]
+}> {
+  const baseParams = { projectId, pipelineId, debug }
+
+  const [triggerMethods, triggerEvents, triggerUsers, triggerNodes] = await Promise.all([
+    getHistoryConditions({ ...baseParams, conditionType: HistoryConditionType.TRIGGER_METHOD }),
+    getHistoryConditions({ ...baseParams, conditionType: HistoryConditionType.TRIGGER_EVENT }),
+    getHistoryConditions({ ...baseParams, conditionType: HistoryConditionType.TRIGGER_USER }),
+    getHistoryConditions({ ...baseParams, conditionType: HistoryConditionType.TRIGGER_NODE }),
+  ])
+
+  return {
+    triggerMethods,
+    triggerEvents,
+    triggerUsers,
+    triggerNodes,
+  }
+}
+
+/**
+ * Update build remark
+ * 更新构建备注
+ * API: POST /process/api/user/builds/{projectId}/{pipelineId}/{buildId}/updateRemark
+ */
+export async function updateBuildRemark(
+  projectId: string,
+  pipelineId: string,
+  buildId: string,
+  remark: string,
+): Promise<boolean> {
+  try {
+    await post(
+      `/process/api/user/builds/${projectId}/${pipelineId}/${buildId}/updateRemark`,
+      { remark }
+    )
+    return true
+  } catch (error) {
+    console.error('Failed to update build remark:', error)
+    throw error
   }
 }

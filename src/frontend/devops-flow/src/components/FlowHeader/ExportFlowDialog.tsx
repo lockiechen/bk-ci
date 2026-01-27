@@ -74,7 +74,7 @@ export const ExportFlowDialog = defineComponent({
             <div class={styles.exportList}>
               {/* JSON 导出 */}
               <div class={styles.exportItem}>
-                <SvgIcon name="file-line" class={styles.exportIcon} />
+                <SvgIcon name="pipeline" class={styles.exportIcon} />
                 <h5 class={styles.exportTitle}>Pipeline JSON</h5>
                 <p class={styles.exportTip}>{t('flow.dialog.exportFlow.exportJsonTip')}</p>
                 <Button

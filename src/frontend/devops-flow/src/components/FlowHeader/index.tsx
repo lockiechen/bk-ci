@@ -7,7 +7,7 @@ import { useFlowInfoStore } from '@/stores/flowInfoStore'
 import type { FlowInfo, FlowVersion } from '@/types/flow'
 import { Button, Message, Select, Tag } from 'bkui-vue'
 import type { PropType } from 'vue'
-import { computed, defineComponent, h, ref } from 'vue'
+import { computed, defineComponent, h, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useRoute, useRouter } from 'vue-router'
 import ExtMenu from '../ExtMenu'
@@ -56,6 +56,16 @@ export const FlowHeader = defineComponent({
     const selectedVersion = ref(Number(route.params.version))
     const { showDeleteConfirm } = useDeleteConfirm()
     const flowInfoStore = useFlowInfoStore()
+
+    // 监听路由参数变化，更新选中的版本
+    watch(
+      () => route.params.version,
+      (newVersion) => {
+        if (newVersion) {
+          selectedVersion.value = Number(newVersion)
+        }
+      }
+    )
 
     // 对话框显示状态
     const showExportDialog = ref(false)

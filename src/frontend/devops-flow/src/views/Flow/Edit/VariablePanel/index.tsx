@@ -42,6 +42,8 @@ export default defineComponent({
     const isOpen = ref(props.modelValue)
     const activePanelTab = ref(VariablePanelTab.VARIABLES) // 顶级Tab
     const searchKeyword = ref('')
+    // Default expanded panels - expand INPUT category by default
+    const expandedPanels = ref<number[]>([0]) // 0 is the index of INPUT category
 
     // Use flow variables hook - unified hook for all variables
     const {
@@ -469,7 +471,7 @@ export default defineComponent({
                     </div>
 
                     <div class={styles.listContent}>
-                      <Collapse accordion={false} list={variableCategories.value} useBlockTheme>
+                      <Collapse v-model={expandedPanels.value} accordion={false} list={variableCategories.value} useBlockTheme>
                         {{
                           title: (item: CategoryItem) => (
                             <div class={styles.collapseHeader}>
@@ -532,6 +534,7 @@ export default defineComponent({
                   existingIds={existingIds.value}
                   existingCategories={getExistingCategories()}
                   editable={props.editable}
+                  allVariables={variables.value}
                   onSave={handleSaveVariable}
                   onCancel={handleCancel}
                 />

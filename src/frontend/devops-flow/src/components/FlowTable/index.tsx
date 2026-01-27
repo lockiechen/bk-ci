@@ -176,26 +176,12 @@ export const FlowTable = defineComponent({
       const handleFlowClick = () => {
         if (row.delete) return
 
-        // If only draft version exists (no released version), go to edit page directly
-        if (row.onlyDraftVersion) {
-          router.push({
-            name: ROUTE_NAMES.FLOW_EDIT_WORKFLOW_ORCHESTRATION,
-            params: {
-              projectId: row.projectId,
-              flowId: row.pipelineId,
-              version: row.pipelineVersion?.toString(),
-            },
-          })
-          return
-        }
-
-        // Otherwise go to detail page
+        // Navigate to flow base path, router guard will fetch releaseVersion and redirect
         router.push({
-          name: ROUTE_NAMES.FLOW_DETAIL_EXECUTION_RECORD,
+          name: ROUTE_NAMES.FLOW_DETAIL,
           params: {
             projectId: row.projectId,
             flowId: row.pipelineId,
-            version: row.pipelineVersion?.toString(),
           },
         })
       }

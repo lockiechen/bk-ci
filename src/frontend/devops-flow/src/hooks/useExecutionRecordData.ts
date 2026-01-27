@@ -35,28 +35,23 @@ export function useExecutionRecordData(debug = false) {
   )
 
   // Watch query parameter changes and auto-load data
+  // 使用 JSON.stringify 来深度监听所有筛选参数的变化
   watch(
-    () => [
-      queryParams.value.startTime, 
-      queryParams.value.endTime, 
-      queryParams.value.status,
-      queryParams.value.trigger,
-      queryParams.value.materialAlias,
-      queryParams.value.triggerAlias,
-      queryParams.value.materialCommitId,
-      queryParams.value.materialCommitMessage,
-      queryParams.value.triggerUser,
-      queryParams.value.materialBranch,
-      queryParams.value.triggerBranch,
-      queryParams.value.remark,
-      queryParams.value.artifactQuality,
-    ],
+    () => JSON.stringify({
+      startTime: queryParams.value.startTimeStartTime, 
+      endTime: queryParams.value.endTimeEndTime, 
+      status: queryParams.value.status,
+      triggerMethod: queryParams.value.triggerMethod,
+      triggerEvent: queryParams.value.triggerEvent,
+      triggerUser: queryParams.value.triggerUser,
+      triggerNode: queryParams.value.triggerNode,
+      remark: queryParams.value.remark,
+    }),
     () => {
       if (queryParams.value.projectId && queryParams.value.pipelineId) {
         store.loadExecutionRecords(1) // Reset to first page
       }
     },
-    { deep: true },
   )
 
   // Load data when component mounts

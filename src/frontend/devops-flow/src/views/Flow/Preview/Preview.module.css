@@ -403,3 +403,42 @@
   font-size: var(--font-size-xs);
   margin-left: var(--spacing-xs);
 }
+
+/* Validation error styles */
+.paramInvalid {
+  animation: shake 0.3s ease-in-out;
+}
+
+.paramInvalid .paramLabelText,
+.paramInvalid .runtimeInfoLabel {
+  color: var(--color-danger);
+}
+
+.inputInvalid {
+  border-color: var(--color-danger) !important;
+  background-color: rgba(234, 54, 54, 0.05);
+}
+
+.inputInvalid:focus {
+  border-color: var(--color-danger) !important;
+  box-shadow: 0 0 0 2px rgba(234, 54, 54, 0.2);
+}
+
+/* Override bkui-vue input/select error styles */
+:global(.bk-input.inputInvalid),
+:global(.bk-select.inputInvalid .bk-select-trigger) {
+  border-color: var(--color-danger) !important;
+  background-color: rgba(234, 54, 54, 0.05);
+}
+
+@keyframes shake {
+  0%, 100% {
+    transform: translateX(0);
+  }
+  20%, 60% {
+    transform: translateX(-4px);
+  }
+  40%, 80% {
+    transform: translateX(4px);
+  }
+}

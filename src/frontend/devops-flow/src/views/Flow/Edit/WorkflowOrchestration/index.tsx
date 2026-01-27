@@ -135,7 +135,7 @@ export default defineComponent({
     }
 
     return () => (
-      <Loading loading={loading.value} class={[sharedStyles.tabContainer, styles.workflowOrchestration]}>
+      <Loading zIndex={1000} loading={loading.value} class={[sharedStyles.tabContainer, styles.workflowOrchestration]}>
         {hasFlowStages.value ? (
           <BkPipeline
             pipeline={flowModelWithoutTriggerStage.value!}
