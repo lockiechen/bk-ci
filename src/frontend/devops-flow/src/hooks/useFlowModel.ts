@@ -290,7 +290,7 @@ export function useFlowModel() {
     const newStage = createDefaultStage(stageIndex, { name: `Stage-${stageIndex + 1}`, containers: [
         createDefaultContainer(1, { name: 'Job1', dispatchType: {
           buildType: 'CREATE_AGENT_ENV',
-          value: '${{BK_CI_CREATIVE_STREAM_NODE_AGENT_ID}}',
+          value: '${{variables.BK_CI_NODE_AGENT_ID}}',
         },
       }),
       ]
@@ -354,7 +354,7 @@ export function useFlowModel() {
       ...(containerType === 'vmBuild' ? {
           dispatchType: {
             buildType: 'CREATE_AGENT_ENV',
-            value: '${{BK_CI_CREATIVE_STREAM_NODE_AGENT_ID}}',
+            value: '${{variables.BK_CI_NODE_AGENT_ID}}',
           }
         } : {}
       ),

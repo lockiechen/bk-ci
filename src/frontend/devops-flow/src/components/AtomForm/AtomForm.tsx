@@ -192,7 +192,8 @@ export default defineComponent({
       
       const Component = COMPONENT_MAP[obj.component] || COMPONENT_MAP[obj.type] || VuexInput
       const value = props.atomValue[key] ?? obj.default ?? ''
-
+      // remove '@type' from obj
+      const { '@type': _type, ...rest } = obj
       return (
         <FormItem
           key={key}
@@ -208,7 +209,7 @@ export default defineComponent({
             placeholder={getPlaceholder(obj)}
             handleChange={handleChange}
             atomValue={props.atomValue}
-            {...obj}
+            {...rest}
           />
         </FormItem>
       )
@@ -220,6 +221,8 @@ export default defineComponent({
       
       const Component = COMPONENT_MAP[obj.component] || COMPONENT_MAP[obj.type] || VuexInput
       const value = props.atomValue[key] ?? obj.default ?? ''
+      // remove '@type' from obj
+      const { '@type': _type, ...rest } = obj
 
       return (
         <div key={key} class={styles.triggerFieldRow}>
@@ -235,7 +238,7 @@ export default defineComponent({
               placeholder={getPlaceholder(obj)}
               handleChange={handleChange}
               atomValue={props.atomValue}
-              {...obj}
+              {...rest}
             />
           </div>
         </div>
