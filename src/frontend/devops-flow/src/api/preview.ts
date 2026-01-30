@@ -130,12 +130,12 @@ export async function fetchPipelineByVersion({
  */
 export async function requestAuthoringNodes({
   projectId,
-  envName,
+  envHashId,
 }: {
   projectId: string
-  envName: string
+  envHashId: string
 }): Promise<AuthoringNodeResponse> {
-  return await fetchAuthoringNodeList({ projectId, envName })
+  return await fetchAuthoringNodeList({ projectId, envHashId })
 }
 
 /**

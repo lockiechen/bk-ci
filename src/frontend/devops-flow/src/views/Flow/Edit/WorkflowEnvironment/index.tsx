@@ -25,12 +25,12 @@ export default defineComponent({
      } = useAuthoringEnvironment({ ...route.params, autoLoadEnvList: true })
 
     // Handle user environment selection change
-    const handleEnvChange = (envName: string) => {
+    const handleEnvChange = (envHashId: string) => {
       // Only update if actually changed by user
-      if (flowSetting.value && envName !== (flowSetting.value as any).envName) {
+      if (flowSetting.value && envHashId !== (flowSetting.value as any).envHashId) {
         updateFlowSetting({
           ...flowSetting.value,
-          envName,
+          envHashId,
         })
       }
     }
@@ -39,7 +39,7 @@ export default defineComponent({
       <div class={[sharedStyles.tabContainer, sharedStyles.tabPadding]}>
         <AuthoringEnv
           isEdit
-          modelValue={flowSetting.value?.envName}
+          modelValue={flowSetting.value?.envHashId}
           envList={envSelectList.value}
           envLoading={envListLoading.value}
           nodeLoading={nodeListLoading.value}

@@ -423,7 +423,7 @@ export interface FlowSettings {
   }
   updater?: string
   createdTime?: number
-  envName?: string
+  envHashId?: string
 }
 
 // ============================================

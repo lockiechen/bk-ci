@@ -88,7 +88,7 @@ export default defineComponent({
                 <div>
                   {!isEmpty.value ? (
                     <AuthoringEnv
-                      modelValue={flowSetting.value?.envName}
+                      modelValue={flowSetting.value?.envHashId}
                       envList={envSelectList.value}
                       envLoading={envListLoading.value}
                       nodeList={nodeList.value}

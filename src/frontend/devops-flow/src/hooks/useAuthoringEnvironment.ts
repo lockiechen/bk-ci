@@ -63,12 +63,6 @@ export interface UseAuthoringEnvironmentOptions {
    * @default false
    */
   resetOnUnmount?: boolean
-
-  /**
-   * Initial environment name
-   * @default ''
-   */
-  envName?: string
 }
 
 // ============ Main Hook ============
@@ -81,7 +75,6 @@ export interface UseAuthoringEnvironmentOptions {
 export function useAuthoringEnvironment(options: UseAuthoringEnvironmentOptions = {}) {
   const route = useRoute()
   const store = useAuthoringEnvironmentStore()
-  const envName = ref<string>(options.envName ?? '')
   
   // ============ Options with defaults ============
   
@@ -126,7 +119,7 @@ export function useAuthoringEnvironment(options: UseAuthoringEnvironmentOptions 
   const envSelectList = computed<EnvSelectItem[]>(() => {
     return envList.value.map(env => ({
       ...env,
-      value: env.name,
+      value: env.envHashId,
       label: env.name,
     }))
   })
@@ -143,10 +136,10 @@ export function useAuthoringEnvironment(options: UseAuthoringEnvironmentOptions 
   
   /**
    * Load node list for specified environment
-   * @param envName - Environment name
+   * @param envHashId - Environment name
    */
-  const loadNodeList = async (envName: string): Promise<void> => {
-    await store.loadNodeList(projectId.value, envName)
+  const loadNodeList = async (envHashId: string): Promise<void> => {
+    await store.loadNodeList(projectId.value, envHashId)
   }
 
   
@@ -162,27 +155,6 @@ export function useAuthoringEnvironment(options: UseAuthoringEnvironmentOptions 
    */
   const refreshNodeList = async (): Promise<void> => {
     await store.refreshNodeList(projectId.value)
-  }
-  
-  /**
-   * Navigate to environment management page
-   * @param envName - Optional environment name to navigate to detail
-   */
-  const goToEnvironmentManagement = (envName?: string): void => {
-    let url = `${location.origin}/console/environment/${projectId.value}`
-    if (envName) {
-      url += `/envDetail/${envName}`
-    }
-    window.open(url, '_blank')
-  }
-  
-  /**
-   * Get environment by name
-   * @param envName - Environment name
-   * @returns Environment item or undefined
-   */
-  const getEnvByName = (envName: string): AuthoringEnvItem | undefined => {
-    return envList.value.find(env => env.name === envName)
   }
   
   /**
@@ -207,9 +179,6 @@ export function useAuthoringEnvironment(options: UseAuthoringEnvironmentOptions 
     // Auto load environment list if enabled
     if (autoLoadEnvList && projectId.value) {
       loadEnvList()
-      if (envName.value) {
-        loadNodeList(envName.value)
-      }
     }
   })
   
@@ -220,10 +189,10 @@ export function useAuthoringEnvironment(options: UseAuthoringEnvironmentOptions 
     }
   })
 
-   function goEnvironment(envName?: string) {
+   function goEnvironment(envHashId?: string) {
     let url = `${location.origin}/console/environment/${route.params.projectId}`
-    if (envName) {
-      url += `/envDetail/${envName}`
+    if (envHashId) {
+      url += `/creative/env/ALL/${envHashId}/node`
     }
     window.open(url, '_blank')
   }
@@ -254,8 +223,6 @@ export function useAuthoringEnvironment(options: UseAuthoringEnvironmentOptions 
     loadNodeList,
     refreshEnvList,
     refreshNodeList,
-    goToEnvironmentManagement,
-    getEnvByName,
     getEnvByHashId,
     resetState,
     goEnvironment,

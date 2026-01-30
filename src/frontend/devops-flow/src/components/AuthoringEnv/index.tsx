@@ -39,14 +39,14 @@ export default defineComponent({
   emits: ['update:modelValue'],
   setup(props, { emit }) {
     const { t } = useI18n()
-    const envName = ref(props.modelValue)
+    const envHashId = ref(props.modelValue)
     const { goEnvironment, loadNodeList } = useAuthoringEnvironment()
 
     watch(
       () => props.modelValue,
       (newValue) => {
-        if (newValue !== envName.value) {
-          envName.value = newValue
+        if (newValue !== envHashId.value) {
+          envHashId.value = newValue
           nextTick(() => {
             loadNodeList(newValue)
           })
@@ -55,20 +55,20 @@ export default defineComponent({
     )
 
     onMounted(() => {
-      if (envName.value) {
-        loadNodeList(envName.value)
+      if (envHashId.value) {
+        loadNodeList(envHashId.value)
       }
     })
 
     function handleChange() {
-      emit('update:modelValue', envName.value)
+      emit('update:modelValue', envHashId.value)
       nextTick(() => {
-          loadNodeList(envName.value)
+          loadNodeList(envHashId.value)
       })
     }
 
     function goToEnvironment() {
-      goEnvironment(envName.value)
+      goEnvironment(envHashId.value)
     }
 
     return () => (
@@ -76,7 +76,7 @@ export default defineComponent({
         <p class={styles.authoringHeader}>
           {props.isEdit ? (
             <Select
-              v-model={envName.value}
+              v-model={envHashId.value}
               filterable
               list={props.envList}
               loading={props.envLoading}
@@ -88,7 +88,7 @@ export default defineComponent({
             <span class={styles.headerText}>{props.modelValue}</span>
           )}
         </p>
-        {envName.value ? (
+        {envHashId.value ? (
           <Loading loading={props.nodeLoading} size="small" class="p-lg">
             <div class={styles.envItem}>
               <p class={styles.envItemTit}>

@@ -6,6 +6,7 @@ import {
   type AuthoringNodeItem,
   type CreationNode
 } from '@/api/authoringEnvironmentApi'
+import { Message } from 'bkui-vue'
 import { defineStore } from 'pinia'
 import { computed, ref } from 'vue'
 
@@ -91,10 +92,11 @@ export const useAuthoringEnvironmentStore = defineStore('authoringEnvironment', 
       errorMessage.value = ''
       const result = await apiFetchEnvList({ projectId, envType })
       envList.value = result
-    } catch (error) {
+    } catch (error: any) {
       console.error('Failed to load environment list:', error)
       errorMessage.value = 'Failed to load environment list'
       envList.value = []
+      Message({  theme: 'error', message: error.message || error })
     } finally {
       envListLoading.value = false
     }
@@ -103,10 +105,10 @@ export const useAuthoringEnvironmentStore = defineStore('authoringEnvironment', 
   /**
    * Load authoring node list by environment name
    * @param projectId - Project ID
-   * @param envName - Environment name
+   * @param envHashId - Environment name
    */
-  async function loadNodeList(projectId: string, envName: string): Promise<void> {
-    if (!projectId || !envName) {
+  async function loadNodeList(projectId: string, envHashId: string): Promise<void> {
+    if (!projectId || !envHashId) {
       console.warn('Project ID and environment name are required to load node list')
       nodeList.value = []
       return
@@ -116,12 +118,13 @@ export const useAuthoringEnvironmentStore = defineStore('authoringEnvironment', 
       nodeListLoading.value = true
       errorMessage.value = ''
       
-      const result = await apiFetchNodeList({ projectId, envName })
+      const result = await apiFetchNodeList({ projectId, envHashId })
       nodeList.value = result.records || []
-    } catch (error) {
+    } catch (error: any) {
       console.error('Failed to load node list:', error)
       errorMessage.value = 'Failed to load node list'
       nodeList.value = []
+      Message({  theme: 'error', message: error.message || error })
     } finally {
       nodeListLoading.value = false
     }
@@ -141,6 +144,8 @@ export const useAuthoringEnvironmentStore = defineStore('authoringEnvironment', 
    * @param projectId - Project ID
    */
   async function refreshNodeList(projectId: string): Promise<void> {
+    // TODO
+    console.log("🚀 ~ refreshNodeList ~ selectedEnvName.value:", selectedEnvName.value)
     if (!selectedEnvName.value) return
     await loadNodeList(projectId, selectedEnvName.value)
   }

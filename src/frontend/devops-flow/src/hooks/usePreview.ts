@@ -81,7 +81,7 @@ interface UsePreviewReturn {
   handleVersionChange: (newVersion: number) => void
   handleExecute: () => Promise<void>
   loadData: (ver?: number) => Promise<void>
-  loadAuthoringNodes: (envName: string) => Promise<void>
+  loadAuthoringNodes: (envHashId: string) => Promise<void>
 }
 
 // ============================================
@@ -361,7 +361,7 @@ export const usePreview = (options: UsePreviewOptions = {}): UsePreviewReturn =>
         })
       }
       
-      await loadAuthoringNodes(store.atomicPipelineModel.value?.modelAndSetting?.setting?.envName ?? '')
+      await loadAuthoringNodes(store.atomicPipelineModel.value?.modelAndSetting?.setting?.envHashId ?? '')
     } catch (error: unknown) {
       console.error('Failed to load preview data:', error)
       Message({
@@ -373,14 +373,14 @@ export const usePreview = (options: UsePreviewOptions = {}): UsePreviewReturn =>
   }
 
   /**
-   * Load authoring nodes by envName
+   * Load authoring nodes by envHashId
    */
-  const loadAuthoringNodes = async (envName: string): Promise<void> => {
+  const loadAuthoringNodes = async (envHashId: string): Promise<void> => {
     try {
      
       await store.loadAuthoringNodes({
         projectId: projectId.value,
-        envName,
+        envHashId,
       })
 
       // Set first available node as default selected
