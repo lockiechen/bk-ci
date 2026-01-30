@@ -51,7 +51,7 @@ export function useFlowListData(styles?: Styles) {
   const currentSortType = ref(
     (route.query.sortType as string) ||
       localStorage.getItem('flowSortType') ||
-      FLOW_SORT_FILED.updateTime,
+      FLOW_SORT_FILED.latestBuildStartDate,
   )
   const currentCollation = ref(
     (route.query.collation as string) ||

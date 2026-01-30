@@ -81,7 +81,6 @@ export interface UseAuthoringEnvironmentOptions {
 export function useAuthoringEnvironment(options: UseAuthoringEnvironmentOptions = {}) {
   const route = useRoute()
   const store = useAuthoringEnvironmentStore()
-  const envHashId = ref<string>(options.envHashId ?? '')
   
   // ============ Options with defaults ============
   
@@ -165,27 +164,6 @@ export function useAuthoringEnvironment(options: UseAuthoringEnvironmentOptions 
   }
   
   /**
-   * Navigate to environment management page
-   * @param envHashId - Optional environment name to navigate to detail
-   */
-  const goToEnvironmentManagement = (envHashId?: string): void => {
-    let url = `${location.origin}/console/environment/${projectId.value}`
-    if (envHashId) {
-      url += `/envDetail/${envHashId}`
-    }
-    window.open(url, '_blank')
-  }
-  
-  /**
-   * Get environment by name
-   * @param envHashId - Environment name
-   * @returns Environment item or undefined
-   */
-  const getEnvByName = (envHashId: string): AuthoringEnvItem | undefined => {
-    return envList.value.find(env => env.name === envHashId)
-  }
-  
-  /**
    * Get environment by hash ID
    * @param envHashId - Environment hash ID
    * @returns Environment item or undefined
@@ -207,9 +185,6 @@ export function useAuthoringEnvironment(options: UseAuthoringEnvironmentOptions 
     // Auto load environment list if enabled
     if (autoLoadEnvList && projectId.value) {
       loadEnvList()
-      if (envHashId.value) {
-        loadNodeList(envHashId.value)
-      }
     }
   })
   
@@ -223,7 +198,7 @@ export function useAuthoringEnvironment(options: UseAuthoringEnvironmentOptions 
    function goEnvironment(envHashId?: string) {
     let url = `${location.origin}/console/environment/${route.params.projectId}`
     if (envHashId) {
-      url += `/envDetail/${envHashId}`
+      url += `/creative/env/ALL/${envHashId}/node`
     }
     window.open(url, '_blank')
   }
@@ -254,8 +229,6 @@ export function useAuthoringEnvironment(options: UseAuthoringEnvironmentOptions 
     loadNodeList,
     refreshEnvList,
     refreshNodeList,
-    goToEnvironmentManagement,
-    getEnvByName,
     getEnvByHashId,
     resetState,
     goEnvironment,

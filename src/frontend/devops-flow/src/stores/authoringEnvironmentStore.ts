@@ -6,6 +6,7 @@ import {
   type AuthoringNodeItem,
   type CreationNode
 } from '@/api/authoringEnvironmentApi'
+import { Message } from 'bkui-vue'
 import { defineStore } from 'pinia'
 import { computed, ref } from 'vue'
 
@@ -91,10 +92,11 @@ export const useAuthoringEnvironmentStore = defineStore('authoringEnvironment', 
       errorMessage.value = ''
       const result = await apiFetchEnvList({ projectId, envType })
       envList.value = result
-    } catch (error) {
+    } catch (error: any) {
       console.error('Failed to load environment list:', error)
       errorMessage.value = 'Failed to load environment list'
       envList.value = []
+      Message({  theme: 'error', message: error.message || error })
     } finally {
       envListLoading.value = false
     }
@@ -118,10 +120,11 @@ export const useAuthoringEnvironmentStore = defineStore('authoringEnvironment', 
       
       const result = await apiFetchNodeList({ projectId, envHashId })
       nodeList.value = result.records || []
-    } catch (error) {
+    } catch (error: any) {
       console.error('Failed to load node list:', error)
       errorMessage.value = 'Failed to load node list'
       nodeList.value = []
+      Message({  theme: 'error', message: error.message || error })
     } finally {
       nodeListLoading.value = false
     }
