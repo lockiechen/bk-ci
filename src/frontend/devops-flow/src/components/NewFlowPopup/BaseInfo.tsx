@@ -14,7 +14,7 @@ export default defineComponent({
       default: () => ({
         pipelineName: '',
         desc: '',
-        envName: '',
+        envHashId: '',
       }),
     },
   },
@@ -50,12 +50,12 @@ export default defineComponent({
     }
 
     function updateAuthoringEnv(env: string) {
-      baseInfoData.value.envName = env
+      baseInfoData.value.envHashId = env
       handleChange()
     }
 
     function goToEnvironment() {
-      goEnvironment(baseInfoData.value.envName)
+      goEnvironment(baseInfoData.value.envHashId)
     }
 
     return () => (
@@ -90,7 +90,7 @@ export default defineComponent({
               {t('flow.content.environmentManagement')}
             </span>
           </p>
-          <Form.FormItem property="envName" required>
+          <Form.FormItem property="envHashId" required>
             {{
               error:() => t('flow.content.environmentRequired'),
               default: () => (
@@ -98,7 +98,7 @@ export default defineComponent({
                 <AuthoringEnv
                   isEdit={true}
                   envLoading={envListLoading.value}
-                  modelValue={baseInfoData.value.envName}
+                  modelValue={baseInfoData.value.envHashId}
                   onUpdate:modelValue={updateAuthoringEnv}
                   envList={envSelectList.value}
                   nodeLoading={nodeListLoading.value}

@@ -437,7 +437,7 @@ export default defineComponent({
                         {isAtomSelected.value ? (
                           <div class={styles.atomSelectEntry}>
                             <Input
-                              value={atomDisplayName.value}
+                              modelValue={atomDisplayName.value}
                               readonly
                               class={styles.atomNameInput}
                             />

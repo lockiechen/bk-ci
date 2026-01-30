@@ -34,7 +34,7 @@ export const useAuthoringEnvironmentStore = defineStore('authoringEnvironment', 
   /**
    * Current selected environment name
    */
-  const selectedEnvName = ref<string>('')
+  const selectedEnvHashId = ref<string>('')
   
   /**
    * Loading state for environment list
@@ -103,10 +103,10 @@ export const useAuthoringEnvironmentStore = defineStore('authoringEnvironment', 
   /**
    * Load authoring node list by environment name
    * @param projectId - Project ID
-   * @param envName - Environment name
+   * @param envHashId - Environment hash ID
    */
-  async function loadNodeList(projectId: string, envName: string): Promise<void> {
-    if (!projectId || !envName) {
+  async function loadNodeList(projectId: string, envHashId: string): Promise<void> {
+    if (!projectId || !envHashId) {
       console.warn('Project ID and environment name are required to load node list')
       nodeList.value = []
       return
@@ -116,7 +116,7 @@ export const useAuthoringEnvironmentStore = defineStore('authoringEnvironment', 
       nodeListLoading.value = true
       errorMessage.value = ''
       
-      const result = await apiFetchNodeList({ projectId, envName })
+      const result = await apiFetchNodeList({ projectId, envHashId })
       nodeList.value = result.records || []
     } catch (error) {
       console.error('Failed to load node list:', error)
@@ -141,8 +141,8 @@ export const useAuthoringEnvironmentStore = defineStore('authoringEnvironment', 
    * @param projectId - Project ID
    */
   async function refreshNodeList(projectId: string): Promise<void> {
-    if (!selectedEnvName.value) return
-    await loadNodeList(projectId, selectedEnvName.value)
+    if (!selectedEnvHashId.value) return
+    await loadNodeList(projectId, selectedEnvHashId.value)
   }
   
   /**
@@ -151,7 +151,7 @@ export const useAuthoringEnvironmentStore = defineStore('authoringEnvironment', 
   function resetState(): void {
     envList.value = []
     nodeList.value = []
-    selectedEnvName.value = ''
+    selectedEnvHashId.value = ''
     errorMessage.value = ''
     envListLoading.value = false
     nodeListLoading.value = false

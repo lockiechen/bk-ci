@@ -48,7 +48,7 @@ export default defineComponent({
 
     return () => (
       <div class={layoutStyles.detailContainer}>
-        <ModeSwitch
+        {/* <ModeSwitch
           projectId={route.params.projectId as string}
           pipelineId={route.params.flowId as string}
           modelAndSetting={
@@ -59,7 +59,7 @@ export default defineComponent({
                 }
               : undefined
           }
-        />
+        /> */}
 
         <div class={layoutStyles.detailContent}>
           {loading.value ? (
@@ -88,7 +88,7 @@ export default defineComponent({
                 <div>
                   {!isEmpty.value ? (
                     <AuthoringEnv
-                      modelValue={flowSetting.value?.envName}
+                      modelValue={flowSetting.value?.envHashId}
                       envList={envSelectList.value}
                       envLoading={envListLoading.value}
                       nodeList={nodeList.value}

@@ -36,9 +36,7 @@ export default defineComponent({
           {
             field: 'operateTime',
             label: t('flow.operator.operateTime'),
-            formatter: (row: any) => {
-              return convertTime(row.operateTime)
-            },
+            render: ({ row }: { row: any }) => convertTime(row.operateTime),
           },
           {
             field: 'operationLogStr',

@@ -1,7 +1,7 @@
 import { SvgIcon } from '@/components/SvgIcon'
-import useAuthoringEnvironment from '@/hooks/useAuthoringEnvironment'
+import useAuthoringEnvironment, { type EnvSelectItem } from '@/hooks/useAuthoringEnvironment'
 import { Loading, Select, Tag } from 'bkui-vue'
-import { defineComponent, nextTick, onMounted, ref, watch } from 'vue'
+import { computed, defineComponent, nextTick, onMounted, ref, watch, type PropType } from 'vue'
 import { useI18n } from 'vue-i18n'
 import styles from './AuthoringEnv.module.css'
 
@@ -20,7 +20,7 @@ export default defineComponent({
       default: '',
     },
     envList: {
-      type: Array,
+      type: Array as PropType<EnvSelectItem[]>,
       default: () => [],
     },
     nodeList: {
@@ -39,14 +39,17 @@ export default defineComponent({
   emits: ['update:modelValue'],
   setup(props, { emit }) {
     const { t } = useI18n()
-    const envName = ref(props.modelValue)
+    const envHashId = ref(props.modelValue)
     const { goEnvironment, loadNodeList } = useAuthoringEnvironment()
+    const envName = computed(() => {
+      return props.envList.find(env => env.envHashId === envHashId.value)?.name || envHashId.value
+    })
 
     watch(
       () => props.modelValue,
       (newValue) => {
-        if (newValue !== envName.value) {
-          envName.value = newValue
+        if (newValue !== envHashId.value) {
+          envHashId.value = newValue
           nextTick(() => {
             loadNodeList(newValue)
           })
@@ -55,20 +58,20 @@ export default defineComponent({
     )
 
     onMounted(() => {
-      if (envName.value) {
-        loadNodeList(envName.value)
+      if (envHashId.value) {
+        loadNodeList(envHashId.value)
       }
     })
 
     function handleChange() {
-      emit('update:modelValue', envName.value)
+      emit('update:modelValue', envHashId.value)
       nextTick(() => {
-          loadNodeList(envName.value)
+          loadNodeList(envHashId.value)
       })
     }
 
     function goToEnvironment() {
-      goEnvironment(envName.value)
+      goEnvironment(envHashId.value)
     }
 
     return () => (
@@ -76,7 +79,7 @@ export default defineComponent({
         <p class={styles.authoringHeader}>
           {props.isEdit ? (
             <Select
-              v-model={envName.value}
+              v-model={envHashId.value}
               filterable
               list={props.envList}
               loading={props.envLoading}
@@ -85,10 +88,10 @@ export default defineComponent({
             >
             </Select>
           ) : (
-            <span class={styles.headerText}>{props.modelValue}</span>
+            <span class={styles.headerText}>{envName.value}</span>
           )}
         </p>
-        {envName.value ? (
+        {envHashId.value ? (
           <Loading loading={props.nodeLoading} size="small" class="p-lg">
             <div class={styles.envItem}>
               <p class={styles.envItemTit}>

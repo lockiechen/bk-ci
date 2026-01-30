@@ -134,7 +134,7 @@ export interface FetchEnvListParams {
  */
 export interface FetchNodeListParams {
   projectId: string
-  envName: string
+  envHashId: string
 }
 
 // ============ API Functions ============
@@ -168,12 +168,12 @@ export async function fetchAuthoringEnvList(
 export async function fetchAuthoringNodeList(
   params: FetchNodeListParams
 ): Promise<AuthoringNodeResponse> {
-  const { projectId, envName } = params
+  const { projectId, envHashId } = params
   
   try {
     
     const res = await get<AuthoringNodeResponse>(
-      `${ENVIRONMENT_API_URL_PREFIX}/user/environment/${projectId}/listNodesNew?envName=${envName}`
+      `${ENVIRONMENT_API_URL_PREFIX}/user/environment/${projectId}/${envHashId}/listNodesNew`
     )
     return res
   } catch (error) {

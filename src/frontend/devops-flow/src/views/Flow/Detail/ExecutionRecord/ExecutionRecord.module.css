@@ -1,3 +1,10 @@
+.executionRecord {
+    display: flex;
+    height: 100%;
+    overflow: hidden;
+    flex-direction: column;
+    padding: var(--spacing-xl);
+}
 .filterLeft {
   flex: 1;
   flex-shrink: 0;

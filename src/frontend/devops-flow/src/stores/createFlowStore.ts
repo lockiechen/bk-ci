@@ -39,7 +39,7 @@ export const useNewFlowStore = defineStore('newFlow', () => {
     baseInfo: {
       pipelineName: '',
       pipelineDesc: '',
-      envName: '',
+      envHashId: '',
     },
     templateInfo: {
       activeTemplate: { name: '', logoUrl: '', desc: '' },
@@ -108,7 +108,7 @@ export const useNewFlowStore = defineStore('newFlow', () => {
           }
           updateFlowModel(flowModel)
           updateFlowSetting({
-            envName: formData.value.baseInfo.envName, 
+            envHashId: formData.value.baseInfo.envHashId, 
             pipelineName: formData.value.baseInfo.pipelineName,
             desc: formData.value.baseInfo.pipelineDesc || '',
           })
@@ -159,7 +159,7 @@ export const useNewFlowStore = defineStore('newFlow', () => {
       baseInfo: {
         pipelineName: '',
         pipelineDesc: '',
-        envName: '',
+        envHashId: '',
       },
       templateInfo: {
         activeTemplate: { name: '', logoUrl: '', desc: '' },
@@ -184,7 +184,7 @@ export const useNewFlowStore = defineStore('newFlow', () => {
   /**
    * Update base info section of form
    */
-  function updateBaseInfo(data: { pipelineName: string; pipelineDesc: string; envName: string }) {
+  function updateBaseInfo(data: { pipelineName: string; pipelineDesc: string; envHashId: string }) {
     formData.value.baseInfo = { ...formData.value.baseInfo, ...data }
   }
 

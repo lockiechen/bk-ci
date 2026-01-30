@@ -227,8 +227,10 @@ export default defineComponent({
       return (
         <div key={key} class={styles.triggerFieldRow}>
           <div class={styles.triggerFieldLabel}>
-            {obj.label}
-            {obj.required && <span class={styles.requiredMark}>*</span>}
+            <span class={styles.triggerFieldLabelText}>
+              {obj.label}
+              {obj.required && <span class={styles.requiredMark}>*</span>}
+            </span>
           </div>
           <div class={styles.triggerFieldInput}>
             <Component

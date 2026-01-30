@@ -1,26 +1,48 @@
-import { defineComponent, ref, watch } from 'vue';
-import { useI18n } from 'vue-i18n';
-import { useRouter } from 'vue-router';
-import { Message } from 'bkui-vue';
-import styles from "./permissionSettings.module.css";
+/**
+ * PermissionSettings Page
+ * Flow permission management settings page
+ */
+
+import { PermissionMain } from '@/components/Permission';
+import { useFlowInfo } from '@/hooks/useFlowInfo';
+import { computed, defineComponent } from 'vue';
+import { useRoute } from 'vue-router';
+import styles from './permissionSettings.module.css';
 
 export default defineComponent({
   name: 'PermissionSettings',
-  props: {
-    
-  },
-  emits: [''],
-  setup(props, { emit }) {
-    const { t } = useI18n();
-    const router = useRouter();
+
+  setup() {
+    const route = useRoute();
+    const { flowInfo } = useFlowInfo();
+
+    /**
+     * Get project code from route params
+     */
+    const projectCode = computed(() => route.params.projectId as string);
+
+    /**
+     * Get pipeline/flow ID (resource code)
+     */
+    const resourceCode = computed(() => flowInfo.value?.pipelineId || '');
+
+    /**
+     * Get pipeline/flow name (resource name)
+     */
+    const resourceName = computed(() => flowInfo.value?.pipelineName || '');
 
     return () => (
-      <>
-        <div class={styles.permissionSettings}>
-          <h3>权限设置</h3>
-          <p>PermissionSettings组件内容</p>
-        </div>
-      </>
+      <div class={styles.permissionSettings}>
+        {resourceCode.value && (
+          <PermissionMain
+            projectCode={projectCode.value}
+            resourceType="creative_stream"
+            resourceCode={resourceCode.value}
+            resourceName={resourceName.value}
+            showCreateGroup={false}
+          />
+        )}
+      </div>
     );
   },
 });

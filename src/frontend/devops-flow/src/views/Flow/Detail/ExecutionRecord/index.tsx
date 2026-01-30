@@ -42,11 +42,11 @@ const SEARCH_KEY = {
   /** 触发方式 */
   TRIGGER_METHOD: 'triggerMethod',
   /** 触发事件 */
-  TRIGGER_EVENT: 'triggerEvent',
+  TRIGGER_EVENT: 'triggerEventTypes',
   /** 触发人 */
   TRIGGER_USER: 'triggerUser',
   /** 触发节点（工作流节点） */
-  TRIGGER_NODE: 'triggerNode',
+  TRIGGER_NODE: 'triggerNodeHashIds',
   /** 状态 (保留旧的) */
   STATUS: 'status',
   /** 备注 */
@@ -643,7 +643,7 @@ export default defineComponent({
     })
       
     return () => (
-      <>
+      <div class={styles.executionRecord}>
         {/* 筛选区域 */}
         <div class={styles.filterBar}>
           <div class={styles.filterLeft}>
@@ -677,12 +677,15 @@ export default defineComponent({
             columns={tableColumns.value as Column[]}
             class={styles.table}
             settings={tableSettings.value}
+            pagination={pagination.value}
+            border="outer"
+            remotePagination
             onPageValueChange={handlePageChange}
             onPageLimitChange={handleLimitChange}
             onSettingChange={handleSettingChange}
           />
         </Loading>
-      </>
+      </div>
     )
   },
 })

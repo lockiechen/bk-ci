@@ -167,7 +167,6 @@ export default defineComponent({
             onExecute={handleExecute}
           />
           <div class={layoutStyles.content}>
-            
             <nav class={styles.sidebar}>
               {menuItems.map((item, index) => (
                 <div key={index} class={styles.menuGroup}>

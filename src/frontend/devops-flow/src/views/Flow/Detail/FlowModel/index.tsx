@@ -32,7 +32,7 @@ export default defineComponent({
 
     return () => (
       <div class={styles.flowModel}>
-        <ModeSwitch
+        {/* <ModeSwitch
           projectId={route.params.projectId as string}
           pipelineId={route.params.flowId as string}
           modelAndSetting={
@@ -43,7 +43,7 @@ export default defineComponent({
                 }
               : undefined
           }
-        />
+        /> */}
 
         <div class={layoutStyles.flexDetailContent}>
           {loading.value ? (

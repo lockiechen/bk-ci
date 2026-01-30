@@ -329,11 +329,11 @@ export const usePreviewStore = defineStore('preview', () => {
     return true
   }
 
-  const loadAuthoringNodes = async ({ projectId, envName }: { projectId: string; envName: string }) => {
+  const loadAuthoringNodes = async ({ projectId, envHashId }: { projectId: string; envHashId: string }) => {
     atomicAuthoringNodes.value = { ...atomicAuthoringNodes.value, loading: true, error: null }
 
     try {
-      const response = await fetchAuthoringNodeList({ projectId, envName })
+      const response = await fetchAuthoringNodeList({ projectId, envHashId })
       atomicAuthoringNodes.value = { value: response.records || [], loading: false, error: null }
       return response
     } catch (err) {

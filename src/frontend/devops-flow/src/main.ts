@@ -23,6 +23,7 @@ import { clickoutside } from 'bkui-vue/lib/directives'
 import { RouterView, useRoute } from 'vue-router'
 import { FLOW_GROUP_TYPES } from './constants/flowGroup'
 import { ROUTE_NAMES } from './constants/routes'
+import { vPerm } from './directives/perm'
 
 // 语言映射配置
 const localeAliasMap: Record<string, string> = {
@@ -123,5 +124,6 @@ app.component('VueDraggable', VueDraggable)
 // 注册指令
 app.directive('clickoutside', clickoutside)
 app.directive('bk-clickoutside', clickoutside)
+app.directive('perm', vPerm)
 
 app.mount('#app')

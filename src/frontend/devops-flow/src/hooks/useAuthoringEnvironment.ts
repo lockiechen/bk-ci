@@ -68,7 +68,7 @@ export interface UseAuthoringEnvironmentOptions {
    * Initial environment name
    * @default ''
    */
-  envName?: string
+  envHashId?: string
 }
 
 // ============ Main Hook ============
@@ -81,7 +81,7 @@ export interface UseAuthoringEnvironmentOptions {
 export function useAuthoringEnvironment(options: UseAuthoringEnvironmentOptions = {}) {
   const route = useRoute()
   const store = useAuthoringEnvironmentStore()
-  const envName = ref<string>(options.envName ?? '')
+  const envHashId = ref<string>(options.envHashId ?? '')
   
   // ============ Options with defaults ============
   
@@ -126,7 +126,7 @@ export function useAuthoringEnvironment(options: UseAuthoringEnvironmentOptions 
   const envSelectList = computed<EnvSelectItem[]>(() => {
     return envList.value.map(env => ({
       ...env,
-      value: env.name,
+      value: env.envHashId,
       label: env.name,
     }))
   })
@@ -143,10 +143,10 @@ export function useAuthoringEnvironment(options: UseAuthoringEnvironmentOptions 
   
   /**
    * Load node list for specified environment
-   * @param envName - Environment name
+   * @param envHashId - Environment envHashId
    */
-  const loadNodeList = async (envName: string): Promise<void> => {
-    await store.loadNodeList(projectId.value, envName)
+  const loadNodeList = async (envHashId: string): Promise<void> => {
+    await store.loadNodeList(projectId.value, envHashId)
   }
 
   
@@ -166,23 +166,23 @@ export function useAuthoringEnvironment(options: UseAuthoringEnvironmentOptions 
   
   /**
    * Navigate to environment management page
-   * @param envName - Optional environment name to navigate to detail
+   * @param envHashId - Optional environment name to navigate to detail
    */
-  const goToEnvironmentManagement = (envName?: string): void => {
+  const goToEnvironmentManagement = (envHashId?: string): void => {
     let url = `${location.origin}/console/environment/${projectId.value}`
-    if (envName) {
-      url += `/envDetail/${envName}`
+    if (envHashId) {
+      url += `/envDetail/${envHashId}`
     }
     window.open(url, '_blank')
   }
   
   /**
    * Get environment by name
-   * @param envName - Environment name
+   * @param envHashId - Environment name
    * @returns Environment item or undefined
    */
-  const getEnvByName = (envName: string): AuthoringEnvItem | undefined => {
-    return envList.value.find(env => env.name === envName)
+  const getEnvByName = (envHashId: string): AuthoringEnvItem | undefined => {
+    return envList.value.find(env => env.name === envHashId)
   }
   
   /**
@@ -207,8 +207,8 @@ export function useAuthoringEnvironment(options: UseAuthoringEnvironmentOptions 
     // Auto load environment list if enabled
     if (autoLoadEnvList && projectId.value) {
       loadEnvList()
-      if (envName.value) {
-        loadNodeList(envName.value)
+      if (envHashId.value) {
+        loadNodeList(envHashId.value)
       }
     }
   })
@@ -220,10 +220,10 @@ export function useAuthoringEnvironment(options: UseAuthoringEnvironmentOptions 
     }
   })
 
-   function goEnvironment(envName?: string) {
+   function goEnvironment(envHashId?: string) {
     let url = `${location.origin}/console/environment/${route.params.projectId}`
-    if (envName) {
-      url += `/envDetail/${envName}`
+    if (envHashId) {
+      url += `/envDetail/${envHashId}`
     }
     window.open(url, '_blank')
   }

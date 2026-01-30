@@ -37,7 +37,7 @@ export default defineComponent({
 
     return () => (
       <div class={layoutStyles.detailContainerWithRightPadding}>
-        <ModeSwitch
+        {/* <ModeSwitch
           projectId={route.params.projectId as string}
           pipelineId={route.params.flowId as string}
           modelAndSetting={
@@ -48,7 +48,7 @@ export default defineComponent({
                 }
               : undefined
           }
-        />
+        /> */}
 
         <div class={layoutStyles.detailContent}>
           {loading.value ? (

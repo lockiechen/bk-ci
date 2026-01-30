@@ -120,7 +120,7 @@ export interface CreateContentFormData {
   baseInfo: {
     pipelineName: string
     pipelineDesc: string
-    envName: string
+    envHashId: string
   }
   templateInfo: {
     activeTemplate: TemplateObject
@@ -141,7 +141,7 @@ export interface CreateContentParams {
   instanceType?: string // 创建实例的模式
   emptyTemplate?: boolean // 是否为空模板
   pipelineDesc?: string
-  envName?: string
+  envHashId?: string
 }
 
 export interface ImportContentParams {
