@@ -149,6 +149,7 @@ export interface OptionsApiConfig {
   dataPath?: string // 数据路径，如 data.list
   paramId?: string // 选项 ID 字段名，默认 id
   paramName?: string // 选项名称字段名，默认 name
+  [key: string]: unknown
 }
 /**
  * Validate variable ID

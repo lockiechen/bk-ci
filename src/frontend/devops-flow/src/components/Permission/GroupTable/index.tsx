@@ -333,7 +333,7 @@ export default defineComponent({
                     </Button>
                   )}
 
-                  {[MEMBER_STATUS.EXPIRED, MEMBER_STATUS.NORMAL].includes(
+                  {([MEMBER_STATUS.EXPIRED, MEMBER_STATUS.NORMAL] as MemberStatus[]).includes(
                     row.status,
                   ) && (
                     <>

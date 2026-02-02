@@ -50,7 +50,6 @@ export default defineComponent({
     const route = useRoute()
     const projectCode = computed(() => route.params.projectId as string)    
     const atomManager = useAtomManager({
-      os: ['WINDOWS'],
       category: JobCategory.TASK,
     })
     const atomVersion = useAtomVersion({
