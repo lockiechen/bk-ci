@@ -101,30 +101,31 @@ export default defineComponent({
           placeholder: t('flow.dialog.copyCreation.desc'),
         },
       },
-      {
-        property: 'labels',
-        label: t('flow.dialog.copyCreation.labels'),
-        component: 'Custom',
-      },
-      {
-        property: 'dynamicGroup',
-        label: t('flow.dialog.copyCreation.dynamicFlowGroup'),
-        component: 'Select',
-        props: {
-          disabled: true,
-          multiple: true,
-          loading: dynamicLoading.value,
-          placeholder: t('flow.dialog.copyCreation.dynamicMatchPlaceholder'),
-        },
-      },
-      {
-        property: 'staticView',
-        label: t('flow.dialog.copyCreation.staticFlowGroup'),
-        component: 'Select',
-        props: {
-          multiple: true,
-        },
-      },
+      // TODO: 暂时注释掉标签、动态创作流组、静态创作流组，后续需要时再启用
+      // {
+      //   property: 'labels',
+      //   label: t('flow.dialog.copyCreation.labels'),
+      //   component: 'Custom',
+      // },
+      // {
+      //   property: 'dynamicGroup',
+      //   label: t('flow.dialog.copyCreation.dynamicFlowGroup'),
+      //   component: 'Select',
+      //   props: {
+      //     disabled: true,
+      //     multiple: true,
+      //     loading: dynamicLoading.value,
+      //     placeholder: t('flow.dialog.copyCreation.dynamicMatchPlaceholder'),
+      //   },
+      // },
+      // {
+      //   property: 'staticView',
+      //   label: t('flow.dialog.copyCreation.staticFlowGroup'),
+      //   component: 'Select',
+      //   props: {
+      //     multiple: true,
+      //   },
+      // },
     ])
 
     watch(
@@ -279,6 +280,7 @@ export default defineComponent({
         quick-close={false}
         class={styles.copyFlowPopup}
         isLoading={props.loading}
+        zIndex={1000}
         onClosed={onClose}
         onHidden={onClose}
         onConfirm={onConfirm}

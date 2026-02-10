@@ -20,3 +20,6 @@ codeql.sh
 *.sarif
 .nx/cache
 .nx/workspace-data
+
+.codebuddy/
+.bkui-knowledge.json

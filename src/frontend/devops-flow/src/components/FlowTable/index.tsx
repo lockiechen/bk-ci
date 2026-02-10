@@ -566,7 +566,7 @@ export const FlowTable = defineComponent({
     // 处理启用/禁用操作
     function handleEnableAction(data: any) {
       const isEnable = data?.lock
-      const objectName = data?.name || data?.pipelineId
+      const objectName = data?.pipelineName || data?.pipelineId
       showDeleteConfirm({
         message: () => [
           `${!isEnable ? t('flow.content.confirmDisableFlow') : t('flow.content.confirmEnableFlow')}\n${t('flow.content.operationObject')}: `,
