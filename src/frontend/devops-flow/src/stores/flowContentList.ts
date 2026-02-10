@@ -126,7 +126,11 @@ export const useFlowHomeContentStore = defineStore('flowContentList', () => {
         key: 'enable',
         text: content.lock ? t('flow.content.enable') : t('flow.content.disable'),
         handler: (data: ContentTableItem) => {
-          enableActionCallback?.(data) ?? openActionDialog(data, DialogType.ADD_TO)
+          if (enableActionCallback) {
+            enableActionCallback(data)
+          } else {
+            openActionDialog(data, DialogType.ADD_TO) // fallback
+          }
         },
       },
       {
@@ -148,7 +152,11 @@ export const useFlowHomeContentStore = defineStore('flowContentList', () => {
         key: 'delete',
         text: t('flow.actions.delete'),
         handler: (data: ContentTableItem) => {
-          deleteActionCallback?.(data) ?? openActionDialog(data, DialogType.ADD_TO)
+          if (deleteActionCallback) {
+            deleteActionCallback(data)
+          } else {
+            openActionDialog(data, DialogType.ADD_TO) // fallback
+          }
         },
       },
     ]
