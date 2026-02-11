@@ -477,7 +477,7 @@ export const FlowTable = defineComponent({
           : [
               {
                 label: t('flow.content.name'),
-                field: 'name',
+                field: 'pipelineName',
                 fixed: 'left',
                 minWidth: 192,
                 sort: sortConfig(FLOW_SORT_FILED.flowName),
@@ -532,7 +532,7 @@ export const FlowTable = defineComponent({
 
     // 处理删除操作
     function handleDeleteAction(data: any) {
-      const objectName = data?.name || data?.pipelineId
+      const objectName = data?.pipelineName || data?.pipelineId
       showDeleteConfirm({
         message: () => [
           `${t('flow.content.confirmDeleteFlow')}\n${t('flow.content.operationObject')}: `,

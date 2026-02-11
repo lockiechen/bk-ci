@@ -10,6 +10,7 @@ import {
 } from '@/api/preview'
 import type { Container, Element, FlowInfo, FlowModel, Stage } from '@/types/flow'
 import { allVersionKeyList } from '@/utils/flowConst'
+import { Message } from 'bkui-vue'
 import { defineStore } from 'pinia'
 import { computed, ref, shallowRef } from 'vue'
 
@@ -385,13 +386,13 @@ export const usePreviewStore = defineStore('preview', () => {
 
       initParams(infoRes)
       return { success: true }
-    } catch (err) {
+    } catch (err: any) {
       const error = err instanceof Error ? err : new Error(String(err))
       atomicStartupInfo.value = { ...atomicStartupInfo.value, loading: false, error }
       atomicPipelineModel.value = { ...atomicPipelineModel.value, loading: false, error }
       atomicFlowInfo.value = { ...atomicFlowInfo.value, loading: false, error }
       console.error('Failed to load preview data:', error)
-      throw error
+      throw err?.message
     }
   }
 

@@ -12,6 +12,7 @@
     },
     "common": {
       "allFlows": "全部创作流",
+      "pleaseSelect": "请选择创作节点",
       "search": "搜索",
       "noData": "暂无数据",
       "success": "成功",
@@ -41,6 +42,7 @@
       "deleter": "删除人",
       "deleteTime": "删除时间",
       "restoreSuc": "恢复成功",
+      "restoreFail": "恢复失败",
       "restoreFlowConfirm": "确定恢复创作流【{0}】"
     },
     "content": {

@@ -5,6 +5,8 @@ import {
   disableContent,
   getContentDetail,
   getContentTableData,
+  getRecycleTableData,
+  restoreContent,
   getMatchDynamicView,
   saveAsTemplate,
   toggleFlowFavorite,
@@ -364,11 +366,15 @@ export const useFlowHomeContentStore = defineStore('flowContentList', () => {
 
   /**
    * 加载内容表格数据
+   * @param params - 查询参数
+   * @param isRecycleBin - 是否为回收站模式
    */
-  async function fetchFlowList(params: ContentTableParams) {
+  async function fetchFlowList(params: ContentTableParams, isRecycleBin = false) {
     tableLoading.value = true
     try {
-      const response = await getContentTableData(params)
+      const response = isRecycleBin
+        ? await getRecycleTableData(params)
+        : await getContentTableData(params)
 
       flowTableList.value = response.records.map(processContentItem)
       pagination.value = {
@@ -395,6 +401,21 @@ export const useFlowHomeContentStore = defineStore('flowContentList', () => {
       return detail
     } catch (error) {
       console.error('Failed to load content detail:', error)
+      throw error
+    }
+  }
+
+  /**
+   * 获取内容详情
+   */
+  async function restoreFlow(pipelineId: string) {
+    try {
+      const res = await restoreContent({
+        pipelineId,
+        projectId: route.params.projectId as string,
+      })
+      return res
+    } catch (error) {
       throw error
     }
   }
@@ -521,6 +542,7 @@ export const useFlowHomeContentStore = defineStore('flowContentList', () => {
     loadContentDetail,
     removeContent,
     confirmEnableAction,
+    restoreFlow,
     copyContentItem,
     saveContentAsTemplate,
     addContentToFlowGroup,

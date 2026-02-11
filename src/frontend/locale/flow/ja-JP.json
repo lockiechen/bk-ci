@@ -12,6 +12,7 @@
     },
     "common": {
       "allFlows": "すべての作成フロー",
+      "pleaseSelect": "作成ノードを選択してください",
       "search": "検索",
       "noData": "データがありません",
       "success": "成功",
@@ -41,6 +42,7 @@
       "deleter": "削除者",
       "deleteTime": "削除時間",
       "restoreSuc": "復元成功",
+      "restoreFail": "復元に失敗しました",
       "restoreFlowConfirm": "作成フロー「{0}」を復元してよろしいですか？"
     },
     "content": {

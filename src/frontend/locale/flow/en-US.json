@@ -12,6 +12,7 @@
     },
     "common": {
       "allFlows": "All Creation Flows",
+      "pleaseSelect": "Please select a creation node",
       "search": "Search",
       "noData": "No data available",
       "success": "Success",
@@ -41,6 +42,7 @@
       "deleter": "Deleted By",
       "deleteTime": "Deletion Time",
       "restoreSuc": "Restoration successful",
+      "restoreFail": "Restore failed",
       "restoreFlowConfirm": "Confirm restore of creation flow \"{0}\""
     },
     "content": {
