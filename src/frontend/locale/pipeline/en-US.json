@@ -2128,6 +2128,7 @@
   "noArchivedPipelines": "No archived pipelines for now, no action needed",
   "notParamsTip": "This parameter is no longer an input parameter or has been deleted and cannot be passed during execution. You can manually delete it, or it will be automatically removed from the parameter list after saving.",
   "saveAsParamSet": "Save Current Parameter Set",
+  "useLastParamSet": "Use Last Parameter Values",
   "reuseParamsExecute": "Reuse Parameters",
   "reuseParamsExecuteTips": "Execute pipeline with current build's startup parameters",
   "reuseParamsExecuteFailed": "Failed to reuse parameters execute",

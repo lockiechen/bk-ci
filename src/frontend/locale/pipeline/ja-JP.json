@@ -2121,6 +2121,7 @@
   "noArchivedPipelines": "アーカイブされたパイプラインは暫定ありません。操作する必要はありません",
   "notParamsTip": "このパラメータはもはや入力パラメータではないか、削除されています。実行時に再び渡すことはできません。手動で削除するか、保存後に自動的にこのパラメータリストから削除されます。",
   "saveAsParamSet": "現在のパラメータセットを保存",
+  "useLastParamSet": "前回のパラメータ値を使用",
   "reuseParamsExecute": "パラメータ再利用実行",
   "reuseParamsExecuteTips": "現在のビルドの起動パラメータでパイプラインを実行",
   "reuseParamsExecuteFailed": "パラメータ再利用実行に失敗しました",

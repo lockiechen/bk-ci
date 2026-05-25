@@ -502,6 +502,7 @@
 
             ctx.expose({
                 saveAsParamSet,
+                applyLastParamSet,
                 clear,
                 closeParamSetManageSlide
             })
@@ -551,6 +552,11 @@
                     acc[param.id] = param.value
                     return acc
                 }, {}))
+            }
+
+            function applyLastParamSet () {
+                paramSetId.value = LAST_USED_SET.value.id
+                applyParamSet()
             }
             
             function showParamSetManageSlide (setId) {
@@ -913,6 +919,7 @@
                 allParamsGroup,
                 saveParamSet,
                 saveAsParamSet,
+                applyLastParamSet,
                 activeSet,
                 editingSet,
                 getParamsGroupByLabel,

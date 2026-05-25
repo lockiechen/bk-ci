@@ -181,6 +181,13 @@
                         >
                             {{ $t('saveAsParamSet') }}
                         </span>
+                        <span class="collapse-trigger-divider">|</span>
+                        <span
+                            class="text-link"
+                            @click.stop="applyLastParamSet"
+                        >
+                            {{ $t('useLastParamSet') }}
+                        </span>
                     </header>
                     <div
                         v-show="activeName.has(2)"
@@ -1040,6 +1047,9 @@
                     ...this.paramsValues,
                     ...this.versionParamValues
                 })
+            },
+            applyLastParamSet () {
+                this.$refs.paramSetSelector.applyLastParamSet()
             },
             particalyUpdateParams (origin, partical, diffMap) {
                 const allParamMap = this.startupInfo?.properties?.reduce((acc, param) => {
