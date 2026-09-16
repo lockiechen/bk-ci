@@ -306,7 +306,10 @@
                     name="workspace"
                     :value="container.dispatchType.workspace"
                     :handle-change="changeBuildResource"
-                    :placeholder="$t('editPage.workspaceTips')"
+                    :placeholder="$t(isThirdPartyDockerEnabled
+                        ? 'editPage.workspaceDockerTips'
+                        : 'editPage.workspaceTips'
+                    )"
                 />
             </form-field>
             <form-field
@@ -695,6 +698,9 @@
             },
             dockerInfo () {
                 return this.container.dispatchType?.dockerInfo || {}
+            },
+            isThirdPartyDockerEnabled () {
+                return Object.keys(this.dockerInfo).length > 0
             },
             linuxOsDockerBuildImageType () {
                 return this.container.dispatchType?.dockerInfo?.imageType
