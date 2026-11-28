@@ -1321,7 +1321,11 @@
 }
 .lp-text { flex: 1; min-width: 0; white-space: pre; }
 ::v-deep .lp-text a,
-::v-deep .lp-text a:visited { color: #3c96ff; }
+::v-deep .lp-text a:visited {
+    color: #3c96ff;
+    text-decoration: underline;
+    text-underline-offset: 2px;
+}
 ::v-deep .lp-ovf-view {
     padding: 0;
     border: 0;
