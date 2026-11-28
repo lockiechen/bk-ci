@@ -141,9 +141,7 @@
                     ref="realLog"
                     @error="handleLogError"
                     @permission="handleLogPermission"
-                    @issues-change="handleIssuesChange"
                     @condition-skip-reason="handleConditionSkipReason"
-                    @locatable-change="handleLocateAvailability"
                     @locate-miss="handleLocateMiss"
                 />
                 <log-params-view
@@ -217,7 +215,6 @@
         shouldMountLogPanel,
         shouldShowLocateLog,
         shouldShowStandaloneExecuteCount,
-        resolveConclusionDisplayMessage,
         buildHistoricalRecordRequest,
         validateHistoricalLogRecord,
         resolveHistoricalPluginSnapshot
@@ -285,9 +282,7 @@
                 locateRequestContext: '',
                 progressRequestId: 0,
                 progressTimer: null,
-                logIssuesAvailable: false,
                 conditionSkipReason: '',
-                logSummaryAvailable: false,
                 tabList: [
                     { name: 'progress', show: true },
                     { name: 'log', show: true },
@@ -645,17 +640,14 @@
                     element
                 )
             },
-            activeErorr () {
-                return this.currentNodeError
-            },
             locateTarget () {
-                const conclusion = this.logConclusionModel
+                const element = this.displayElement
+                const error = this.currentNodeError
+                const message = error?.errorMsg || element.errorMsg || element.errorDetail || element.detail || ''
                 return {
                     context: this.logContext,
-                    messages: [
-                        [conclusion.errorCode, resolveConclusionDisplayMessage(conclusion, key => this.$t(key))].filter(Boolean).join('\n'),
-                        this.activeErorr?.errorMsg || ''
-                    ]
+                    messages: [message],
+                    errorCode: error?.errorCode || element.errorCode || ''
                 }
             },
             progressHeaderMeta () {
@@ -742,9 +734,7 @@
                 this.progressRequestId += 1
                 this.invalidateParamsRecord()
                 this.resetProgressState({ preserveSnapshot: false })
-                this.logIssuesAvailable = false
                 this.conditionSkipReason = ''
-                this.logSummaryAvailable = false
                 this.realLogControls = { levels: ['INFO', 'WARN', 'ERROR'], levelAll: false, search: '', current: 0, total: 0, showTime: false, wrap: true }
                 this.selectedExecuteCount = null
                 this.settingView = 'config'
@@ -933,14 +923,8 @@
                     }
                 }
             },
-            handleIssuesChange (hasIssues) {
-                this.logIssuesAvailable = hasIssues
-            },
             handleConditionSkipReason (reason) {
                 if (reason) this.conditionSkipReason = reason
-            },
-            handleLocateAvailability (available) {
-                this.logSummaryAvailable = Boolean(available)
             },
             handleLocateLog () {
                 this.locateRequest += 1

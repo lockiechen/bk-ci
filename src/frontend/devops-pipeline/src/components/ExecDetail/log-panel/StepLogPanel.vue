@@ -134,7 +134,6 @@
     import {
         findLogMatchIds,
         formatLogTime,
-        getLogIssueLevel,
         isLogArchivePendingBuildStatus,
         isPermissionError,
         latestDisplayBase,
@@ -345,12 +344,6 @@
                 this.updateMatches(true)
                 if (value) this.$nextTick(this.continueSearchBackfill)
             },
-            locateTarget: {
-                deep: true,
-                handler () {
-                    this.emitLocateAvailability()
-                }
-            },
             selectedSubTag () {
                 this.collapsedGroupIds = []
                 if (!this.suppressSubTagReload) this.reload()
@@ -509,8 +502,6 @@
                 this.controls.current = 0
                 this.controls.total = 0
                 this.highlightedLogId = ''
-                this.$emit('issues-change', false)
-                this.$emit('locatable-change', false)
                 this.displayBase = 0
                 this.matchedTotal = null
                 this.bottomFollow = true
@@ -549,16 +540,12 @@
                         }
                         const search = String(this.controls.search || '')
                         this.$nextTick(() => {
-                            if (!latestSucceeded || generation !== this.generation || search !== String(this.controls.search || '')) {
-                                if (generation === this.generation && search === String(this.controls.search || '')) this.$emit('logs-loaded')
-                                return
-                            }
+                            if (!latestSucceeded || generation !== this.generation || search !== String(this.controls.search || '')) return
                             if (this.controls.search) this.continueSearchBackfill()
                             else {
                                 this.scrollToBottom()
                                 this.maybeAutoBackfill()
                             }
-                            this.$emit('logs-loaded')
                         })
                     }
                 })
@@ -607,8 +594,6 @@
                         if (reason) this.$emit('condition-skip-reason', reason)
                     }
                     this.updateMatches()
-                    this.emitIssuesChange()
-                    this.emitLocateAvailability()
                 }
                 if (this.collapsedGroupIds.length && (merged !== oldLogs || structureWasComplete !== this.logStructureComplete)) {
                     const validCollapsedIds = new Set(this.logStructure.groups.filter(group => group.complete).map(group => group.id))
@@ -628,17 +613,6 @@
                     this.$emit('sub-tags', this.subTags)
                 }
                 if (direction !== 'before') this.scheduleAfter()
-            },
-            emitIssuesChange () {
-                this.$emit('issues-change', this.logs.some(log => Boolean(getLogIssueLevel(log))))
-            },
-            emitLocateAvailability () {
-                if (this.locateTarget && this.locateTarget.context !== this.logContext) {
-                    this.$emit('locatable-change', false)
-                    return
-                }
-                const result = resolveLocateLogTarget(this.logs, this.locateTarget?.messages || [])
-                this.$emit('locatable-change', result.lineNo !== null && result.lineNo !== undefined)
             },
             updateMatches (reset = false) {
                 const ids = this.matchIds
@@ -706,13 +680,6 @@
                     this.finished = true
                     this.beforeError = ''
                     this.afterError = ''
-                    this.$emit('locatable-change', false)
-                    if (direction === 'latest') {
-                        const cleanGeneration = this.generation
-                        this.$nextTick(() => {
-                            if (cleanGeneration === this.generation) this.$emit('logs-loaded')
-                        })
-                    }
                     return
                 }
                 if (result.status === 999) {
@@ -956,21 +923,15 @@
                     ? this.collapsedGroupIds.filter(id => id !== groupId)
                     : [...this.collapsedGroupIds, groupId]
             },
-            locateFirstIssue (messages) {
+            locateFirstIssue () {
                 if (this.locateTarget && this.locateTarget.context !== this.logContext) return false
-                const hasExplicitMessages = arguments.length > 0
-                const targetMessages = hasExplicitMessages ? messages : (this.locateTarget?.messages || [])
-                const hasTarget = resolveLocateLogTarget([], targetMessages).hasTarget
-                const result = hasTarget ? resolveLocateLogTarget(this.logs, targetMessages) : null
-                const hasText = log => String(log?.text ?? log?.content ?? log?.message ?? '').trim()
-                const lastError = [...this.logs].reverse().find(log => getLogIssueLevel(log) === 'error' && hasText(log))
-                const firstWarn = this.logs.find(log => getLogIssueLevel(log) === 'warn' && hasText(log))
-                const targetLine = result?.lineNo !== null && result?.lineNo !== undefined
-                    ? result.lineNo
-                    : lastError?.lineNo ?? lastError?.line ?? firstWarn?.lineNo ?? firstWarn?.line
-                const line = this.logs.find(log => (log.lineNo ?? log.line) === targetLine)
-                if (line) this.locate(line)
-                if (line) return true
+                const { messages, errorCode } = this.locateTarget || {}
+                const { lineNo } = resolveLocateLogTarget(this.logs, messages, errorCode)
+                const line = lineNo === null ? null : this.logs.find(log => (log.lineNo ?? log.line) === lineNo)
+                if (line) {
+                    this.locate(line)
+                    return true
+                }
                 this.$emit('locate-miss')
                 return false
             },

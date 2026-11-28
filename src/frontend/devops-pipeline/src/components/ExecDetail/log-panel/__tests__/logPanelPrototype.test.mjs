@@ -312,7 +312,7 @@ test('execution-count popover uses a masked shared SVG and the prototype menu ge
     assert.match(source, /rgba\(0, 0, 0, \.35\)/)
 })
 
-test('Job failed-step conclusion keeps the node divider while exposing its locator', () => {
+test('Job failed-step conclusion keeps the failed step and node divider without a locator', () => {
     const job = loadOptions('../../job.vue', {
         mapGetters: () => ({}),
         jobLog: {}, pluginLog: {}, detailContainer: {}, ContainerContent: {}, LogConclusionBar: {}, JobLogPanel: {}, LogPanelToolbar: {}, LogExecuteCountSelect: {}, MacDebugDialog: {},
@@ -349,7 +349,8 @@ test('Job failed-step conclusion keeps the node divider while exposing its locat
         devLogMock: null,
         $t: (key, values) => key === 'logPanel.status.failedByStep' ? `failed: ${values[0]}` : key
     })
-    assert.equal(conclusion.locateLog, true)
+    assert.equal(conclusion.locateLog, false)
+    assert.equal(conclusion.message, 'failed: compile')
     assert.equal(conclusion.node, 'node-1')
     assert.equal(conclusion.showNodeMessageDivider, true)
     const bar = readFileSync(new URL('../LogConclusionBar.vue', import.meta.url), 'utf8')

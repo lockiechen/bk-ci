@@ -474,6 +474,11 @@ const LOCATOR_TEMPLATE_WORDS = new Set([
     'for', 'from', 'help', 'how', 'in', 'message', 'of', 'on', 'or', 'please', 'script', 'see', 'support',
     'the', 'to', 'tracking', 'unknown', 'was', 'with'
 ])
+const LOCATOR_GENERIC_SUMMARIES = new Set([
+    'error', 'failed', 'failure', 'unknown error', 'an error occurred', 'step failed',
+    '发生错误', '未知错误', '执行失败', '步骤执行失败'
+])
+const LOCATOR_CODE_ONLY = /^(?:0x[\da-f]+|[a-z]{0,8}[-_]?\d{3,})$/i
 
 export function normalizeLocateText (value) {
     return stripAnsiForDisplay(value)
@@ -509,7 +514,7 @@ export function normalizeJobSummaryMessage (value) {
 
 function locateTextInformation (value) {
     const text = String(value || '').trim()
-    if (text.length < 16 || /^(?:0x[\da-f]+|[a-z]{0,8}[-_]?\d{3,})$/i.test(text)) return 0
+    if (text.length < 16 || LOCATOR_CODE_ONLY.test(text)) return 0
     const words = text.match(/[a-z][a-z0-9_./:-]*/gi) || []
     const latinInformation = words.reduce((count, word) => count + (word.length > 2 && !LOCATOR_TEMPLATE_WORDS.has(word.toLowerCase()) ? 1 : 0), 0)
     const cjkCharacters = text.match(/[\u3400-\u4dbf\u4e00-\u9fff\uf900-\ufaff\u3040-\u30ff\uac00-\ud7af]/g) || []
@@ -517,41 +522,59 @@ function locateTextInformation (value) {
     return Math.max(latinInformation, cjkInformation)
 }
 
-function locateCandidates (messages = []) {
+function isConcreteLocateText (text) {
+    const key = text.toLowerCase().replace(/[.!?。！？]+$/, '')
+    if (LOCATOR_CODE_ONLY.test(key) || LOCATOR_GENERIC_SUMMARIES.has(key)) return false
+    const words = key.match(/\p{L}+/gu) || []
+    return words.some(word => !LOCATOR_TEMPLATE_WORDS.has(word))
+}
+
+function locateCandidates (messages = [], errorCode) {
     const candidates = new Map()
+    const code = normalizeLocateText(errorCode).replace(/\n+/g, ' ')
     messages.forEach((message, sourceIndex) => {
         const normalized = normalizeLocateText(message)
-        if (!normalized) return
-        const bodies = [normalized.replace(/\n+/g, ' '), ...normalized.split('\n')]
-        bodies.forEach((text, candidateIndex) => {
-            const info = locateTextInformation(text)
-            if (info < 2) return
+        const lines = normalized.split('\n').filter(isConcreteLocateText)
+        if (!lines.length) return
+        const bodies = [normalized.replace(/\n+/g, ' '), ...lines]
+        const addCandidate = (text, info, rank) => {
             const existing = candidates.get(text)
-            const candidate = { text, info, sourceIndex, rank: candidateIndex === 0 ? 4 : 3 }
+            const candidate = { text, info, sourceIndex, rank }
             if (!existing || candidate.rank > existing.rank || (candidate.rank === existing.rank && sourceIndex < existing.sourceIndex)) candidates.set(text, candidate)
+        }
+        bodies.forEach((text, candidateIndex) => {
+            const rank = candidateIndex === 0 ? 4 : 3
+            addCandidate(text, locateTextInformation(text), rank)
+            if (code) addCandidate(`${code} ${text}`, 0, rank)
         })
     })
     return [...candidates.values()]
 }
 
-export function resolveLocateLogTarget (logs = [], messages = []) {
-    const candidates = locateCandidates(Array.isArray(messages) ? messages : [messages])
+export function resolveLocateLogTarget (logs = [], messages = [], errorCode) {
+    const candidates = locateCandidates(Array.isArray(messages) ? messages : [messages], errorCode)
     if (!candidates.length) {
-        const line = logs.find(log => getLogIssueLevel(log) === 'error') || logs.find(log => getLogIssueLevel(log) === 'warn')
-        return { hasTarget: false, lineNo: line?.lineNo ?? line?.line ?? null, miss: false }
+        for (let index = logs.length - 1; index >= 0; index -= 1) {
+            const log = logs[index]
+            const lineNo = log?.lineNo ?? log?.line ?? null
+            if (lineNo !== null && getLogIssueLevel(log) === 'error' && normalizeLocateText(getRawLogText(log))) {
+                return { hasTarget: false, lineNo, miss: false }
+            }
+        }
+        return { hasTarget: false, lineNo: null, miss: false }
     }
 
     let best = null
     logs.forEach((log, logIndex) => {
         const text = normalizeLocateText(getRawLogText(log)).replace(/\n+/g, ' ')
-        const logInfo = locateTextInformation(text)
-        if (!text || !logInfo) return
+        if (!text) return
         const level = getLogIssueLevel(log)
         candidates.forEach(candidate => {
             let rank = 0
             if (text === candidate.text) rank = candidate.rank
-            else if (text.includes(candidate.text)) rank = 2
-            else if (candidate.text.includes(text)) rank = 1
+            // 短摘要仍是定位目标，但不能用低信息量的片段模糊匹配其他日志。
+            else if (candidate.info >= 2 && text.includes(candidate.text)) rank = 2
+            else if (candidate.info >= 2 && candidate.text.includes(text) && locateTextInformation(text) > 0 && isConcreteLocateText(text)) rank = 1
             if (!rank || (level !== 'error' && level !== 'warn' && rank < 2)) return
             const levelPriority = level === 'error' ? 3 : level === 'warn' ? 2 : 1
             const score = [levelPriority, rank, -candidate.sourceIndex, candidate.info, candidate.text.length, logIndex]

@@ -29,8 +29,7 @@
             :download-job-id="logTarget.jobId"
             :download-link="selectedDownloadLink"
             :context-key="contextKey"
-            @logs-loaded="handleLogsLoaded"
-            v-on="forwardedListeners"
+            v-on="$listeners"
         />
         <div
             v-else
@@ -59,18 +58,10 @@
             return {
                 selectedId: '',
                 elapsedNow: Date.now(),
-                elapsedTimer: null,
-                pendingLocate: null,
-                loadedContextKey: ''
+                elapsedTimer: null
             }
         },
         computed: {
-            forwardedListeners () {
-                return {
-                    ...this.$listeners,
-                    'issues-change': this.handleIssuesChange
-                }
-            },
             selectedItem () {
                 return this.pluginList.find(item => item.id === this.selectedId) || this.pluginList[0] || {}
             },
@@ -110,75 +101,21 @@
                 deep: true,
                 handler () {
                     if (!this.pluginList.some(item => item.id === this.selectedId)) this.selectedId = this.pluginList[0]?.id || ''
-                    this.syncIssuesAvailability()
                     this.syncElapsedTimer()
                 }
             },
             rootJobId () {
                 this.selectedId = this.pluginList[0]?.id || ''
-                this.loadedContextKey = ''
-                this.syncIssuesAvailability()
-            },
-            selectedId () {
-                this.loadedContextKey = ''
-                if (this.pendingLocate && this.pendingLocate.itemId !== this.selectedId) this.pendingLocate = null
-                this.syncIssuesAvailability()
-            },
-            hasLogTarget () {
-                this.syncIssuesAvailability()
             }
         },
         mounted () {
             this.selectedId = this.pluginList[0]?.id || ''
-            this.syncIssuesAvailability()
             this.syncElapsedTimer()
         },
         beforeDestroy () {
             clearInterval(this.elapsedTimer)
         },
         methods: {
-            syncIssuesAvailability () {
-                this.$emit('issues-change', false)
-            },
-            handleIssuesChange (hasIssues) {
-                if (!this.hasLogTarget) {
-                    this.$emit('issues-change', false)
-                    return
-                }
-                this.$emit('issues-change', hasIssues)
-            },
-            locateFirstIssue () {
-                return this.$refs.panel?.locateFirstIssue?.(...arguments) ?? false
-            },
-            locateItem (itemId, messages) {
-                if (!this.pluginList.some(item => item.id === itemId)) return false
-                this.pendingLocate = { itemId, messages }
-                if (this.selectedId !== itemId) {
-                    this.selectedId = itemId
-                } else if (this.loadedContextKey === this.contextKey) {
-                    this.handleLogsLoaded()
-                }
-                return true
-            },
-            handleLogsLoaded () {
-                this.loadedContextKey = this.contextKey
-                this.$nextTick(() => this.consumePendingLocate())
-            },
-            consumePendingLocate (retry = false, contextKey = this.contextKey) {
-                const target = this.pendingLocate
-                if (!target || target.itemId !== this.selectedId || contextKey !== this.contextKey || contextKey !== this.loadedContextKey) return
-                const panel = this.$refs.panel
-                if (!panel) return
-                if (panel.loadingInitial) {
-                    if (!retry) this.$nextTick(() => this.consumePendingLocate(true, contextKey))
-                    return
-                }
-                const located = Array.isArray(target.messages) && target.messages.length
-                    ? this.locateFirstIssue(target.messages)
-                    : this.locateFirstIssue()
-                if (this.pendingLocate === target) this.pendingLocate = null
-                return located
-            },
             statusLabel (status) {
                 const key = `details.statusMap.${status}`
                 const translated = this.$t(key)

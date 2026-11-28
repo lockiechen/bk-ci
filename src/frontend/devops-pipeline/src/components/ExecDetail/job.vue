@@ -32,7 +32,6 @@
                 v-if="currentTab === 'log' && showConclusion"
                 :conclusion="logConclusionModel"
                 :pending-action="pendingAction"
-                @locate="handleLocateLog"
                 @retry="handleStepAction(false)"
                 @skip="handleStepAction(true)"
             >
@@ -109,8 +108,6 @@
                     ref="realLog"
                     @error="handleLogError"
                     @permission="handleLogPermission"
-                    @locate-miss="handleLocateMiss"
-                    @issues-change="handleIssuesChange"
                     @condition-skip-reason="handleConditionSkipReason"
                 />
                 <plugin-log
@@ -148,7 +145,7 @@
     import ContainerContent from '@/components/ContainerPropertyPanel/ContainerContent'
     import { convertMStoString } from '@/utils/util'
     import LogConclusionBar from './log-panel/LogConclusionBar'
-    import { buildConclusion, countConditionSkippedSteps, isJobConditionSkipped, resolveCancelConclusion, resolveCancelDisplay, resolveConclusionElapsed, resolveElapsedTimestamp, resolveJobQueueDetail, resolveNodeLogError, resolveJobFailureStep, isJobExecTimeoutCancel, isJobSystemAgentTermination, resolveJobExecTimeoutCode, resolveFallbackCancelLabelKey, resolveCancelUserId, isTaskElapsedStatus, isConcurrencyQueueCandidate, isVisibleConcurrencyQueueResponse, canShowJobConclusion, shouldClearQueueAfterError, buildHistoricalRecordRequest, validateHistoricalLogRecord, resolveHistoricalJobSnapshot, shouldMountLogPanel, shouldShowLocateLog, shouldShowStandaloneExecuteCount, resolveJobDirectoryItems, encodeDownloadFileName } from './log-panel/logPanelAdapter'
+    import { buildConclusion, countConditionSkippedSteps, isJobConditionSkipped, resolveCancelConclusion, resolveCancelDisplay, resolveConclusionElapsed, resolveElapsedTimestamp, resolveJobQueueDetail, resolveNodeLogError, resolveJobFailureStep, isJobExecTimeoutCancel, isJobSystemAgentTermination, resolveJobExecTimeoutCode, resolveFallbackCancelLabelKey, resolveCancelUserId, isTaskElapsedStatus, isConcurrencyQueueCandidate, isVisibleConcurrencyQueueResponse, canShowJobConclusion, shouldClearQueueAfterError, buildHistoricalRecordRequest, validateHistoricalLogRecord, resolveHistoricalJobSnapshot, shouldMountLogPanel, shouldShowStandaloneExecuteCount, resolveJobDirectoryItems, encodeDownloadFileName } from './log-panel/logPanelAdapter'
     import JobLogPanel from './log-panel/JobLogPanel'
     import LogPanelToolbar from './log-panel/LogPanelToolbar'
     import LogExecuteCountSelect from './log-panel/LogExecuteCountSelect'
@@ -198,7 +195,6 @@
                 realLogControls: { levels: ['INFO', 'WARN', 'ERROR'], levelAll: false, search: '', current: 0, total: 0, showTime: false, wrap: true },
                 realLogError: '',
                 pendingAction: '',
-                logIssuesAvailable: false,
                 conditionSkipReason: '',
                 elapsedNow: Date.now(),
                 elapsedTimer: null,
@@ -361,20 +357,6 @@
                 return (Array.isArray(this.displayJob.elements) ? this.displayJob.elements : [])
                     .find(step => step?.canRetry || step?.canSkip) || null
             },
-            locateMessages () {
-                const canDisplayConclusion = this.isHistoricalExecuteCount ? this.displayConclusionAvailable : this.conclusionVisible
-                if (!canDisplayConclusion || !['FAILED', 'HEARTBEAT_TIMEOUT', 'EXEC_TIMEOUT'].includes(String(this.displayJob.status || '').toUpperCase())) return []
-                const ownError = this.jobErrorSummary
-                if (ownError?.errorCode || ownError?.errorMsg) {
-                    return [[ownError.errorCode, ownError.errorMsg].filter(Boolean).join('\n')]
-                }
-                const step = this.jobFailureStep
-                if (!step) return []
-                const stepError = resolveNodeLogError(this.displayExecDetail.errorInfoList, { id: step.id, containerId: this.displayJob.id }, step)
-                return stepError?.errorCode || stepError?.errorMsg
-                    ? [[stepError.errorCode, stepError.errorMsg].filter(Boolean).join('\n')]
-                    : []
-            },
             queueDetailModel () {
                 return resolveJobQueueDetail(this.queueResponse, {
                     projectId: this.$route.params.projectId,
@@ -418,8 +400,7 @@
                     container: job,
                     hideNode: this.setupFailed,
                     canRetry: gated && !!this.retryableStep?.canRetry,
-                    canSkip: gated && !!this.retryableStep?.canSkip,
-                    locateLog: shouldShowLocateLog(effectiveStatus) && Boolean(this.jobFailureStep || this.jobErrorSummary || this.setupFailed)
+                    canSkip: gated && !!this.retryableStep?.canSkip
                 })
                 const fallbackCancelKey = cancelConclusion ? '' : resolveFallbackCancelLabelKey({ status: effectiveStatus, cancelUserId: model.cancelUserId, buildEndInfo: displayDetail.buildEndInfo })
                 const key = `details.statusMap.${effectiveStatus}`
@@ -524,7 +505,6 @@
         watch: {
             'currentJob.id' () {
                 this.currentTab = 'log'
-                this.logIssuesAvailable = false
                 this.conditionSkipReason = ''
                 this.realLogControls = { levels: ['INFO', 'WARN', 'ERROR'], levelAll: false, search: '', current: 0, total: 0, showTime: false, wrap: true }
                 this.selectedExecuteCount = null
@@ -609,22 +589,8 @@
                     this.$refs.conclusionExecuteCountSelect?.focusTrigger?.()
                 })
             },
-            handleIssuesChange (hasIssues) {
-                this.logIssuesAvailable = hasIssues
-            },
             handleConditionSkipReason (reason) {
                 if (reason) this.conditionSkipReason = reason
-            },
-            handleLocateLog () {
-                const itemId = this.jobFailureStep?.id
-                    || (this.setupFailed ? this.displayPluginList[0]?.id : this.$refs.realLog?.selectedId)
-                if (!itemId) return
-                const messages = this.locateMessages
-                if (messages.length) this.$refs.realLog?.locateItem?.(itemId, messages)
-                else this.$refs.realLog?.locateItem?.(itemId)
-            },
-            handleLocateMiss () {
-                if (this.$bkMessage) this.$bkMessage({ theme: 'warning', message: this.$t('logPanel.locateSummaryMiss'), limit: 1 })
             },
             handleStepAction (skip) {
                 if (this.pendingAction || !this.retryableStep) return

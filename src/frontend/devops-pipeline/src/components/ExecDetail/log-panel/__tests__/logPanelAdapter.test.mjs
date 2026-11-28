@@ -3771,7 +3771,6 @@ test('historical conclusion bars remain visible while actions stay gated', () =>
     assert.match(job, /conclusionVisible \(\) \{\s*return this\.selectedExecuteCount === null \|\| Number\(this\.selectedExecuteCount\) === Number\(this\.latestExecuteCount\)/)
     assert.match(plugin, /conclusionVisible \(\) \{\s*return this\.selectedExecuteCount === null \|\| Number\(this\.selectedExecuteCount\) === Number\(this\.currentElement\.executeCount\)/)
     assert.match(plugin, /currentNodeError \(\) \{[\s\S]*?return resolveNodeLogError/)
-    assert.match(plugin, /activeErorr \(\) \{\s*return this\.currentNodeError/)
     assert.match(plugin, /const gated = this\.actionsEnabled && !this\.\$route\.query\?\.archiveFlag && this\.conclusionVisible/)
     assert.match(plugin, /canRetry: !this\.isHistoricalExecuteCount && gated && !!currentElement\.canRetry/)
     assert.match(plugin, /canSkip: !this\.isHistoricalExecuteCount && gated && !!currentElement\.canSkip/)
@@ -5001,9 +5000,7 @@ test('hasLogIssues detects ERROR and WARN only', () => {
         { text: 'ordinary error word' }
     ]).map(mark => mark.cls), ['is-error', 'is-warn'])
     const stepPanel = readFileSync(new URL('../StepLogPanel.vue', import.meta.url), 'utf8')
-    assert.match(stepPanel, /getLogIssueLevel,/)
-    assert.match(stepPanel, /this\.logs\.some\(log => Boolean\(getLogIssueLevel\(log\)\)\)/)
-    assert.match(stepPanel, /resolveLocateLogTarget\(this\.logs, targetMessages\)/)
+    assert.equal(stepPanel.match(/resolveLocateLogTarget\(/g)?.length, 1, 'log append must not resolve the locate target')
     assert.match(stepPanel, /locateRequest: \{ type: Number, default: 0 \}/)
     assert.match(stepPanel, /locateRequestContext: \{ type: String, default: '' \}/)
     assert.match(stepPanel, /logContext: \{ type: String, default: '' \}/)
@@ -5012,7 +5009,6 @@ test('hasLogIssues detects ERROR and WARN only', () => {
     assert.match(stepPanel, /pendingStatusResume:\s*false/)
     assert.match(stepPanel, /resumeLogPolling \(\) \{[\s\S]*if \(this\.loadingInitial \|\| this\.loadingAfter\) \{[\s\S]*this\.pendingStatusResume = true/)
     assert.match(stepPanel, /this\.pendingStatusResume[\s\S]*this\.resumeLogPolling\(\)/)
-    assert.match(stepPanel, /locateTarget:\s*\{[\s\S]*handler \(\) \{[\s\S]*this\.emitLocateAvailability\(\)/)
     assert.match(stepPanel, /resumeLogPolling \(\) \{[\s\S]*this\.finished = false[\s\S]*this\.loadAfter\(\)/)
     assert.match(stepPanel, /locateRequest \(token, previousToken\) \{[\s\S]*token === previousToken \|\| this\.locateRequestContext !== this\.logContext[\s\S]*this\.\$nextTick\(\(\) => \{[\s\S]*this\.locateTarget\.context === this\.logContext[\s\S]*this\.locateFirstIssue\(\)/)
     assert.match(stepPanel, /locate \(log\) \{\s*this\.highlightedLogId = log\.lineNo[\s\S]*scrollToLine\(log\.lineNo\)/)
@@ -5022,7 +5018,6 @@ test('hasLogIssues detects ERROR and WARN only', () => {
     const job = readFileSync(new URL('../../job.vue', import.meta.url), 'utf8')
     const jobLogPanel = readFileSync(new URL('../JobLogPanel.vue', import.meta.url), 'utf8')
     assert.match(plugin, /:task-status="displayElement\.status"/)
-    assert.match(plugin, /@locatable-change="handleLocateAvailability"/)
     assert.match(plugin, /locateLog:\s*shouldShowLocateLog\(effectiveStatus\)[\s\S]*&& this\.shouldMountLog/)
     assert.doesNotMatch(plugin, /hasLocatableSummary \(\)/)
     assert.match(plugin, /const start = resolveElapsedTimestamp\(this\.currentElement\.startEpoch\)\s*\?\?\s*resolveElapsedTimestamp\(this\.currentElement\.startTime\)/)
@@ -5065,13 +5060,13 @@ test('error-summary locator selects the most informative matching ERROR line', (
     ], [primary, supplementary]).lineNo, 501)
 })
 
-test('error-summary locator uses ERROR then WARN fallback only for empty or non-informative summaries', () => {
+test('error-summary locator uses a structured ERROR fallback only without a concrete summary', () => {
     const logs = [
         { lineNo: 7, level: 'WARN', text: 'warning fallback has enough details' },
         { lineNo: 8, level: 'ERROR', text: 'error fallback has enough details' }
     ]
     assert.equal(adapter.resolveLocateLogTarget(logs, ['', '404']).lineNo, 8)
-    assert.equal(adapter.resolveLocateLogTarget(logs.slice(0, 1), []).lineNo, 7)
+    assert.equal(adapter.resolveLocateLogTarget(logs.slice(0, 1), []).lineNo, null)
     assert.equal(adapter.resolveLocateLogTarget(logs, ['error']).hasTarget, false)
 })
 
@@ -5129,12 +5124,10 @@ test('error-summary locator wiring is context-bound and virtual scrolling calibr
     const step = readFileSync(new URL('../StepLogPanel.vue', import.meta.url), 'utf8')
     const lines = readFileSync(new URL('../LogLinesView.vue', import.meta.url), 'utf8')
     assert.match(plugin, /:locate-target="locateTarget"/)
-    assert.match(plugin, /messages:\s*\[[\s\S]*conclusion\.errorCode[\s\S]*this\.activeErorr\?\.errorMsg/)
     assert.match(plugin, /handleLocateMiss \(\) \{[\s\S]*\$t\('logPanel\.locateSummaryMiss'\)/)
     assert.match(step, /locateTarget: \{ type: Object, default: null \}/)
     assert.match(step, /this\.locateTarget\.context !== this\.logContext/)
-    assert.match(step, /resolveLocateLogTarget\(this\.logs, targetMessages\)/)
-    assert.match(step, /const hasTarget = resolveLocateLogTarget\(\[\], targetMessages\)\.hasTarget/)
+    assert.match(step, /resolveLocateLogTarget\(this\.logs, messages, errorCode\)/)
     assert.match(step, /locate \(log\) \{\s*this\.highlightedLogId = log\.lineNo\s*this\.revealLogGroupAncestors\(log\.lineNo\)\s*this\.\$nextTick\(\(\) => this\.\$refs\.linesView\?\.scrollToLine\(log\.lineNo\)\)/)
     assert.doesNotMatch(lines, /highlightedLineNo \(val\)/)
     assert.match(lines, /calibrateLocateLine \(lineNo, generation, attempt\)[\s\S]*attempt >= 2[\s\S]*resolveLineCenterAdjustment/)
@@ -5769,7 +5762,7 @@ test('historical conclusions project selected failure data without exposing exec
     assert.equal(jobConclusion.errorCode, 'E1')
     assert.equal(jobConclusion.canRetry, false)
     assert.equal(jobConclusion.canSkip, false)
-    assert.equal(jobConclusion.locateLog, true)
+    assert.equal(jobConclusion.locateLog, false)
 
     const pluginOptions = loadComponentOptions('../../plugin.vue', {
         mapActions: () => ({}), mapState: () => ({}), detailContainer: {}, ReferenceVariable: {}, pluginLog: {},
@@ -5794,7 +5787,6 @@ test('historical conclusions project selected failure data without exposing exec
         canReview: true,
         devLogMock: null,
         realLogFallback: false,
-        logIssuesAvailable: true,
         shouldMountLog: true,
         elapsedNow: 0,
         $route: { params: { projectId: 'project-1' } },
@@ -5841,8 +5833,6 @@ test('job timeout conclusion takes priority over a matching system cancellation 
         actionsEnabled: true,
         canReview: false,
         devLogMock: null,
-        logIssuesAvailable: false,
-        logSummaryAvailable: false,
         elapsedNow: 0,
         $route: { params: { projectId: 'project-1' } },
         $t: (key, values) => key === 'details.statusMap.EXEC_TIMEOUT'
@@ -6093,8 +6083,6 @@ test('parent cancellation conclusions use the nested parent pipeline operator', 
         actionsEnabled: true,
         canReview: false,
         devLogMock: null,
-        logIssuesAvailable: false,
-        logSummaryAvailable: false,
         shouldMountLog: true,
         elapsedNow: 0,
         $route: { params: { projectId: 'project-1' } },
@@ -6416,7 +6404,6 @@ test('Job and Step error summary computed properties do not consume errorInfoLis
         queueDetailModel: null,
         devLogMock: null,
         realLogFallback: false,
-        logIssuesAvailable: false,
         $t: key => key
     })
     assert.equal(conclusion.errorCode, 'job-own-code')
@@ -6459,85 +6446,22 @@ test('Job and Step error summary computed properties do not consume errorInfoLis
     })
 })
 
-test('Job locate target is built from its current own cause or its failed step, never an arbitrary error', () => {
-    const source = readFileSync(new URL('../../job.vue', import.meta.url), 'utf8')
-    assert.match(source, /locateItem\?\.\(itemId, messages\)/)
-    assert.match(source, /@locate-miss="handleLocateMiss"/)
-    const dependencies = {
-        mapGetters: () => ({}), jobLog: {}, pluginLog: {}, detailContainer: {}, ContainerContent: {}, LogConclusionBar: {}, JobLogPanel: {}, LogPanelToolbar: {}, MacDebugDialog: {},
-        convertMStoString: () => '', buildConclusion: adapter.buildConclusion, resolveJobQueueDetail: () => null,
-        resolveNodeLogError: adapter.resolveNodeLogError, resolveJobFailureStep: adapter.resolveJobFailureStep,
-        shouldShowLocateLog: adapter.shouldShowLocateLog,
-        isSystemAgentTermination: adapter.isSystemAgentTermination, isConcurrencyQueueCandidate: () => false,
-        isVisibleConcurrencyQueueResponse: () => false, canShowJobConclusion: () => false, shouldClearQueueAfterError: () => false,
-        applyLogPanelDevMock: value => value, resolveLogPanelDevMock: () => null, RESOURCE_ACTION: {}, handlePipelineNoPermission: () => {}
-    }
-    const options = loadComponentOptions('../../job.vue', dependencies)
-    const selectedStep = { id: 9, name: '上报为空', status: 'FAILED' }
-    const common = {
-        conclusionVisible: true,
-        displayConclusionAvailable: true,
-        isLatestBuild: true,
-        currentJob: { id: 42, status: 'FAILED', elements: [selectedStep] },
-        displayJob: { id: 42, status: 'FAILED', elements: [selectedStep] },
-        isHistoricalExecuteCount: false,
-        jobErrorSummary: null,
-        jobFailureStep: selectedStep,
-        execDetail: { errorInfoList: [
-            { taskId: 8, containerId: 42, errorCode: 'other', errorMsg: 'different step' },
-            { taskId: 9, containerId: 42, errorCode: '2199011', errorMsg: 'Script command execution failed: report empty' },
-            { taskId: 9, containerId: 99, errorCode: 'historic', errorMsg: 'another job' }
-        ] },
-        displayExecDetail: { errorInfoList: [
-            { taskId: 8, containerId: 42, errorCode: 'other', errorMsg: 'different step' },
-            { taskId: 9, containerId: 42, errorCode: '2199011', errorMsg: 'Script command execution failed: report empty' },
-            { taskId: 9, containerId: 99, errorCode: 'historic', errorMsg: 'another job' }
-        ] }
-    }
-    assert.deepEqual(options.computed.locateMessages.call(common), ['2199011\nScript command execution failed: report empty'])
-    assert.deepEqual(options.computed.locateMessages.call({
-        ...common, jobErrorSummary: { errorCode: 'JOB-OWN', errorMsg: 'Job setup failed' }
-    }), ['JOB-OWN\nJob setup failed'])
-    assert.deepEqual(options.computed.locateMessages.call({ ...common, conclusionVisible: false }), [])
-    assert.deepEqual(options.computed.locateMessages.call({ ...common, isLatestBuild: false }), ['2199011\nScript command execution failed: report empty'])
-    assert.deepEqual(options.computed.locateMessages.call({ ...common, jobFailureStep: null }), [])
-})
-
-test('Job conclusion exposes locate when a danger status has a failure summary', () => {
-    const dependencies = {
-        mapGetters: () => ({}), jobLog: {}, pluginLog: {}, detailContainer: {}, ContainerContent: {}, LogConclusionBar: {}, JobLogPanel: {}, LogPanelToolbar: {}, MacDebugDialog: {},
-        convertMStoString: () => '', buildConclusion: adapter.buildConclusion, resolveJobQueueDetail: () => null,
-        resolveNodeLogError: adapter.resolveNodeLogError, resolveJobFailureStep: adapter.resolveJobFailureStep,
-        shouldShowLocateLog: adapter.shouldShowLocateLog,
-        isSystemAgentTermination: adapter.isSystemAgentTermination, isConcurrencyQueueCandidate: () => false,
-        isVisibleConcurrencyQueueResponse: () => false, canShowJobConclusion: () => false, shouldClearQueueAfterError: () => false,
-        applyLogPanelDevMock: value => value, resolveLogPanelDevMock: () => null, RESOURCE_ACTION: {}, handlePipelineNoPermission: () => {}
-    }
-    const options = loadComponentOptions('../../job.vue', dependencies)
-    const model = ({ status = 'FAILED', issues = true, latest = true, errorCode = 'job-error', errorMsg = 'trusted Job failure', history = true, mockLocate = false, failureStep = null } = {}) => {
-        const currentJob = { id: 42, status, errorCode, errorMsg, nodeName: 'runner' }
-        const execDetail = { id: 'build', status, cancelUserId: '', errorInfoList: [] }
-        const summary = options.computed.jobErrorSummary.call({ currentJob, displayJob: currentJob, conclusionVisible: history, displayConclusionAvailable: history, isHistoricalExecuteCount: false, devLogMock: null, execDetail, displayExecDetail: execDetail })
-        const vm = {
-            currentJob, displayJob: currentJob, execDetail, displayExecDetail: execDetail, displayConclusionAvailable: history, isHistoricalExecuteCount: false, jobErrorSummary: summary, jobFailureStep: failureStep,
-            locateMessages: options.computed.locateMessages.call({ currentJob, displayJob: currentJob, displayExecDetail: execDetail, displayConclusionAvailable: history, isHistoricalExecuteCount: false, jobErrorSummary: summary, jobFailureStep: failureStep, conclusionVisible: history, isLatestBuild: latest, execDetail, devLogMock: null }),
-            isLatestBuild: latest, conclusionVisible: history, elapsedNow: 0, queueDetailModel: null,
-            devLogMock: mockLocate ? { locateLog: true } : null, realLogFallback: false, logIssuesAvailable: issues,
-            $route: { params: { projectId: 'project' } }, $t: key => key
+test('Job conclusions retain their own error and node but never show the locate action', () => {
+    const options = loadJobConclusionOptions()
+    const statuses = ['FAILED', 'EXEC_TIMEOUT', 'HEARTBEAT_TIMEOUT', 'TERMINATE', 'CANCELED', 'RUNNING', 'SUCCEED']
+    for (const status of statuses) {
+        const job = { id: 'job-1', status, dockerContainerName: 'runner' }
+        const jobErrorSummary = { errorCode: 'E42', errorMsg: 'trusted Job failure' }
+        const model = options.computed.logConclusionModel.call(jobConclusionContext(job, { jobErrorSummary }))
+        assert.equal(model.locateLog, false, status)
+        if (status === 'FAILED') {
+            assert.equal(model.errorCode, 'E42')
+            assert.equal(model.message, 'trusted Job failure')
+            assert.equal(model.node, 'runner')
         }
-        return options.computed.logConclusionModel.call(vm)
     }
-    assert.equal(model().locateLog, true)
-    assert.equal(model({ status: 'RUNNING' }).locateLog, false)
-    assert.equal(model({ status: 'SUCCEED' }).locateLog, false)
-    assert.equal(model({ status: 'FAILED', errorCode: '', errorMsg: '' }).locateLog, false)
-    assert.equal(model({ latest: false }).locateLog, true)
-    assert.equal(model({ history: false }).locateLog, false)
-    assert.equal(model({ issues: false }).locateLog, true)
-    assert.equal(model().locateLog, true, 'Job conclusion exposes locate with a matching Job error summary')
-    assert.equal(model({ mockLocate: true }).locateLog, true, 'development mock does not hide the Job locate action')
-    assert.equal(model({ errorCode: '', errorMsg: '', failureStep: { name: 'failed step' } }).showNodeMessageDivider, true)
-    assert.equal(adapter.shouldShowLocateLog('FAILED', true), true, 'plugin locate behavior remains available')
+    const source = readFileSync(new URL('../../job.vue', import.meta.url), 'utf8')
+    assert.doesNotMatch(source, /@locate(?:-miss)?=/)
 })
 
 test('Job keeps the debug action out of the config ref path and gates it to the latest eligible execution', () => {
@@ -6566,7 +6490,6 @@ test('Job keeps the debug action out of the config ref path and gates it to the 
     }), false)
     assert.match(source, /<template v-slot:right-actions>[\s\S]*v-if="showDebugDockerBtn"[\s\S]*@click\.stop="handleDebug"/)
     assert.match(source, /handleDebug\s*\(\)\s*\{[\s\S]*?\$refs\.container\?\.startDebug\?\.\(\)/)
-    assert.match(source, /locateLog:\s*shouldShowLocateLog\(effectiveStatus\)[\s\S]*Boolean\(this\.jobFailureStep \|\| this\.jobErrorSummary \|\| this\.setupFailed\)/)
     const bar = readFileSync(new URL('../LogConclusionBar.vue', import.meta.url), 'utf8')
     assert.match(bar, /<div class="lp-status-actions">\s*<slot name="right-actions"><\/slot>/)
     assert.match(bar, /\.lp-status-actions ::v-deep \.lp-debug-action\.is-outline\s*\{[^}]*height:\s*24px;[^}]*padding:\s*0 12px;[^}]*background:\s*rgba\(107, 71, 71, 0\.4\);[^}]*border:\s*1px solid #979ba5;[^}]*color:\s*#c4c6cc/)
@@ -6586,10 +6509,9 @@ test('LogPanelToolbar wrap toggle preserves disabled behavior and is reflected b
     assert.match(source, /class="toolbar-action is-wrap-toggle"\s+:class="\{ 'is-active': controls\.wrap \}"[\s\S]*:aria-pressed="String\(controls\.wrap\)"\s+@click="toggleWrap"/)
 })
 
-test('Step location prefers summary matches, then the last ERROR, then the first WARN', () => {
-    const source = readFileSync(new URL('../StepLogPanel.vue', import.meta.url), 'utf8')
+test('plugin location scrolls only to a matched summary, and falls back only to a structured ERROR without one', () => {
     const dependencies = Object.fromEntries([
-        'mapActions', 'markRaw', 'shallowRef', 'LogGroupBar', 'LogLinesView', 'findLogMatchIds', 'formatLogTime', 'getLogIssueLevel',
+        'mapActions', 'markRaw', 'shallowRef', 'LogGroupBar', 'LogLinesView', 'findLogMatchIds', 'formatLogTime',
         'normalizeLogLevels', 'isPermissionError', 'latestDisplayBase', 'normalizeLogPanelResponse', 'serializeLogLevels', 'shouldBackfillSmallLog',
         'shouldApplyLogSearchScroll', 'shouldContinueSearchBackfill', 'resolveCleanResponseMessage', 'resolveCleanStatusFallbackKey', 'resolveCleanStatusText',
         'resolveDirectJobDownloadUrl', 'resolveLocateLogTarget', 'resolveLogHighlightState', 'resolveNextLogMatchIndex',
@@ -6601,90 +6523,63 @@ test('Step location prefers summary matches, then the last ERROR, then the first
         name,
         name === 'resolveLocateLogTarget'
             ? adapter.resolveLocateLogTarget
-            : name === 'getLogIssueLevel' ? adapter.getLogIssueLevel : (() => {})
+            : (() => {})
     ]))
     const options = loadComponentOptions('../StepLogPanel.vue', dependencies)
-    const blank = { lineNo: 'real-log-175', level: 'ERROR', text: '' }
-    const target = { lineNo: 'real-log-177', level: 'ERROR', text: '2199011 Script command execution failed: report empty' }
-    const events = []
-    const vm = {
-        locateTarget: null, logContext: '', logs: [blank, target], $emit: event => events.push(event),
-        locate: line => events.push(line.lineNo)
+    const plugin = loadPluginConclusionOptions()
+    const logContext = 'task-1-2'
+    const longSummary = 'Script command execution failed: report empty'
+    const shortSummary = '权限被拒绝'
+    const warn = { lineNo: 'warn-176', level: 'WARN', text: 'an unrelated dependency warning' }
+    const hit = { lineNo: 'error-177', level: 'ERROR', text: longSummary }
+    const otherError = { lineNo: 'error-178', text: '##[error] an unrelated upload error' }
+    const shortHit = { lineNo: 'short-179', text: `##[error] ${shortSummary}` }
+    const blank = { lineNo: 'error-180', level: 'ERROR', text: '' }
+    const markerOnly = { lineNo: 'error-181', text: '##[error]' }
+    const run = ({ errorMsg = '', errorCode = '', nodeError, logs, context = logContext }) => {
+        const target = plugin.computed.locateTarget.call({
+            logContext: context,
+            displayElement: { errorMsg, errorCode },
+            currentNodeError: nodeError,
+            logConclusionModel: { errorCode: '2199011', message: 'A generated status message, not the error summary' }
+        })
+        const events = []
+        const vm = { locateTarget: target, logContext, logs, $emit: event => events.push(event), locate: line => events.push(line.lineNo) }
+        const located = options.methods.locateFirstIssue.call(vm)
+        return { located, events }
     }
-    assert.equal(options.methods.locateFirstIssue.call(vm, ['2199011\nScript command execution failed: report empty']), true)
-    assert.deepEqual(events, ['real-log-177'])
-    events.length = 0
-    assert.equal(options.methods.locateFirstIssue.call(vm, ['missing distinctive message']), true)
-    assert.deepEqual(events, ['real-log-177'])
-    events.length = 0
-    assert.equal(options.methods.locateFirstIssue.call(vm), true)
-    assert.deepEqual(events, ['real-log-177'])
-    assert.match(source, /const hasTarget = resolveLocateLogTarget\(\[\], targetMessages\)\.hasTarget/)
-})
+    const unrelated = [warn, otherError, blank]
+    assert.deepEqual(run({ errorMsg: longSummary, logs: [warn, hit, otherError] }), { located: true, events: ['error-177'] })
+    assert.deepEqual(run({ errorMsg: longSummary, logs: unrelated }), { located: false, events: ['locate-miss'] })
+    assert.deepEqual(run({ errorMsg: shortSummary, logs: unrelated }), { located: false, events: ['locate-miss'] })
+    assert.deepEqual(run({ errorMsg: shortSummary, logs: [warn, shortHit, otherError] }), { located: true, events: ['short-179'] })
+    assert.deepEqual(run({ errorMsg: longSummary, nodeError: { errorMsg: shortSummary }, logs: [hit, ...unrelated] }), { located: false, events: ['locate-miss'] })
+    assert.deepEqual(run({ logs: [warn, hit, otherError, blank, markerOnly] }), { located: true, events: ['error-178'] })
+    assert.deepEqual(run({ logs: [warn, blank] }), { located: false, events: ['locate-miss'] })
+    assert.deepEqual(run({ errorMsg: longSummary, logs: [hit], context: 'task-1-1' }), { located: false, events: [] })
+    const fragments = [
+        { errorMsg: 'Disk quota exhausted writing artifact\nError message tracking', text: 'Error message tracking', level: 'INFO' },
+        { errorMsg: 'Disk quota exhausted writing artifact\nCommand: Error / Message: Tracking', text: 'Command: Error / Message: Tracking', level: 'ERROR' },
+        { errorMsg: 'Permission denied while writing artifact\n---', text: '---', level: 'ERROR' }
+    ]
+    for (const { errorMsg, text, level } of fragments) {
+        const logs = [{ lineNo: 'template-fragment', text, level }]
+        assert.deepEqual(run({ errorMsg, logs }), { located: false, events: ['locate-miss'] })
+    }
+    const matchedShortFragment = { lineNo: 'short-fragment', text: shortSummary, level: 'INFO' }
+    assert.deepEqual(run({ errorMsg: 'Error message tracking\n权限被拒绝\n---', logs: [matchedShortFragment] }), { located: true, events: ['short-fragment'] })
 
-test('JobLogPanel forwards the current Job target to whichever Step log is selected', () => {
-    const dependencies = {
-        StepLogPanel: {}, LogStatus: {}, buildLogTarget: adapter.buildLogTarget, hasLogTarget: adapter.hasLogTarget,
-        isLiveElapsedStatus: adapter.isLiveElapsedStatus, resolveConclusionElapsed: adapter.resolveConclusionElapsed,
-        resolveDirectJobDownloadUrl: adapter.resolveDirectJobDownloadUrl, shouldLoadStepLog: adapter.shouldLoadStepLog
-    }
-    const options = loadComponentOptions('../JobLogPanel.vue', dependencies)
-    const selectedLogs = ['prepare-job', 'failed-step']
-    const calls = []
-    const vm = { $refs: { panel: { locateFirstIssue: messages => calls.push({ selected: selectedLogs.at(-1), messages }) } } }
-    const target = ['2199011\nScript command execution failed: report empty']
-    options.methods.locateFirstIssue.call(vm, target)
-    selectedLogs.push('selected-plugin-log')
-    options.methods.locateFirstIssue.call(vm, target)
-    assert.deepEqual(calls, [
-        { selected: 'failed-step', messages: target },
-        { selected: 'selected-plugin-log', messages: target }
-    ])
-    const source = readFileSync(new URL('../JobLogPanel.vue', import.meta.url), 'utf8')
-    assert.match(source, /locateItem \(itemId, messages\) \{[\s\S]*this\.pendingLocate/)
-    assert.match(source, /handleLogsLoaded \(\) \{[\s\S]*locateFirstIssue/)
-})
+    const withCode = { lineNo: 'code-and-summary', text: '2199011 权限被拒绝无法打开文件', level: 'ERROR' }
+    const codeOnly = { lineNo: 'code-only', text: '2199011', level: 'ERROR' }
+    const nodeError = { errorCode: '2199011', errorMsg: '权限被拒绝无法打开文件' }
+    assert.deepEqual(run({ nodeError, logs: [withCode, codeOnly] }), { located: true, events: ['code-and-summary'] })
+    assert.deepEqual(run({ nodeError, logs: [codeOnly] }), { located: false, events: ['locate-miss'] })
 
-test('JobLogPanel keeps a locate request until the Step log is ready', async () => {
-    const dependencies = {
-        StepLogPanel: {}, LogStatus: {}, buildLogTarget: adapter.buildLogTarget, hasLogTarget: adapter.hasLogTarget,
-        isLiveElapsedStatus: adapter.isLiveElapsedStatus, resolveConclusionElapsed: adapter.resolveConclusionElapsed,
-        resolveDirectJobDownloadUrl: adapter.resolveDirectJobDownloadUrl, shouldLoadStepLog: adapter.shouldLoadStepLog
-    }
-    const options = loadComponentOptions('../JobLogPanel.vue', dependencies)
-    const panel = {
-        loadingInitial: true,
-        locateCalls: 0,
-        locateFirstIssue () {
-            if (this.loadingInitial) return false
-            this.locateCalls += 1
-            return true
-        }
-    }
-    const vm = new Vue({
-        data: () => ({
-            selectedId: 'failed-step',
-            contextKey: 'failed-step|job-1',
-            loadedContextKey: '',
-            pendingLocate: { itemId: 'failed-step', messages: ['step failed'] }
-        }),
-        methods: {
-            ...options.methods,
-            locateFirstIssue (...args) {
-                return panel.locateFirstIssue(...args)
-            }
-        }
-    }).$mount()
-    vm.$refs.panel = panel
-
-    vm.handleLogsLoaded()
-    assert.ok(vm.pendingLocate, 'the request remains pending while the log view is loading')
-    vm.$nextTick(() => {
-        panel.loadingInitial = false
-    })
-    await vm.$nextTick()
-    assert.equal(panel.locateCalls, 1, 'the request is retried after the log view is ready')
-    assert.equal(vm.pendingLocate, null, 'the request is cleared after locating')
+    const exception = { lineNo: 'error-marker', text: 'MissingArtifactException', level: 'ERROR' }
+    assert.deepEqual(run({
+        errorMsg: 'Artifact upload failed: MissingArtifactException in loader',
+        logs: [warn, exception, otherError]
+    }), { located: true, events: ['error-marker'] })
 })
 
 test('selected Errors row keeps its action group visible while hover and keyboard focus remain supported', () => {
@@ -7436,7 +7331,7 @@ test('Job keeps the execute count selector reachable while a historical run is l
     assert.equal(vm.selectedExecuteCount, null, 'a failed historical load can switch back to the latest run')
 })
 
-test('Job setup failure exposes locate before an error summary exists and locates the setup item', () => {
+test('Job setup failure preserves the failed conclusion without a locate action', () => {
     const options = loadJobConclusionOptions()
     const setupFailedJob = { id: 'job-1', containerId: 'job-1', status: 'FAILED', startVMStatus: 'FAILED', elements: [{ id: 'task-1', name: 'Bash', status: 'UNEXEC' }] }
     const setupFailed = options.computed.setupFailed.call({ displayJob: setupFailedJob })
@@ -7447,21 +7342,12 @@ test('Job setup failure exposes locate before an error summary exists and locate
     const jobFailureStep = options.computed.jobFailureStep.call(jobConclusionContext(setupFailedJob, { setupFailed }))
     assert.equal(jobFailureStep, null)
     const model = options.computed.logConclusionModel.call(jobConclusionContext(setupFailedJob, { setupFailed, jobFailureStep, jobErrorSummary: null }))
-    assert.equal(model.locateLog, true, 'locate is available while the build-level error summary has not been generated yet')
+    assert.equal(model.status, 'FAILED')
+    assert.equal(model.locateLog, false)
     const succeeded = options.computed.logConclusionModel.call(jobConclusionContext({ ...setupFailedJob, status: 'SUCCEED', startVMStatus: 'SUCCEED' }, { setupFailed: false }))
     assert.equal(succeeded.locateLog, false)
     const running = options.computed.logConclusionModel.call(jobConclusionContext({ ...setupFailedJob, status: 'RUNNING' }, { setupFailed }))
-    assert.equal(running.locateLog, false, 'setup failure alone does not expose locate on a non-danger status')
-
-    const located = []
-    options.methods.handleLocateLog.call({
-        setupFailed,
-        jobFailureStep: null,
-        locateMessages: [],
-        displayPluginList: [{ id: 'startVM-job-1', isSetup: true }, { id: 'task-1' }],
-        $refs: { realLog: { selectedId: 'task-1', locateItem: (...args) => located.push(args) } }
-    })
-    assert.deepEqual(located, [['startVM-job-1']])
+    assert.equal(running.locateLog, false)
 })
 
 test('large variable placeholder is delegated from log lines and queried with task context', () => {
